@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "cliente.json · Kit Demos",
+  "description": "Configuración de un negocio: marca, carta, horarios, módulos y pagos.",
+  "type": "object",
+  "required": ["id", "nombre", "pais", "marca", "modulos"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Slug único. Se usa como clave en localStorage y como 'negocio' en Supabase." },
+    "nombre": { "type": "string" },
+    "pais": { "enum": ["AR", "BR"], "description": "Define moneda (ARS/BRL), formato, zona horaria y credenciales de Mercado Pago." },
+    "idioma": { "enum": ["es", "pt-BR"] },
+    "zonaHoraria": { "type": "string", "description": "IANA. Por defecto la del país." },
+    "modo": { "enum": ["demo", "produccion"], "description": "demo = localStorage; produccion = Supabase." },
+    "whatsapp": { "type": "string", "description": "Número con código de país (5491112345678) o un link. Si es un link corto sin texto, el pedido se copia al portapapeles." },
+    "prefijoPedido": { "type": "string", "maxLength": 4 },
+    "supabase": { "type": "object", "properties": { "url": { "type": "string" }, "anonKey": { "type": "string" } } },
+    "marca": {
+      "type": "object",
+      "properties": {
+        "logo": { "type": "string" }, "logoPanel": { "type": "string" }, "favicon": { "type": "string" },
+        "colores": {
+          "type": "object",
+          "properties": {
+            "fondo": { "type": "string" }, "superficie": { "type": "string" }, "texto": { "type": "string" },
+            "primario": { "type": "string" }, "sobrePrimario": { "type": "string" }, "acento": { "type": "string" },
+            "sobreAcento": { "type": "string" }, "borde": { "type": "string" }, "suave": { "type": "string" },
+            "ok": { "type": "string" }, "alerta": { "type": "string" }, "error": { "type": "string" }
+          }
+        },
+        "fuentes": { "type": "object", "properties": { "titulos": { "type": "string" }, "texto": { "type": "string" }, "googleFonts": { "type": "string", "description": "Lo que va después de family= en la URL de Google Fonts. Vacío si la web ya las carga." } } },
+        "estilo": {
+          "type": "object",
+          "properties": {
+            "forma": { "enum": ["recta", "redondeada", "pildora"] },
+            "radio": { "type": "string" },
+            "sombra": { "description": "suave | dura | ninguna | valor CSS", "type": "string" },
+            "borde": { "type": "string" },
+            "mayusculas": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "modulos": {
+      "type": "object",
+      "properties": { "carta": { "type": "boolean" }, "carrito": { "type": "boolean" }, "reservas": { "type": "boolean" }, "admin": { "type": "boolean" } }
+    },
+    "horarios": {
+      "type": "object",
+      "description": "Franjas por día. Un cierre menor que la apertura cruza la medianoche.",
+      "propertyNames": { "enum": ["lun", "mar", "mie", "jue", "vie", "sab", "dom"] },
+      "additionalProperties": { "type": "array", "items": { "type": "array", "items": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" }, "minItems": 2, "maxItems": 2 } }
+    },
+    "reservas": {
+      "type": "object",
+      "properties": {
+        "intervaloMin": { "type": "integer" }, "duracionMin": { "type": "integer" }, "capacidad": { "type": "integer", "description": "Personas simultáneas" },
+        "maxPersonas": { "type": "integer" }, "anticipacionMin": { "type": "integer" }, "diasAdelante": { "type": "integer" },
+        "ultimoTurnoMin": { "type": "integer", "description": "Minutos antes del cierre del último turno" },
+        "cerrados": { "type": "array", "items": { "type": "string", "format": "date" } }
+      }
+    },
+    "pedidos": {
+      "type": "object",
+      "properties": {
+        "salidas": { "type": "array", "items": { "enum": ["whatsapp", "mercadopago"] } },
+        "tipos": { "type": "array", "items": { "enum": ["retiro", "delivery"] } },
+        "envio": { "type": "number" }, "minimo": { "type": "number" }
+      }
+    },
+    "pagos": {
+      "type": "object",
+      "properties": {
+        "mercadopago": {
+          "type": "object",
+          "properties": {
+            "endpoint": { "type": "string", "description": "Demo: la función compartida de kit-demos. Producción: /api/mp-preference del cliente." },
+            "modo": { "enum": ["sandbox", "produccion", "simulado"] }
+          }
+        }
+      }
+    },
+    "carta": {
+      "type": "object",
+      "properties": {
+        "categorias": { "type": "array", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" }, "orden": { "type": "integer" } } } },
+        "productos": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["id", "nombre"],
+            "properties": {
+              "id": { "type": "string" }, "categoria": { "type": ["string", "null"] }, "nombre": { "type": "string" }, "descripcion": { "type": "string" },
+              "precio": { "type": ["number", "null"], "description": "null = sin precio confirmado: se muestra 'Consultar' y no se puede pedir." },
+              "foto": { "type": "string" }, "etiquetas": { "type": "array", "items": { "type": "string" } },
+              "disponible": { "type": "boolean" }, "orden": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "textos": { "type": "object", "description": "Pisa cualquier texto del kit (ver kit/core/i18n.js).", "additionalProperties": { "type": "string" } }
+  }
+}

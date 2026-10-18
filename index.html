@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kit Demos · página de prueba</title>
+<meta name="description" content="Página de prueba del kit de funcionalidades para demos: carta con ABM, reservas, carrito con WhatsApp y Mercado Pago, y panel /admin.">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="kit/kit.css?v=1">
+<style>
+  html { background: var(--kit-text); overflow-x: clip; overscroll-behavior: none; scroll-behavior: smooth; }
+  body { margin: 0; background: var(--kit-bg); color: var(--kit-text); font-family: var(--kit-font-body); overflow-x: clip; }
+  .wrap { width: min(1080px, 100% - 32px); margin-inline: auto; }
+  .top { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--kit-bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: var(--kit-border-w) solid var(--kit-border); }
+  .top .wrap { display: flex; align-items: center; gap: 12px; min-height: 64px; }
+  .top img { height: 40px; }
+  .top nav { margin-left: auto; display: flex; gap: 8px; }
+  .hero { padding: clamp(36px, 8vw, 90px) 0 clamp(28px, 6vw, 60px); }
+  .hero h1 { margin: 0 0 12px; font: 700 clamp(2.4rem, 9vw, 5rem)/.95 var(--kit-font-head); letter-spacing: -.02em; max-width: 14ch; animation: kit-up .6s var(--kit-ease) both; }
+  .hero p { margin: 0 0 22px; max-width: 52ch; font-size: 1.08rem; line-height: 1.5; color: var(--kit-muted); animation: kit-up .6s .08s var(--kit-ease) both; }
+  .hero .kit-row { animation: kit-up .6s .16s var(--kit-ease) both; }
+  .tag { display: inline-block; margin-bottom: 14px; padding: .35em .7em; border-radius: 999px; background: var(--kit-accent); color: var(--kit-on-accent); font-weight: 800; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }
+  section.blk { padding: clamp(36px, 7vw, 80px) 0; border-top: var(--kit-border-w) solid var(--kit-border); }
+  section.blk h2 { margin: 0 0 6px; font: 700 clamp(1.8rem, 5vw, 3rem)/1 var(--kit-font-head); }
+  section.blk .sub { margin: 0 0 22px; color: var(--kit-muted); }
+  .grid2 { display: grid; gap: 28px; }
+  @media (min-width: 900px) { .grid2 { grid-template-columns: .8fr 1.2fr; align-items: start; } }
+  .tools { display: grid; gap: 10px; padding: 18px; border: var(--kit-border-w) dashed var(--kit-border); border-radius: var(--kit-radius); }
+  .tools code { background: var(--kit-surface); padding: .1em .35em; border-radius: 5px; font-size: .85em; }
+  footer { background: var(--kit-text); color: var(--kit-bg); padding: 36px 0 28px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between; font-size: .9rem; }
+  footer a { color: inherit; }
+  .credit { font-size: .78rem; opacity: .8; }
+  @media (max-width: 560px) { .top nav .kit-btn--ghost { display: none; } }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <img data-logo src="img/logo.svg" alt="">
+  <nav>
+    <a class="kit-btn kit-btn--ghost kit-btn--sm" href="#carta" data-txt="carta">Carta</a>
+    <button type="button" class="kit-btn kit-btn--sm" data-kit-open="reservas" data-reservar>Reservar</button>
+  </nav>
+</div></header>
+
+<main>
+  <section class="hero"><div class="wrap">
+    <span class="tag">Kit demos · página de prueba</span>
+    <h1 data-nombre>Fonda Ejemplo</h1>
+    <p>Negocio ficticio para probar el kit: la carta sale de <code>cliente.json</code>, se edita en <a href="admin/">/admin</a>, y los pedidos y reservas entran al panel. Todo queda en este navegador.</p>
+    <div class="kit-row">
+      <a class="kit-btn kit-btn--big" href="#carta">Ver la carta</a>
+      <button type="button" class="kit-btn kit-btn--big kit-btn--ghost" data-kit-open="reservas" data-reservar>Reservar mesa</button>
+    </div>
+  </div></section>
+
+  <section class="blk" id="carta"><div class="wrap">
+    <h2>La carta</h2>
+    <p class="sub">Tocá “Agregar” y armá un pedido. Después editá precios o fotos en el panel y mirá cómo cambia acá.</p>
+    <div data-kit="carta"></div>
+  </div></section>
+
+  <section class="blk" id="reservas" data-bloque-reservas><div class="wrap grid2">
+    <div>
+      <h2>Reservas</h2>
+      <p class="sub">Turnos según los horarios y la capacidad de <code>cliente.json</code>. Los horarios que se llenan aparecen tachados.</p>
+      <div class="tools">
+        <b>Herramientas de prueba</b>
+        <span>Cliente: <a href="./">Fonda Ejemplo (AR, es)</a> · <a href="?cliente=br">Padaria Exemplo (BR, pt-BR)</a></span>
+        <span>Panel: <a data-admin href="admin/">/admin</a></span>
+        <button type="button" class="kit-btn kit-btn--ghost kit-btn--sm" data-reset style="justify-self:start">↺ Reiniciar demo</button>
+      </div>
+    </div>
+    <div data-kit="reservas"></div>
+  </div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>© <span data-year>2026</span> <span data-nombre>Fonda Ejemplo</span> · negocio ficticio de prueba</span>
+  <span class="credit">Sitio desarrollado por <a href="https://alejomfernandez.com.ar" target="_blank" rel="noopener">Alejo Martín Fernández</a></span>
+</div></footer>
+
+<script type="module">
+  import { initKit } from './kit/kit.js?v=1';
+  import { confirmar, toast } from './kit/core/ui.js';
+  const c = new URLSearchParams(location.search).get('cliente');
+  const kit = await initKit({ config: c ? `cliente-${c}.json` : 'cliente.json', adminUrl: c ? `admin/?cliente=${c}` : 'admin/' });
+  const { config, store } = kit;
+  document.documentElement.lang = config.idioma;
+  document.querySelectorAll('[data-nombre]').forEach(e => { e.textContent = config.nombre; });
+  document.querySelector('[data-logo]').src = kit.asset(config.marca.logo);
+  document.querySelector('[data-logo]').alt = config.nombre;
+  document.querySelector('[data-admin]').href = c ? `admin/?cliente=${c}` : 'admin/';
+  document.querySelector('[data-year]').textContent = new Date().getFullYear();
+  if (!config.modulos.reservas) { document.querySelectorAll('[data-reservar]').forEach(b => b.remove()); document.querySelector('[data-kit="reservas"]').remove(); }
+  document.querySelector('[data-reset]').addEventListener('click', async () => {
+    if (await confirmar('¿Reiniciar la demo? Se borran pedidos, reservas y cambios de carta.', { ok: 'Reiniciar', peligro: true })) { await store.reset(); toast('Demo reiniciada'); }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+// Textos del kit en el idioma del negocio (es / pt-BR).
+// Cada cliente.json puede pisar cualquier clave con "textos": { "clave": "texto" }.
+
+const DICT = {
+  es: {
+    cerrar: 'Cerrar', agregar: 'Agregar', agregado: 'Agregado', quitar: 'Quitar', sinPrecio: 'Consultar',
+    noDisponible: 'Sin stock hoy', cargando: 'Cargando…', error: 'Algo salió mal. Probá de nuevo.',
+    // carrito
+    tuPedido: 'Tu pedido', verPedido: 'Ver pedido', carritoVacio: 'Todavía no agregaste nada.',
+    carritoVacioSub: 'Elegí algo de la carta y aparece acá.', subtotal: 'Subtotal', envio: 'Envío', total: 'Total',
+    notaItem: 'Aclaración (sin cebolla, punto…)', notaPedido: 'Algo más que tengamos que saber',
+    retiro: 'Retiro en el local', delivery: 'Delivery', direccion: 'Dirección de entrega',
+    nombre: 'Nombre', telefono: 'WhatsApp / teléfono', email: 'Email (opcional)',
+    comoPagas: '¿Cómo lo querés cerrar?', porWhatsapp: 'Enviar por WhatsApp', porWhatsappSub: 'Coordinás el pago con el local',
+    porMP: 'Pagar con Mercado Pago', porMPSub: 'Tarjeta, débito o dinero en cuenta',
+    enviarPedido: 'Enviar pedido', pagar: 'Ir a pagar', minimo: 'El pedido mínimo es de {monto}',
+    seguir: 'Seguir mirando', pedidoListo: '¡Pedido enviado!', pedidoListoSub: 'Tu código es {codigo}. El local lo ve en su panel y te escribe por WhatsApp.',
+    pedidoPagado: '¡Pago aprobado!', pedidoPagadoSub: 'Pedido {codigo} pagado. Ya está en la cocina.',
+    pagoPendiente: 'Pago pendiente', pagoPendienteSub: 'Mercado Pago está procesando el pago del pedido {codigo}.',
+    pagoRechazado: 'El pago no se completó', pagoRechazadoSub: 'Podés intentar otra vez o enviar el pedido por WhatsApp.',
+    copiado: 'Copiamos el pedido: pegalo en el chat de WhatsApp.', abrirWA: 'Abrir WhatsApp',
+    mpSimulado: 'Mercado Pago (simulación de demo)', mpSimuladoSub: 'En la demo el pago se simula. Con la web contratada, acá se abre el checkout real.',
+    mpAprobar: 'Simular pago aprobado', mpRechazar: 'Simular pago rechazado', mpSinConexion: 'No pudimos conectar con Mercado Pago sandbox: te mostramos la simulación.',
+    faltan: 'Completá {campos}.',
+    waPedido: 'Hola {negocio}! Quiero hacer este pedido:', waCodigo: 'Pedido {codigo}', waNombre: 'Nombre', waEntrega: 'Entrega', waNota: 'Nota', waPago: 'Pago',
+    waPagoWA: 'a coordinar', waPagoMP: 'Mercado Pago (pagado)',
+    // reservas
+    reservar: 'Reservar', reservarMesa: 'Reservá tu mesa', personas: 'Personas', persona: 'persona', personasN: 'personas',
+    dia: 'Día', hora: 'Hora', hoy: 'Hoy', manana: 'Mañana', cerrado: 'Cerrado', sinTurnos: 'No quedan horarios para este día.',
+    lleno: 'Completo', quedan: 'Quedan {n}', comentario: 'Comentario (cumple, silla para bebé…)',
+    confirmarReserva: 'Pedir reserva', reservaLista: '¡Reserva pedida!', reservaListaSub: '{personas} · {dia} a las {hora}. Te confirmamos por WhatsApp.',
+    avisarWA: 'Avisar por WhatsApp', waReserva: 'Hola {negocio}! Pedí una reserva para {personas} el {dia} a las {hora}. A nombre de {nombre}.',
+    sinLugar: 'Ese horario se llenó recién. Elegí otro.', masPersonas: 'Para más de {n} personas escribinos por WhatsApp.',
+    // admin
+    panel: 'Panel', pedidos: 'Pedidos', reservas: 'Reservas', carta: 'Carta', ajustes: 'Ajustes', verSitio: 'Ver sitio', salir: 'Salir',
+    modoDemo: 'Modo demo', modoDemoSub: 'Los cambios quedan solo en este navegador. Probá todo sin miedo.', reiniciar: 'Reiniciar demo',
+    reiniciarSeguro: '¿Reiniciar la demo? Se borran los pedidos, reservas y cambios de carta que hiciste.',
+    entrar: 'Entrar', entrarDemo: 'Entrar al panel', entrarDemoSub: 'En la demo entra cualquiera. En la versión contratada entra solo el dueño, con su email y contraseña.',
+    password: 'Contraseña', loginError: 'Email o contraseña incorrectos.',
+    todos: 'Todos', pendiente: 'Pendiente', pendientes: 'Pendientes', confirmado: 'Confirmado', confirmada: 'Confirmada', listo: 'Listo', entregado: 'Entregado',
+    cancelado: 'Cancelado', cancelada: 'Cancelada', confirmar: 'Confirmar', cancelar: 'Cancelar', marcarListo: 'Listo', marcarEntregado: 'Entregado',
+    pagado: 'Pagado', pagoRech: 'Pago rechazado', aCoordinar: 'Pago a coordinar', sinPedidos: 'Todavía no entró ningún pedido.', sinPedidosSub: 'Hacé uno desde la web y mirá cómo aparece acá al instante.',
+    sinReservas: 'No hay reservas para mostrar.', proximas: 'Próximas', pasadas: 'Pasadas',
+    escribir: 'Escribirle', categorias: 'Categorías', nuevaCategoria: 'Nueva categoría', nuevoProducto: 'Nuevo producto',
+    editar: 'Editar', borrar: 'Borrar', guardar: 'Guardar', descripcion: 'Descripción', precio: 'Precio', categoria: 'Categoría', foto: 'Foto',
+    subirFoto: 'Subir foto', cambiarFoto: 'Cambiar foto', quitarFoto: 'Quitar foto', disponible: 'Disponible', etiquetas: 'Etiquetas (separadas por coma)',
+    borrarProducto: '¿Borrar "{nombre}" de la carta?', borrarCategoria: '¿Borrar la categoría "{nombre}"? Sus productos quedan sin categoría.',
+    nombreCategoria: 'Nombre de la categoría', guardado: 'Guardado', borrado: 'Borrado', subir: 'Subir', bajar: 'Bajar',
+    sinCategoria: 'Sin categoría', fotoGrande: 'La foto es muy pesada para la demo. Probá con otra.',
+    horarios: 'Horarios', capacidad: 'Capacidad por turno', duracion: 'Duración de cada mesa', intervalo: 'Turnos cada',
+    min: 'min', importarCarta: 'Cargar carta inicial', importarCartaSub: 'Copia la carta del cliente.json a la base de datos.',
+    nuevo: 'Nuevo', hace: 'hace {t}', ahora: 'recién', enCurso: 'En curso', items: 'productos',
+    waConfirmaReserva: 'Hola {nombre}! Te confirmamos la reserva en {negocio} para {personas} el {dia} a las {hora}. ¡Te esperamos!',
+    waAvisoPedido: 'Hola {nombre}! Recibimos tu pedido {codigo} en {negocio}.',
+    resumenReservas: 'Turnos cada {intervalo} min · {capacidad} personas por turno · mesas de {duracion} min',
+    hoyN: '{n} hoy', productosN: '{n} productos', vacioCategoria: 'Sin productos en esta categoría.', nuevoProductoEn: 'Agregar a {cat}',
+    mpPagoAprobado: 'Pagado con Mercado Pago', mpPagoPendiente: 'Esperando el pago', mpPagoRechazado: 'Pago rechazado',
+    dias: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+    diasCortos: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+    meses: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
+  },
+  'pt-BR': {
+    cerrar: 'Fechar', agregar: 'Adicionar', agregado: 'Adicionado', quitar: 'Remover', sinPrecio: 'Consultar',
+    noDisponible: 'Esgotado hoje', cargando: 'Carregando…', error: 'Algo deu errado. Tente de novo.',
+    tuPedido: 'Seu pedido', verPedido: 'Ver pedido', carritoVacio: 'Você ainda não adicionou nada.',
+    carritoVacioSub: 'Escolha algo do cardápio e ele aparece aqui.', subtotal: 'Subtotal', envio: 'Entrega', total: 'Total',
+    notaItem: 'Observação (sem cebola, ponto…)', notaPedido: 'Algo mais que a gente precise saber',
+    retiro: 'Retirar no local', delivery: 'Delivery', direccion: 'Endereço de entrega',
+    nombre: 'Nome', telefono: 'WhatsApp / telefone', email: 'E-mail (opcional)',
+    comoPagas: 'Como você quer fechar?', porWhatsapp: 'Enviar pelo WhatsApp', porWhatsappSub: 'Você combina o pagamento com a loja',
+    porMP: 'Pagar com Mercado Pago', porMPSub: 'Pix, cartão ou saldo em conta',
+    enviarPedido: 'Enviar pedido', pagar: 'Ir para o pagamento', minimo: 'O pedido mínimo é de {monto}',
+    seguir: 'Continuar olhando', pedidoListo: 'Pedido enviado!', pedidoListoSub: 'Seu código é {codigo}. A loja vê no painel e te chama no WhatsApp.',
+    pedidoPagado: 'Pagamento aprovado!', pedidoPagadoSub: 'Pedido {codigo} pago. Já está na cozinha.',
+    pagoPendiente: 'Pagamento pendente', pagoPendienteSub: 'O Mercado Pago está processando o pagamento do pedido {codigo}.',
+    pagoRechazado: 'O pagamento não foi concluído', pagoRechazadoSub: 'Tente de novo ou envie o pedido pelo WhatsApp.',
+    copiado: 'Copiamos o pedido: cole na conversa do WhatsApp.', abrirWA: 'Abrir WhatsApp',
+    mpSimulado: 'Mercado Pago (simulação da demo)', mpSimuladoSub: 'Na demo o pagamento é simulado. Com o site contratado, aqui abre o checkout real.',
+    mpAprobar: 'Simular pagamento aprovado', mpRechazar: 'Simular pagamento recusado', mpSinConexion: 'Não conseguimos conectar com o Mercado Pago sandbox: mostramos a simulação.',
+    faltan: 'Preencha {campos}.',
+    waPedido: 'Olá {negocio}! Quero fazer este pedido:', waCodigo: 'Pedido {codigo}', waNombre: 'Nome', waEntrega: 'Entrega', waNota: 'Obs.', waPago: 'Pagamento',
+    waPagoWA: 'a combinar', waPagoMP: 'Mercado Pago (pago)',
+    reservar: 'Reservar', reservarMesa: 'Reserve sua mesa', personas: 'Pessoas', persona: 'pessoa', personasN: 'pessoas',
+    dia: 'Dia', hora: 'Horário', hoy: 'Hoje', manana: 'Amanhã', cerrado: 'Fechado', sinTurnos: 'Não há mais horários para este dia.',
+    lleno: 'Lotado', quedan: 'Restam {n}', comentario: 'Comentário (aniversário, cadeirinha…)',
+    confirmarReserva: 'Pedir reserva', reservaLista: 'Reserva solicitada!', reservaListaSub: '{personas} · {dia} às {hora}. A gente confirma pelo WhatsApp.',
+    avisarWA: 'Avisar pelo WhatsApp', waReserva: 'Olá {negocio}! Pedi uma reserva para {personas} no dia {dia} às {hora}. Em nome de {nombre}.',
+    sinLugar: 'Esse horário acabou de lotar. Escolha outro.', masPersonas: 'Para mais de {n} pessoas, fale com a gente no WhatsApp.',
+    panel: 'Painel', pedidos: 'Pedidos', reservas: 'Reservas', carta: 'Cardápio', ajustes: 'Ajustes', verSitio: 'Ver site', salir: 'Sair',
+    modoDemo: 'Modo demo', modoDemoSub: 'As mudanças ficam só neste navegador. Teste tudo sem medo.', reiniciar: 'Reiniciar demo',
+    reiniciarSeguro: 'Reiniciar a demo? Os pedidos, reservas e mudanças no cardápio serão apagados.',
+    entrar: 'Entrar', entrarDemo: 'Entrar no painel', entrarDemoSub: 'Na demo qualquer pessoa entra. Na versão contratada só o dono entra, com e-mail e senha.',
+    password: 'Senha', loginError: 'E-mail ou senha incorretos.',
+    todos: 'Todos', pendiente: 'Pendente', pendientes: 'Pendentes', confirmado: 'Confirmado', confirmada: 'Confirmada', listo: 'Pronto', entregado: 'Entregue',
+    cancelado: 'Cancelado', cancelada: 'Cancelada', confirmar: 'Confirmar', cancelar: 'Cancelar', marcarListo: 'Pronto', marcarEntregado: 'Entregue',
+    pagado: 'Pago', pagoRech: 'Pagamento recusado', aCoordinar: 'Pagamento a combinar', sinPedidos: 'Nenhum pedido ainda.', sinPedidosSub: 'Faça um pelo site e veja aparecer aqui na hora.',
+    sinReservas: 'Não há reservas para mostrar.', proximas: 'Próximas', pasadas: 'Passadas',
+    escribir: 'Chamar', categorias: 'Categorias', nuevaCategoria: 'Nova categoria', nuevoProducto: 'Novo produto',
+    editar: 'Editar', borrar: 'Apagar', guardar: 'Salvar', descripcion: 'Descrição', precio: 'Preço', categoria: 'Categoria', foto: 'Foto',
+    subirFoto: 'Enviar foto', cambiarFoto: 'Trocar foto', quitarFoto: 'Remover foto', disponible: 'Disponível', etiquetas: 'Etiquetas (separadas por vírgula)',
+    borrarProducto: 'Apagar "{nombre}" do cardápio?', borrarCategoria: 'Apagar a categoria "{nombre}"? Os produtos ficam sem categoria.',
+    nombreCategoria: 'Nome da categoria', guardado: 'Salvo', borrado: 'Apagado', subir: 'Subir', bajar: 'Descer',
+    sinCategoria: 'Sem categoria', fotoGrande: 'A foto é pesada demais para a demo. Tente outra.',
+    horarios: 'Horários', capacidad: 'Capacidade por horário', duracion: 'Duração de cada mesa', intervalo: 'Horários a cada',
+    min: 'min', importarCarta: 'Carregar cardápio inicial', importarCartaSub: 'Copia o cardápio do cliente.json para o banco de dados.',
+    nuevo: 'Novo', hace: 'há {t}', ahora: 'agora', enCurso: 'Em andamento', items: 'produtos',
+    waConfirmaReserva: 'Olá {nombre}! Confirmamos sua reserva no {negocio} para {personas} no dia {dia} às {hora}. Te esperamos!',
+    waAvisoPedido: 'Olá {nombre}! Recebemos seu pedido {codigo} no {negocio}.',
+    resumenReservas: 'Horários a cada {intervalo} min · {capacidad} pessoas por horário · mesas de {duracion} min',
+    hoyN: '{n} hoje', productosN: '{n} produtos', vacioCategoria: 'Nenhum produto nesta categoria.', nuevoProductoEn: 'Adicionar em {cat}',
+    mpPagoAprobado: 'Pago com Mercado Pago', mpPagoPendiente: 'Aguardando pagamento', mpPagoRechazado: 'Pagamento recusado',
+    dias: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
+    diasCortos: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+    meses: ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'],
+  },
+};
+
+let lang = 'es';
+let overrides = {};
+
+export function setLang(l, extra = {}) {
+  lang = DICT[l] ? l : (String(l).startsWith('pt') ? 'pt-BR' : 'es');
+  overrides = extra || {};
+}
+export const getLang = () => lang;
+
+export function t(key, vars) {
+  let s = overrides[key] ?? DICT[lang][key] ?? DICT.es[key] ?? key;
+  if (vars && typeof s === 'string') s = s.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+  return s;
+}

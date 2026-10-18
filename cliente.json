@@ -1,0 +1,67 @@
+{
+  "$schema": "./docs/cliente.schema.json",
+  "id": "fonda-ejemplo",
+  "nombre": "Fonda Ejemplo",
+  "pais": "AR",
+  "idioma": "es",
+  "modo": "demo",
+  "whatsapp": "5491100000000",
+  "prefijoPedido": "FE",
+  "supabase": { "url": "", "anonKey": "" },
+
+  "marca": {
+    "logo": "img/logo.svg",
+    "colores": {
+      "fondo": "#FBF4E8",
+      "superficie": "#FFFFFF",
+      "texto": "#1F1A14",
+      "primario": "#B6371B",
+      "acento": "#F2B632",
+      "borde": "#E4D6BF"
+    },
+    "fuentes": {
+      "titulos": "'Bricolage Grotesque', system-ui, sans-serif",
+      "texto": "'Instrument Sans', system-ui, sans-serif",
+      "googleFonts": "Bricolage+Grotesque:opsz,wght@12..96,700&family=Instrument+Sans:wght@400;600;700"
+    },
+    "estilo": { "forma": "redondeada", "sombra": "dura", "borde": "2px", "mayusculas": false }
+  },
+
+  "modulos": { "carta": true, "carrito": true, "reservas": true, "admin": true },
+
+  "horarios": {
+    "lun": [],
+    "mar": [["12:00", "15:30"], ["20:00", "00:30"]],
+    "mie": [["12:00", "15:30"], ["20:00", "00:30"]],
+    "jue": [["12:00", "15:30"], ["20:00", "00:30"]],
+    "vie": [["12:00", "15:30"], ["20:00", "01:30"]],
+    "sab": [["12:00", "16:00"], ["20:00", "01:30"]],
+    "dom": [["12:00", "16:30"]]
+  },
+
+  "reservas": { "intervaloMin": 30, "duracionMin": 90, "capacidad": 24, "maxPersonas": 8, "anticipacionMin": 60, "diasAdelante": 21, "ultimoTurnoMin": 60, "cerrados": [] },
+
+  "pedidos": { "salidas": ["whatsapp", "mercadopago"], "tipos": ["retiro", "delivery"], "envio": 1500, "minimo": 0 },
+
+  "pagos": { "mercadopago": { "endpoint": "/api/mp-preference", "modo": "sandbox" } },
+
+  "carta": {
+    "categorias": [
+      { "id": "entradas", "nombre": "Para picar" },
+      { "id": "principales", "nombre": "Principales" },
+      { "id": "postres", "nombre": "Postres" }
+    ],
+    "productos": [
+      { "id": "empanadas", "categoria": "entradas", "nombre": "Empanadas de carne cortada a cuchillo", "descripcion": "Docena o media, al horno de barro.", "precio": 2400, "etiquetas": ["casa"] },
+      { "id": "provoleta", "categoria": "entradas", "nombre": "Provoleta", "descripcion": "Con orégano, ají molido y tomates asados.", "precio": 6800, "etiquetas": ["veggie"] },
+      { "id": "milanesa", "categoria": "principales", "nombre": "Milanesa napolitana", "descripcion": "Con papas fritas o puré.", "precio": 14500 },
+      { "id": "bife", "categoria": "principales", "nombre": "Bife de chorizo", "descripcion": "400 g con ensalada mixta.", "precio": 19800, "etiquetas": ["casa"] },
+      { "id": "ravioles", "categoria": "principales", "nombre": "Ravioles de verdura", "descripcion": "Con fileto o crema.", "precio": 12200, "etiquetas": ["veggie"] },
+      { "id": "picante", "categoria": "principales", "nombre": "Chorizo a la pomarola picante", "descripcion": "Para los que se animan.", "precio": 11000, "etiquetas": ["picante"] },
+      { "id": "flan", "categoria": "postres", "nombre": "Flan casero", "descripcion": "Con dulce de leche y crema.", "precio": 5200 },
+      { "id": "budin", "categoria": "postres", "nombre": "Budín de pan", "descripcion": "Precio a confirmar con el local.", "precio": null }
+    ]
+  },
+
+  "textos": {}
+}

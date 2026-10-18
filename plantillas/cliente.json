@@ -1,0 +1,130 @@
+{
+  "$schema": "https://raw.githubusercontent.com/AlejoMFernandez/kit-demos/main/docs/cliente.schema.json",
+  "id": "<slug-del-negocio>",
+  "nombre": "<Nombre del negocio>",
+  "pais": "AR",
+  "idioma": "es",
+  "modo": "demo",
+  "whatsapp": "<5491100000000 o link wa.me>",
+  "prefijoPedido": "XX",
+  "supabase": {
+    "url": "",
+    "anonKey": ""
+  },
+  "marca": {
+    "logo": "img/logo.png",
+    "logoPanel": "img/logo.png",
+    "favicon": "img/favicon.png",
+    "colores": {
+      "fondo": "#FFFFFF",
+      "superficie": "#FFFFFF",
+      "texto": "#111111",
+      "primario": "#111111",
+      "acento": "#FFCC00",
+      "borde": ""
+    },
+    "fuentes": {
+      "titulos": "'Anton', sans-serif",
+      "texto": "'Archivo', sans-serif",
+      "googleFonts": "Anton&family=Archivo:wght@400;600;800"
+    },
+    "estilo": {
+      "forma": "redondeada",
+      "sombra": "suave",
+      "borde": "1.5px",
+      "mayusculas": true
+    }
+  },
+  "modulos": {
+    "carta": true,
+    "carrito": true,
+    "reservas": false,
+    "admin": true
+  },
+  "horarios": {
+    "lun": [
+      [
+        "11:00",
+        "23:00"
+      ]
+    ],
+    "mar": [
+      [
+        "11:00",
+        "23:00"
+      ]
+    ],
+    "mie": [
+      [
+        "11:00",
+        "23:00"
+      ]
+    ],
+    "jue": [
+      [
+        "11:00",
+        "23:00"
+      ]
+    ],
+    "vie": [
+      [
+        "11:00",
+        "23:00"
+      ]
+    ],
+    "sab": [
+      [
+        "11:00",
+        "23:00"
+      ]
+    ],
+    "dom": []
+  },
+  "reservas": {
+    "intervaloMin": 30,
+    "duracionMin": 90,
+    "capacidad": 24,
+    "maxPersonas": 8,
+    "anticipacionMin": 60,
+    "diasAdelante": 21,
+    "ultimoTurnoMin": 60,
+    "cerrados": []
+  },
+  "pedidos": {
+    "salidas": [
+      "whatsapp",
+      "mercadopago"
+    ],
+    "tipos": [
+      "retiro"
+    ],
+    "envio": 0,
+    "minimo": 0
+  },
+  "pagos": {
+    "mercadopago": {
+      "endpoint": "https://kit-demos.vercel.app/api/mp-preference",
+      "modo": "sandbox"
+    }
+  },
+  "carta": {
+    "categorias": [
+      {
+        "id": "categoria-1",
+        "nombre": "Categoría 1"
+      }
+    ],
+    "productos": [
+      {
+        "id": "producto-1",
+        "categoria": "categoria-1",
+        "nombre": "Producto",
+        "descripcion": "",
+        "precio": null,
+        "foto": "",
+        "etiquetas": []
+      }
+    ]
+  },
+  "textos": {}
+}

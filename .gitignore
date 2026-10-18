@@ -1,0 +1,5 @@
+node_modules/
+capturas/
+.vercel/
+.env*
+__pycache__/

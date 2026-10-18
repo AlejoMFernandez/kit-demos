@@ -1,0 +1,31 @@
+{
+  "id": "padaria-exemplo",
+  "nombre": "Padaria Exemplo",
+  "pais": "BR",
+  "idioma": "pt-BR",
+  "modo": "demo",
+  "whatsapp": "5571900000000",
+  "prefijoPedido": "PX",
+
+  "marca": {
+    "logo": "img/logo-br.svg",
+    "colores": { "fondo": "#FFF7EC", "superficie": "#FFFFFF", "texto": "#14213D", "primario": "#14213D", "acento": "#FCA311", "borde": "#E5DCCB" },
+    "fuentes": { "titulos": "'Anton', Impact, sans-serif", "texto": "'Archivo', system-ui, sans-serif", "googleFonts": "Anton&family=Archivo:wght@400;600;800" },
+    "estilo": { "forma": "pildora", "sombra": "suave", "borde": "1.5px" }
+  },
+
+  "modulos": { "carta": true, "carrito": true, "reservas": false, "admin": true },
+  "horarios": { "lun": [["07:00", "19:00"]], "mar": [["07:00", "19:00"]], "mie": [["07:00", "19:00"]], "jue": [["07:00", "19:00"]], "vie": [["07:00", "19:00"]], "sab": [["07:00", "14:00"]], "dom": [] },
+  "pedidos": { "salidas": ["whatsapp", "mercadopago"], "tipos": ["retiro"], "minimo": 20 },
+  "pagos": { "mercadopago": { "endpoint": "/api/mp-preference", "modo": "sandbox" } },
+
+  "carta": {
+    "categorias": [ { "id": "paes", "nombre": "Pães" }, { "id": "doces", "nombre": "Doces" } ],
+    "productos": [
+      { "id": "pao-queijo", "categoria": "paes", "nombre": "Pão de queijo (6 un.)", "descripcion": "Quentinho, saindo do forno.", "precio": 12.9 },
+      { "id": "pao-delicia", "categoria": "paes", "nombre": "Pão delícia (10 un.)", "descripcion": "Com queijo ralado por cima.", "precio": 18.5, "etiquetas": ["casa"] },
+      { "id": "bolo-milho", "categoria": "doces", "nombre": "Bolo de milho", "descripcion": "Fatia generosa.", "precio": 9.0 },
+      { "id": "cocada", "categoria": "doces", "nombre": "Cocada de forno", "descripcion": "", "precio": 7.5, "etiquetas": ["nuevo"] }
+    ]
+  }
+}

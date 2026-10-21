@@ -68,7 +68,7 @@ export function createLocalStore(config) {
     // ---- reservas
     async getOcupacion(fecha) {
       const o = {};
-      leer().reservas.filter(r => r.fecha === fecha && r.estado !== 'cancelada').forEach(r => { o[r.hora] = (o[r.hora] || 0) + r.personas; });
+      leer().reservas.filter(r => r.fecha === fecha && !['cancelada', 'no_vino'].includes(r.estado)).forEach(r => { o[r.hora] = (o[r.hora] || 0) + r.personas; });
       return o;
     },
     async createReserva(data) {
@@ -77,7 +77,7 @@ export function createLocalStore(config) {
         const pers = Number(data.personas);
         if (!(pers >= 1 && pers <= cfg.maxPersonas)) throw Object.assign(new Error('personas'), { code: 'personas' });
         const m = toMin(data.hora);
-        const usados = db.reservas.filter(r => r.fecha === data.fecha && r.estado !== 'cancelada' && Math.abs(toMin(r.hora) - m) < cfg.duracionMin).reduce((s, r) => s + r.personas, 0);
+        const usados = db.reservas.filter(r => r.fecha === data.fecha && !['cancelada', 'no_vino'].includes(r.estado) && Math.abs(toMin(r.hora) - m) < cfg.duracionMin).reduce((s, r) => s + r.personas, 0);
         if (usados + pers > cfg.capacidad) throw Object.assign(new Error('sin_lugar'), { code: 'sin_lugar' });
         const r = { id: uid('r-'), fecha: data.fecha, hora: data.hora, personas: pers, nombre: data.nombre, telefono: data.telefono, email: data.email || '', comentario: data.comentario || '', estado: 'pendiente', creado: new Date().toISOString() };
         db.reservas.push(r); return r;

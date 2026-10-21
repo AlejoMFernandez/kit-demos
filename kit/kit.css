@@ -123,7 +123,7 @@ html.kit-lock body { overflow: hidden; touch-action: none; }
 
 /* ---------- popups ---------- */
 .kit-pop { position: fixed; inset: 0; z-index: var(--kit-z); display: grid; place-items: center; padding: 16px; }
-.kit-pop__back { position: absolute; inset: 0; background: color-mix(in srgb, var(--kit-text) 55%, transparent); opacity: 0; transition: opacity .25s; backdrop-filter: blur(2px); }
+.kit-pop__back { position: absolute; inset: 0; background: color-mix(in srgb, var(--kit-text) 55%, transparent); opacity: 0; transition: opacity .25s; }
 .kit-pop__box {
   position: relative; width: min(520px, 100%); max-height: min(88vh, 100%); max-height: min(88dvh, 100%); display: flex; flex-direction: column;
   background: var(--kit-bg); color: var(--kit-text); border: var(--kit-border-w) solid var(--kit-text); border-radius: var(--kit-radius);

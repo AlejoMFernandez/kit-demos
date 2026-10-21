@@ -58,20 +58,22 @@ export function initCarrito(ctx, opts = {}) {
   function cambiar(id, delta, origen) {
     const p = productos.find(x => x.id === id);
     if (!p || p.disponible === false || p.precio == null) return;
+    // la posición del botón se toma ANTES de redibujar (sync reemplaza el botón y su rect queda en 0,0)
+    const desde = origen && origen.isConnected ? origen.getBoundingClientRect() : null;
     const l = lineas.find(x => x.id === id && !x.nota);
     if (l) l.cant = Math.max(0, Math.min(99, l.cant + delta));
     else if (delta > 0) lineas.push({ id, cant: delta, nota: '' });
     lineas = lineas.filter(x => x.cant > 0);
     guardar(); sync(); pintarFab(delta > 0);
     if (pop) pintarDrawer();
-    if (delta > 0 && origen) volar(origen, p);
+    if (delta > 0 && desde && desde.width) volar(desde, p);
     document.dispatchEvent(new CustomEvent('kit:carrito', { detail: { lineas: lineas.slice(), producto: p, delta } }));
   }
 
   // pequeño "vuelo" del botón al carrito
-  function volar(origen, p) {
+  function volar(a, p) {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches || fab.hidden) return;
-    const a = origen.getBoundingClientRect(), b = fab.getBoundingClientRect();
+    const b = fab.getBoundingClientRect();
     const dot = h(`<span class="kit-root kit-fly">${p.foto ? `<img src="${esc(ctx.asset(p.foto))}" alt="">` : ''}</span>`);
     dot.style.left = a.left + a.width / 2 + 'px'; dot.style.top = a.top + a.height / 2 + 'px';
     document.body.appendChild(dot);

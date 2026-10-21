@@ -103,7 +103,7 @@
   },
   "pagos": {
     "mercadopago": {
-      "endpoint": "https://kit-demos.vercel.app/api/mp-preference",
+      "endpoint": "https://kit-demos-amf.vercel.app/api/mp-preference",
       "modo": "sandbox"
     }
   },

@@ -22,7 +22,7 @@ Todas las demos usan **una sola función**: `api/mp-preference.js` de este repo,
 | `MP_TEST_TOKEN_BR` | Access Token del vendedor de prueba BR |
 | `ALLOWED_ORIGINS` | `https://*.vercel.app,https://alejomfernandez.com.ar,http://localhost` |
 
-3. Redeploy. La URL queda tipo `https://kit-demos.vercel.app/api/mp-preference` (o la que asigne Vercel): esa va en `pagos.mercadopago.endpoint` de cada `cliente.json` de demo, y en `plantillas/cliente.json`.
+3. Redeploy. La URL queda tipo `https://kit-demos-amf.vercel.app/api/mp-preference` (o la que asigne Vercel): esa va en `pagos.mercadopago.endpoint` de cada `cliente.json` de demo, y en `plantillas/cliente.json`.
 
 > Si una demo está en un dominio propio (no `*.vercel.app`), agregalo a `ALLOWED_ORIGINS`.
 

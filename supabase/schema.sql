@@ -52,7 +52,7 @@ create table if not exists reservas (
   telefono text not null check (length(telefono) between 6 and 30),
   email text,
   comentario text check (length(coalesce(comentario,'')) <= 300),
-  estado text not null default 'pendiente' check (estado in ('pendiente','confirmada','cancelada')),
+  estado text not null default 'pendiente' check (estado in ('pendiente','confirmada','llego','no_vino','cancelada')),
   creado timestamptz not null default now()
 );
 create index if not exists reservas_negocio_fecha on reservas (negocio, fecha);
@@ -69,7 +69,7 @@ create table if not exists pedidos (
   cliente jsonb not null,
   nota text,
   pago text not null default 'whatsapp' check (pago in ('whatsapp','mercadopago')),
-  pago_estado text not null default 'a_coordinar' check (pago_estado in ('a_coordinar','pendiente','aprobado','rechazado')),
+  pago_estado text not null default 'a_coordinar' check (pago_estado in ('a_coordinar','pendiente','aprobado','rechazado','cobrado')),
   pago_id text,
   estado text not null default 'pendiente' check (estado in ('pendiente','confirmado','listo','entregado','cancelado')),
   creado timestamptz not null default now()
@@ -115,7 +115,7 @@ create or replace function ocupacion(p_negocio text, p_fecha date)
 returns table (hora text, personas int)
 language sql stable security definer set search_path = public as $$
   select r.hora, sum(r.personas)::int from reservas r
-  where r.negocio = p_negocio and r.fecha = p_fecha and r.estado <> 'cancelada'
+  where r.negocio = p_negocio and r.fecha = p_fecha and r.estado not in ('cancelada','no_vino')
   group by r.hora
 $$;
 
@@ -137,7 +137,7 @@ begin
   if p_fecha < (now() at time zone 'utc')::date - 1 or p_fecha > current_date + 120 then raise exception 'fecha'; end if;
   perform pg_advisory_xact_lock(hashtext(p_negocio || p_fecha::text));   -- evita sobreventa con dos reservas simultáneas
   select coalesce(sum(personas), 0) into usados from reservas
-   where negocio = p_negocio and fecha = p_fecha and estado <> 'cancelada'
+   where negocio = p_negocio and fecha = p_fecha and estado not in ('cancelada','no_vino')
      and abs(hora_min(hora) - hora_min(p_hora)) < dur;
   if usados + p_personas > cap then raise exception 'sin_lugar'; end if;
   insert into reservas (negocio, fecha, hora, personas, nombre, telefono, email, comentario)

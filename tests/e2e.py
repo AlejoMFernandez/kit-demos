@@ -125,16 +125,49 @@ async def flujo(browser, nombre, w, h):
     await pg.screenshot(path=f'{SHOTS}/{nombre}-7-panel-pedidos.png', full_page=True)
     await pg.locator('.kad-card--pendiente [data-estado=confirmado]').first.click(); await pg.wait_for_timeout(400)
     check(await pg.locator('.kad-card--confirmado').count() >= 1, 'pedido confirmado desde el panel')
+    # tablero de cocina: aceptar → listo → cobrado y entregado
+    movil = await pg.locator('.kad-cols-tabs').is_visible()   # en el celu se ve una columna por vez
+    async def columna(c):
+        if movil: await pg.click(f'[data-col={c}]'); await pg.wait_for_timeout(250)
+    await columna('confirmado')
+    card = pg.locator('.kad-card--confirmado').first
+    cid = await card.get_attribute('data-id')
+    await card.locator('[data-estado=listo]').click(); await pg.wait_for_timeout(450)
+    await columna('listo')
+    await pg.locator(f'.kad-card--listo[data-id="{cid}"] [data-estado=entregado]').click(); await pg.wait_for_timeout(450)
+    await columna('entregado')
+    check(await pg.locator(f'.kad-hecho[data-id="{cid}"]').count() == 1, 'pedido pasa por listo y queda entregado')
     if await pg.locator('[data-vista=reservas]').count():
-        await pg.click('[data-vista=reservas]'); await pg.wait_for_selector('.kad-card--res')
+        await pg.click('[data-vista=reservas]'); await pg.wait_for_selector('.kad-seg')
+        if not await pg.locator('.kad-card--res').count():   # la reserva de prueba puede ser de otro día: buscarla en el calendario
+            await pg.click('[data-res-vista=calendario]'); await pg.wait_for_selector('.kad-cal')
+            await pg.locator('.kad-dia:has(.kad-dia__r)').first.click(); await pg.wait_for_timeout(200)
+            await pg.click('[data-ver-lista]'); await pg.wait_for_selector('.kad-card--res')
         await pg.click('.kad-card--res [data-estado=confirmada]'); await pg.wait_for_timeout(400)
         check(await pg.locator('.kad-card--confirmada').count() == 1, 'reserva confirmada')
         await sin_overflow(pg, 'panel reservas')
         await pg.screenshot(path=f'{SHOTS}/{nombre}-8-panel-reservas.png', full_page=True)
+        await pg.click('[data-res-vista=calendario]'); await pg.wait_for_selector('.kad-cal')
+        check(await pg.locator('.kad-dia[data-dia]').count() >= 28, 'calendario del mes')
+        await pg.screenshot(path=f'{SHOTS}/{nombre}-8b-panel-calendario.png', full_page=True)
+        await pg.click('[data-res-vista=lista]')
+        n0 = await pg.locator('.kad-card--res').count()
+        await pg.locator('[data-anotar]').first.click(); await pg.wait_for_selector('.kad-anotar-form')
+        await pg.fill('.kad-anotar-form input[name=nombre]', 'Reserva telefónica')
+        await pg.click('.kad-anotar-form button:not([type=button])'); await pg.wait_for_timeout(500)
+        check(await pg.locator('.kad-card--res:has-text("Reserva telefónica").kad-card--confirmada').count() == 1, 'anotar reserva por teléfono (queda confirmada)')
     # carta ABM
     await pg.click('[data-vista=carta]'); await pg.wait_for_selector('.kad-prod')
     await sin_overflow(pg, 'panel carta')
     await pg.screenshot(path=f'{SHOTS}/{nombre}-9-panel-carta.png', full_page=True)
+    # precio en el mismo renglón + aumento por porcentaje
+    pin = pg.locator('.kad-prod [data-precio]').first
+    await pin.fill('5000'); await pin.press('Enter'); await pg.wait_for_timeout(300)
+    check(await pg.locator('.kad-prod .kad-ok.is-on').count() >= 1, 'precio editado en el renglón (guardado)')
+    if await pg.locator('[data-pct="10"]').count():
+        await pg.click('[data-pct="10"]'); await pg.click('.kit-pop [data-si]'); await pg.wait_for_timeout(500)
+        v = (await pg.locator('.kad-prod [data-precio]').first.input_value()).replace('.', '').replace(',', '')
+        check(v.startswith('55'), f'aumento de 10% en la sección ({v})')
     await pg.locator('.kad-prod [data-editar]').nth(1).click(); await pg.wait_for_selector('.kad-editor')
     await pg.fill('.kad-editor input[name=precio]', '7777')
     await pg.set_input_files('.kad-editor [data-file]', files=[{'name': 'foto.png', 'mimeType': 'image/png', 'buffer': PNG}])

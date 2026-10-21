@@ -11,7 +11,7 @@ Se arma en el paso 1 con la carta transcripta. Campos clave (esquema completo en
 - `modulos`: `carta`, `carrito`, `reservas`, `admin`.
 - `horarios` por día (`lun`…`dom`), `reservas` (intervalo, duración de mesa, capacidad, máximo de personas…), `pedidos` (`salidas`, `tipos`, `envio`, `minimo`).
 - `carta`: categorías y productos. **Precio que no está confirmado → `null`**: se muestra “Consultar” y no se puede pedir (nunca inventar precios).
-- `pagos.mercadopago.endpoint`: en demos, la función compartida (`https://<kit-demos>.vercel.app/api/mp-preference`).
+- `pagos.mercadopago.endpoint`: en demos, la función compartida (`https://kit-demos-amf.vercel.app/api/mp-preference`).
 
 ## 2. Copiar el kit
 

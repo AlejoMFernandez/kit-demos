@@ -113,11 +113,12 @@ html.kit-lock body { overflow: hidden; touch-action: none; }
 /* píldora "probá el panel" (solo demo) */
 .kit-demo-pill {
   position: fixed; z-index: calc(var(--kit-z) - 3); left: max(14px, env(safe-area-inset-left)); bottom: max(14px, env(safe-area-inset-bottom));
-  display: inline-flex; align-items: center; gap: .5rem; padding: .55rem .9rem; border-radius: 999px; background: var(--kit-surface); color: var(--kit-text);
+  display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; padding: .55rem .9rem; border-radius: 999px; background: var(--kit-surface); color: var(--kit-text);
   border: var(--kit-border-w) solid var(--kit-text); box-shadow: var(--kit-shadow); font: 700 .8rem/1 var(--kit-font-body); text-decoration: none;
   opacity: 0; transform: translateY(20px); transition: opacity .4s, transform .4s var(--kit-ease);
 }
 .kit-demo-pill.is-in { opacity: 1; transform: none; }
+html.kit-lock .kit-demo-pill { opacity: 0; pointer-events: none; transform: translateY(20px); }
 .kit-demo-pill__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--kit-ok); box-shadow: 0 0 0 0 var(--kit-ok); animation: kit-ping 2s infinite; }
 @media (max-width: 640px) { html.kit-has-cart .kit-demo-pill { bottom: calc(max(14px, env(safe-area-inset-bottom)) + 70px); } }
 
@@ -192,6 +193,17 @@ html.kit-lock body { overflow: hidden; touch-action: none; }
 .kit-seg span { display: grid; place-items: center; min-height: 42px; border-radius: calc(var(--kit-radius-btn) * .75); font-weight: 700; font-size: .9rem; transition: background .2s, color .2s; text-align: center; padding: 0 .4rem; }
 .kit-seg input:checked + span { background: var(--kit-primary); color: var(--kit-on-primary); }
 .kit-seg input:focus-visible + span { outline: 3px solid var(--kit-accent); }
+.kit-sedes { border: 0; padding: 0; margin: .1rem 0 0; min-width: 0; }
+.kit-sedes legend { font: 700 .78rem/1 var(--kit-font-body); text-transform: uppercase; letter-spacing: .06em; color: var(--kit-muted); margin-bottom: .55rem; padding: 0; }
+.kit-sedes__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr)); gap: .5rem; }
+.kit-sede { position: relative; display: block; cursor: pointer; min-width: 0; }
+.kit-sede input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.kit-sede span { display: flex; flex-direction: column; justify-content: center; gap: .15rem; min-height: 56px; padding: .55rem .8rem; border: var(--kit-border-w) solid var(--kit-border); border-radius: var(--kit-radius); background: var(--kit-surface); transition: background .2s, color .2s, border-color .2s; }
+.kit-sede b { font-size: .95rem; line-height: 1.15; overflow-wrap: anywhere; }
+.kit-sede small { font-size: .8rem; line-height: 1.25; opacity: .8; overflow-wrap: anywhere; }
+.kit-sede input:checked + span { background: var(--kit-primary); color: var(--kit-on-primary); border-color: var(--kit-primary); }
+.kit-sede input:focus-visible + span { outline: 3px solid var(--kit-accent); outline-offset: 2px; }
+.kit-line__nota { font-style: normal; font-size: .82rem; color: var(--kit-muted); overflow-wrap: anywhere; }
 .kit-pay { display: grid; gap: .5rem; border: 0; padding: 0; margin: .2rem 0 0; }
 .kit-pay legend { margin-bottom: .5rem; }
 .kit-pay__opt { position: relative; display: block; cursor: pointer; }

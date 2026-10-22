@@ -7,7 +7,7 @@ const SUPABASE_ESM = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/
 
 const aPedido = (r) => r && ({
   id: r.id, codigo: r.codigo, items: r.items, subtotal: Number(r.subtotal), envio: Number(r.envio), total: Number(r.total),
-  tipo: r.tipo, cliente: r.cliente, nota: r.nota, pago: r.pago, pagoEstado: r.pago_estado, pagoId: r.pago_id,
+  tipo: r.tipo, cliente: r.cliente, nota: r.nota, pago: r.pago, pagoEstado: r.pago_estado, pagoId: r.pago_id, sucursal: r.sucursal || null,
   estado: r.estado, creado: r.creado,
 });
 const aReserva = (r) => r && ({ ...r });
@@ -68,7 +68,10 @@ export async function createSupabaseStore(config) {
     async updateReserva(id, patch) { const r = ok(await sb.from('reservas').update({ estado: patch.estado }).eq('id', id).select().single()); emitir(); return r; },
 
     async createPedido(d) {
-      const r = ok(await sb.rpc('crear_pedido', { p_negocio: N, p_items: d.items.map(i => ({ id: i.id, cant: i.cant, nota: i.nota || '' })), p_tipo: d.tipo, p_cliente: d.cliente, p_nota: d.nota || '', p_pago: d.pago }));
+      const args = { p_negocio: N, p_items: d.items.map(i => ({ id: i.id, cant: i.cant, nota: i.nota || '' })), p_tipo: d.tipo, p_cliente: d.cliente, p_nota: d.nota || '', p_pago: d.pago };
+      // solo las cadenas mandan la sede (así los clientes de un solo local no necesitan la migración)
+      if (d.sucursal) args.p_sucursal = d.sucursal;
+      const r = ok(await sb.rpc('crear_pedido', args));
       return aPedido(r);
     },
     async getPedidos() { return ok(await sb.from('pedidos').select('*').eq('negocio', N).order('creado', { ascending: false }).limit(300)).map(aPedido); },

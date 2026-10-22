@@ -88,3 +88,18 @@ test('firma del webhook de Mercado Pago', () => {
   assert.ok(!firmaValida({ signature: `ts=${ts},v1=${'0'.repeat(64)}`, requestId, dataId, secret }));
   assert.ok(!firmaValida({ signature: '', requestId, dataId, secret }));
 });
+
+test('cadenas: el mensaje lleva la sede y se valida contra cliente.json', async () => {
+  const { sucursalPorId, pideSucursal, resumenSucursal } = await import('../kit/core/sucursales.js');
+  setLang('es');
+  const cfg = { sucursales: [{ id: 'beiro', nombre: 'Devoto', direccion: 'Av. Beiró 3425', whatsapp: '5491100000000' }, { id: 'incas', nombre: 'Parque Chas' }] };
+  assert.equal(pideSucursal(cfg), true);
+  assert.equal(pideSucursal({ sucursales: [cfg.sucursales[0]] }), false);
+  assert.equal(sucursalPorId(cfg, 'nada'), null);
+  const money = crearFormatoMoneda('AR');
+  const ped = { codigo: 'EM-1', items: [{ cant: 1, nombre: 'Chocludo', precio: 6000, subtotal: 6000, nota: 'salchicha alemana' }], total: 6000, envio: 0, cliente: { nombre: 'Ale' }, tipo: 'retiro', pago: 'whatsapp', sucursal: resumenSucursal(cfg.sucursales[0]) };
+  const txt = mensajePedido(ped, { negocio: 'Emperrate', money });
+  assert.match(txt, /Sede: Devoto — Av\. Beiró 3425/);
+  assert.match(txt, /salchicha alemana/);
+  assert.deepEqual(resumenSucursal(cfg.sucursales[0]), { id: 'beiro', nombre: 'Devoto', direccion: 'Av. Beiró 3425' });
+});

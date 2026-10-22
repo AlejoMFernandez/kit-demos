@@ -24,6 +24,7 @@ const DICT = {
     faltan: 'Completá {campos}.',
     waPedido: 'Hola {negocio}! Quiero hacer este pedido:', waCodigo: 'Pedido {codigo}', waNombre: 'Nombre', waEntrega: 'Entrega', waNota: 'Nota', waPago: 'Pago',
     waPagoWA: 'a coordinar', waPagoMP: 'Mercado Pago (pagado)',
+    waSede: 'Sede', sede: 'Sede', laSede: 'la sede', sedeRetiro: '¿En qué sede lo retirás?', sedeDelivery: '¿Desde qué sede te lo mandamos?', todasSedes: 'Todas las sedes',
     // reservas
     reservar: 'Reservar', reservarMesa: 'Reservá tu mesa', personas: 'Personas', persona: 'persona', personasN: 'personas',
     dia: 'Día', hora: 'Hora', hoy: 'Hoy', manana: 'Mañana', cerrado: 'Cerrado', sinTurnos: 'No quedan horarios para este día.',
@@ -97,6 +98,7 @@ const DICT = {
     faltan: 'Preencha {campos}.',
     waPedido: 'Olá {negocio}! Quero fazer este pedido:', waCodigo: 'Pedido {codigo}', waNombre: 'Nome', waEntrega: 'Entrega', waNota: 'Obs.', waPago: 'Pagamento',
     waPagoWA: 'a combinar', waPagoMP: 'Mercado Pago (pago)',
+    waSede: 'Unidade', sede: 'Unidade', laSede: 'a unidade', sedeRetiro: 'Em qual unidade você retira?', sedeDelivery: 'De qual unidade enviamos?', todasSedes: 'Todas as unidades',
     reservar: 'Reservar', reservarMesa: 'Reserve sua mesa', personas: 'Pessoas', persona: 'pessoa', personasN: 'pessoas',
     dia: 'Dia', hora: 'Horário', hoy: 'Hoje', manana: 'Amanhã', cerrado: 'Fechado', sinTurnos: 'Não há mais horários para este dia.',
     lleno: 'Lotado', quedan: 'Restam {n}', comentario: 'Comentário (aniversário, cadeirinha…)',

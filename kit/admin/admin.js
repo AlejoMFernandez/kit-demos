@@ -12,6 +12,7 @@ import { t } from '../core/i18n.js';
 import { popup, confirmar, toast } from '../core/ui.js';
 import { ahoraEn, horaVisible, aMin, diaSemana, diaNum, fechaDeNum, franjas, generarTurnos, configReservas } from '../core/turnos.js';
 import { linkWhatsApp } from '../core/pedidos.js';
+import { sucursales } from '../core/sucursales.js';
 
 const ACTIVOS = ['pendiente', 'confirmado', 'listo'];
 const PAGADO = ['aprobado', 'cobrado'];
@@ -39,6 +40,7 @@ export async function initAdmin(opts = {}) {
   const guardarPref = () => { try { localStorage.setItem(KEY, JSON.stringify(pref)); } catch (_) { /* sin storage */ } };
   const st = {
     tipo: 'todos',                         // filtro de pedidos
+    sede: pref.sede || 'todas',            // filtro por sede (cadenas); cada tablet recuerda la suya
     colMovil: 'pendiente',                 // columna visible en el celu
     resVista: pref.resVista || 'lista',    // lista | calendario
     fecha: null,                           // día elegido en reservas
@@ -168,6 +170,8 @@ export async function initAdmin(opts = {}) {
   }
 
   async function onChange(e) {
+    const sf = e.target.closest('[data-sede-filtro]');
+    if (sf) { st.sede = sf.value; pref.sede = st.sede; guardarPref(); render(); return; }
     if (vista !== 'carta') return;
     const fila = e.target.closest('[data-prod]'); if (!fila) return;
     const prods = await store.getProductos();
@@ -224,11 +228,13 @@ export async function initAdmin(opts = {}) {
   // =====================================================================
   async function vistaPedidos(main) {
     const todos = await store.getPedidos();
-    const deHoy = todos.filter(p => esDeHoy(p.creado));
+    const deHoy = todos.filter(p => esDeHoy(p.creado) && (st.sede === 'todas' || p.sucursal?.id === st.sede));
     const validos = deHoy.filter(p => p.estado !== 'cancelado');
     const sinCobrar = todos.filter(p => p.estado !== 'cancelado' && !pagado(p) && (ACTIVOS.includes(p.estado) || esDeHoy(p.creado)));
     const conDelivery = (config.pedidos?.tipos || []).includes('delivery') || todos.some(p => p.tipo === 'delivery');
-    const filtrar = (arr) => st.tipo === 'todos' ? arr : arr.filter(p => p.tipo === st.tipo);
+    const sedes = sucursales(config);
+    if (st.sede !== 'todas' && !sedes.some(s => s.id === st.sede)) st.sede = 'todas';
+    const filtrar = (arr) => arr.filter(p => (st.tipo === 'todos' || p.tipo === st.tipo) && (st.sede === 'todas' || p.sucursal?.id === st.sede));
     const cols = [
       { id: 'pendiente', corto: t('tabNuevos'), titulo: t('colNuevos'), items: filtrar(todos.filter(p => p.estado === 'pendiente')).reverse(), clase: 'nuevos' },
       { id: 'confirmado', corto: t('tabPreparando'), titulo: t('colPreparando'), items: filtrar(todos.filter(p => p.estado === 'confirmado')).reverse() },
@@ -246,6 +252,9 @@ export async function initAdmin(opts = {}) {
           <span>${esc(t('vendidos', { monto: ctx.money(validos.reduce((s, p) => s + (p.total || 0), 0)) || '0' }))}</span>
           ${sinCobrar.length ? `<span class="kad-stats__warn">${esc(t('sinCobrar', { n: sinCobrar.length, monto: ctx.money(sinCobrar.reduce((s, p) => s + (p.total || 0), 0)) }))}</span>` : ''}
         </div>
+        ${sedes.length > 1 ? `<label class="kad-sede"><span class="kit-sr">${esc(t('sede'))}</span><select data-sede-filtro>
+          <option value="todas" ${st.sede === 'todas' ? 'selected' : ''}>${esc(t('todasSedes'))}</option>
+          ${sedes.map(s => `<option value="${esc(s.id)}" ${st.sede === s.id ? 'selected' : ''}>${esc(s.nombre || s.id)}</option>`).join('')}</select></label>` : ''}
         ${conDelivery ? `<div class="kad-seg" role="group">${[['todos', t('todos')], ['retiro', t('chipRetiro')], ['delivery', t('chipDelivery')]].map(([k, l]) => `<button type="button" data-tipo="${k}" aria-pressed="${st.tipo === k}">${esc(l)}</button>`).join('')}</div>` : ''}
       </div>
       <div class="kad-cols-tabs" role="tablist">${cols.map(c => `<button type="button" role="tab" data-col="${c.id}" aria-selected="${st.colMovil === c.id}" class="kad-cols-tabs__b kad-cols-tabs__b--${c.clase || ''}">${esc(c.corto)} <b>${c.items.length}</b></button>`).join('')}</div>
@@ -285,7 +294,7 @@ export async function initAdmin(opts = {}) {
         <b class="kad-code">${esc(p.codigo)}</b>
         <time class="kad-reloj${urg}" datetime="${esc(p.creado)}">${esc(relativo(p.creado))}</time>
       </header>
-      <div class="kad-chips">${chipPago(p)}<span class="kad-chip">${esc(delivery ? t('chipDelivery') : t('chipRetiro'))}</span></div>
+      <div class="kad-chips">${chipPago(p)}<span class="kad-chip">${esc(delivery ? t('chipDelivery') : t('chipRetiro'))}</span>${p.sucursal ? `<span class="kad-chip kad-chip--sede">${esc(p.sucursal.nombre)}</span>` : ''}</div>
       <ul class="kad-items">${(p.items || []).map(i => `<li><b>${i.cant} ×</b> <span>${esc(i.nombre)}${i.nota ? `<em>${esc(i.nota)}</em>` : ''}</span></li>`).join('')}</ul>
       ${p.nota ? `<p class="kad-note"><b>${esc(t('waNota'))}:</b> ${esc(p.nota)}</p>` : ''}
       ${delivery && p.cliente?.direccion ? `<a class="kad-dir" href="${esc(mapsUrl(p.cliente.direccion))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg><span><b>${esc(p.cliente.direccion)}</b> · ${esc(t('abrirMaps'))}</span></a>` : ''}

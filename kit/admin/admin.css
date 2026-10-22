@@ -70,6 +70,8 @@ body { margin: 0; background: var(--kit-bg); color: var(--kit-text); font-family
 .kad-stats { display: flex; gap: 8px; flex-wrap: wrap; font-size: .9rem; }
 .kad-stats > span, .kad-pill { background: var(--kad-caja); border: 1px solid var(--kad-linea); padding: 8px 14px; border-radius: calc(var(--kit-radius-btn) * .6); }
 .kad-stats__warn { background: var(--kad-warn-bg) !important; border-color: var(--kad-warn-borde) !important; color: var(--kad-warn); font-weight: 700; }
+.kad-sede select { appearance: none; font: 700 16px/1 var(--kit-font-body); color: var(--kit-text); background: var(--kad-caja) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23555' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 14px center; border: 1.5px solid var(--kit-text); border-radius: calc(var(--kit-radius-btn) * .6); min-height: 44px; padding: 0 40px 0 14px; max-width: 100%; cursor: pointer; }
+.kad-chip--sede { background: var(--kit-text); color: var(--kit-surface); }
 .kad-seg { display: inline-flex; border: 1.5px solid var(--kit-text); background: var(--kad-caja); border-radius: calc(var(--kit-radius-btn) * .6); overflow: hidden; }
 .kad-seg button { appearance: none; border: 0; background: transparent; color: var(--kit-text); padding: 9px 16px; font: 700 .88rem/1 var(--kit-font-body); cursor: pointer; }
 .kad-seg button[aria-pressed="true"] { background: var(--kit-text); color: var(--kit-surface); }

@@ -21,7 +21,7 @@ import { mountCarta } from './modules/carta.js';
 import { initCarrito } from './modules/carrito.js';
 import { initReservas } from './modules/reservas.js';
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 
 export async function cargarConfig(src = 'cliente.json') {
   const url = new URL(src, location.href);
@@ -46,7 +46,7 @@ export async function crearContexto({ config, base }) {
     money: crearFormatoMoneda(config.pais),
     // rutas de cliente.json (img/…) relativas al propio cliente.json: funcionan igual desde / y desde /admin
     asset: (p) => !p ? '' : /^(data:|blob:|https?:|\/)/.test(p) ? p : new URL(p, base).href,
-    abierto: () => estadoAbierto(config.horarios, config.zonaHoraria),
+    abierto: (horarios = config.horarios) => estadoAbierto(horarios, config.zonaHoraria),
   };
 }
 

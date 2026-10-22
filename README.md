@@ -16,7 +16,7 @@ index.html  cliente.json  cliente-br.json  img/   ← página de prueba (igual a
 admin/index.html                                  ← panel de la página de prueba
 kit/
   kit.js  kit.css                                 ← entrada del sitio público
-  core/   theme · i18n (es / pt-BR) · pais · turnos · pedidos · ui (popups) · util
+  core/   theme · i18n (es / pt-BR) · pais · turnos · pedidos · sucursales · ui (popups) · util
   store/  index (elige adaptador) · local (demo) · supabase (producción)
   modules/ carta · carrito · reservas
   admin/  admin.js · admin.css                    ← panel

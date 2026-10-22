@@ -50,6 +50,18 @@
       "propertyNames": { "enum": ["lun", "mar", "mie", "jue", "vie", "sab", "dom"] },
       "additionalProperties": { "type": "array", "items": { "type": "array", "items": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" }, "minItems": 2, "maxItems": 2 } }
     },
+    "sucursales": {
+      "type": "array",
+      "description": "Cadenas con varios locales. Con 2 o más, el checkout pide la sede, el pedido la guarda, el WhatsApp va al número de la sede (si tiene) y el panel filtra por sede.",
+      "items": {
+        "type": "object", "required": ["id", "nombre"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" }, "nombre": { "type": "string" }, "direccion": { "type": "string" },
+          "barrio": { "type": "string" }, "whatsapp": { "type": "string" }, "mapa": { "type": "string" },
+          "horarios": { "type": "object", "description": "Mismo formato que horarios. Sin horarios = se muestra sin estado abierto/cerrado." }
+        }
+      }
+    },
     "reservas": {
       "type": "object",
       "properties": {

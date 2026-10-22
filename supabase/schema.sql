@@ -71,6 +71,7 @@ create table if not exists pedidos (
   pago text not null default 'whatsapp' check (pago in ('whatsapp','mercadopago')),
   pago_estado text not null default 'a_coordinar' check (pago_estado in ('a_coordinar','pendiente','aprobado','rechazado','cobrado')),
   pago_id text,
+  sucursal jsonb,                                -- cadenas: { id, nombre, direccion } de la sede elegida
   estado text not null default 'pendiente' check (estado in ('pendiente','confirmado','listo','entregado','cancelado')),
   creado timestamptz not null default now()
 );
@@ -148,7 +149,7 @@ end $$;
 
 -- Alta de pedido: los precios salen de la tabla productos, no del navegador.
 create or replace function crear_pedido(
-  p_negocio text, p_items jsonb, p_tipo text, p_cliente jsonb, p_nota text, p_pago text
+  p_negocio text, p_items jsonb, p_tipo text, p_cliente jsonb, p_nota text, p_pago text, p_sucursal jsonb default null
 ) returns pedidos
 language plpgsql security definer set search_path = public as $$
 declare
@@ -168,14 +169,17 @@ begin
   if p_tipo = 'delivery' then env := coalesce((cfg->'pedidos'->>'envio')::numeric, 0); end if;
   if sub < coalesce((cfg->'pedidos'->>'minimo')::numeric, 0) then raise exception 'minimo'; end if;
   if coalesce(p_cliente->>'nombre','') = '' or length(regexp_replace(coalesce(p_cliente->>'telefono',''), '\D', '', 'g')) < 8 then raise exception 'cliente'; end if;
+  -- la sede tiene que existir en la config del negocio (se guarda solo id, nombre y dirección)
+  if p_sucursal is not null and not exists (select 1 from jsonb_array_elements(coalesce(cfg->'sucursales','[]'::jsonb)) s where s->>'id' = p_sucursal->>'id') then raise exception 'sucursal'; end if;
   pref := coalesce(cfg->>'prefijoPedido', 'PD');
-  insert into pedidos (negocio, codigo, items, subtotal, envio, total, tipo, cliente, nota, pago, pago_estado)
+  insert into pedidos (negocio, codigo, items, subtotal, envio, total, tipo, cliente, nota, pago, pago_estado, sucursal)
   values (p_negocio, pref || '-' || (1000 + floor(random() * 9000))::int, items, sub, env, sub + env,
           case when p_tipo = 'delivery' then 'delivery' else 'retiro' end,
           jsonb_build_object('nombre', left(p_cliente->>'nombre', 80), 'telefono', left(p_cliente->>'telefono', 30), 'direccion', left(coalesce(p_cliente->>'direccion',''), 200)),
           left(coalesce(p_nota,''), 300),
           case when p_pago = 'mercadopago' then 'mercadopago' else 'whatsapp' end,
-          case when p_pago = 'mercadopago' then 'pendiente' else 'a_coordinar' end)
+          case when p_pago = 'mercadopago' then 'pendiente' else 'a_coordinar' end,
+          case when p_sucursal is null then null else jsonb_build_object('id', left(p_sucursal->>'id', 40), 'nombre', left(coalesce(p_sucursal->>'nombre',''), 80), 'direccion', left(coalesce(p_sucursal->>'direccion',''), 160)) end)
   returning * into fila;
   return fila;
 end $$;
@@ -188,7 +192,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 grant execute on function ocupacion(text, date), crear_reserva(text, date, text, int, text, text, text, text),
-  crear_pedido(text, jsonb, text, jsonb, text, text), pedido_publico(uuid) to anon, authenticated;
+  crear_pedido(text, jsonb, text, jsonb, text, text, jsonb), pedido_publico(uuid) to anon, authenticated;
 
 -- ---------- tiempo real (el panel ve pedidos y reservas al instante) ----------
 do $$ begin

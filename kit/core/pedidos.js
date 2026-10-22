@@ -27,6 +27,7 @@ export function mensajePedido(pedido, { negocio, money }) {
   L.push(`*${t('total')}: ${money(pedido.total)}*`, '');
   L.push(`${t('waNombre')}: ${pedido.cliente.nombre}`);
   L.push(`${t('waEntrega')}: ${pedido.tipo === 'delivery' ? `${t('delivery')} — ${pedido.cliente.direccion}` : t('retiro')}`);
+  if (pedido.sucursal) L.push(`${t('waSede')}: ${pedido.sucursal.nombre}${pedido.sucursal.direccion ? ` — ${pedido.sucursal.direccion}` : ''}`);
   if (pedido.nota) L.push(`${t('waNota')}: ${pedido.nota}`);
   L.push(`${t('waPago')}: ${pedido.pago === 'mercadopago' ? t('waPagoMP') : t('waPagoWA')}`);
   return L.join('\n');

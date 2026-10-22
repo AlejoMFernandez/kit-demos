@@ -86,3 +86,21 @@ El carrito ya genera el mensaje y abre WhatsApp. Si el WOW de la demo tiene su p
 - [ ] Pedido por WhatsApp llega con el texto armado (probar en el celu).
 - [ ] Mercado Pago sandbox: pago aprobado con tarjeta de prueba y vuelta a la web.
 - [ ] Crédito en el footer.
+
+
+## Cadenas: varias sedes
+
+Agregá `"sucursales"` a `cliente.json` (ver `docs/cliente.schema.json`):
+
+```json
+"sucursales": [
+  { "id": "beiro", "nombre": "Devoto", "direccion": "Av. Beiró 3425", "whatsapp": "", "horarios": { "mar": [["12:00","02:00"]] } }
+]
+```
+
+- Con 2 o más sedes, el checkout pide **en qué sede se retira** (o desde cuál se envía). Es obligatorio y se recuerda en el navegador.
+- El pedido guarda `sucursal: { id, nombre, direccion }`, el mensaje de WhatsApp suma la línea “Sede” y sale al `whatsapp` de esa sede (si no tiene, al general).
+- El panel muestra la sede en cada pedido y un selector “Todas las sedes / …” que cada dispositivo recuerda (la tablet de cada local queda en la suya).
+- Desde la web: `data-kit-sucursal="beiro"` en cualquier botón deja esa sede elegida (sumale `data-kit-open="carrito"` para abrir el carrito), o `kit.carrito.setSucursal('beiro')`. Estado abierto/cerrado de una sede: `kit.abierto(sede.horarios)`.
+- Aclaraciones por plato desde la web: `kit.carrito.agregar('chocludo', 1, { nota: 'salchicha alemana' })` crea una línea aparte con esa nota (va al panel y al WhatsApp).
+- Producción: correr `supabase/migracion-sucursales.sql` y cargar las sedes en la config del negocio.

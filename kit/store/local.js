@@ -93,7 +93,7 @@ export function createLocalStore(config) {
         if (!calc.items.length) throw Object.assign(new Error('vacio'), { code: 'vacio' });
         const p = {
           id: uid('o-'), codigo: codigoCorto(config.prefijoPedido || 'PD'), ...calc,
-          tipo: data.tipo, cliente: data.cliente, nota: data.nota || '', pago: data.pago,
+          tipo: data.tipo, cliente: data.cliente, nota: data.nota || '', pago: data.pago, sucursal: data.sucursal || null,
           pagoEstado: data.pago === 'mercadopago' ? 'pendiente' : 'a_coordinar', estado: 'pendiente', creado: new Date().toISOString(),
         };
         db.pedidos.push(p); return p;

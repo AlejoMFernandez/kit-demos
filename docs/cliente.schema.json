@@ -42,7 +42,7 @@
     },
     "modulos": {
       "type": "object",
-      "properties": { "carta": { "type": "boolean" }, "carrito": { "type": "boolean" }, "reservas": { "type": "boolean" }, "admin": { "type": "boolean" } }
+      "properties": { "carta": { "type": "boolean" }, "carrito": { "type": "boolean" }, "reservas": { "type": "boolean" }, "admin": { "type": "boolean" }, "fechas": { "type": "boolean", "description": "Pestaña Fechas especiales en el panel (se activa sola si alguna categoría tiene especial: true)." } }
     },
     "horarios": {
       "type": "object",
@@ -76,7 +76,16 @@
       "properties": {
         "salidas": { "type": "array", "items": { "enum": ["whatsapp", "efectivo", "mercadopago"] }, "description": "efectivo = como whatsapp, pero pagando en efectivo al retirar con el descuento de pagos.efectivo." },
         "tipos": { "type": "array", "items": { "enum": ["retiro", "delivery"] } },
-        "envio": { "type": "number" }, "minimo": { "type": "number" }
+        "envio": { "type": "number" }, "minimo": { "type": "number" },
+        "sinPrecio": { "enum": ["consultar", "a_confirmar"], "description": "a_confirmar = los productos con precio null se pueden encargar; el total dice 'a confirmar' y Mercado Pago se habilita cuando todos tienen precio." },
+        "encargo": {
+          "type": "object", "description": "Encargos con día y franja de retiro.",
+          "properties": {
+            "anticipacionHoras": { "type": "integer" }, "diasAdelante": { "type": "integer" },
+            "cerrados": { "type": "array", "items": { "type": "string", "format": "date" } },
+            "franjas": { "type": "array", "items": { "type": "object", "required": ["id", "nombre", "desde", "hasta"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" }, "desde": { "type": "string" }, "hasta": { "type": "string" } } } }
+          }
+        }
       }
     },
     "pagos": {
@@ -105,7 +114,10 @@
       "properties": {
         "temporadas": { "type": "array", "description": "Temporadas de la carta (invierno, primavera…). El dueño elige la activa desde /admin.", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" } } } },
         "temporadaActiva": { "type": "string", "description": "Temporada que se ve al sembrar la demo (o hasta que el dueño la cambie)." },
-        "categorias": { "type": "array", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" }, "orden": { "type": "integer" }, "temporada": { "type": ["string", "null"], "description": "Sin temporada = se ve siempre (ej. bebidas)." } } } },
+        "categorias": { "type": "array", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" }, "orden": { "type": "integer" }, "temporada": { "type": ["string", "null"], "description": "Sin temporada = se ve siempre (ej. bebidas)." },
+          "anticipacionHoras": { "type": "integer", "description": "Encargos: horas mínimas para esta sección (ej. tortas 48)." },
+          "especial": { "type": "boolean", "description": "Fecha especial (Navidad, Pascuas…): solo se ve en la web desde desde−avisoDias hasta hasta." },
+          "desde": { "type": "string", "format": "date" }, "hasta": { "type": "string", "format": "date" }, "avisoDias": { "type": "integer" }, "bajada": { "type": "string" } } } },
         "productos": {
           "type": "array",
           "items": {

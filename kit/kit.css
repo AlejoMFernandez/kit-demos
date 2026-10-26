@@ -292,3 +292,32 @@ html.kit-lock .kit-demo-pill { opacity: 0; pointer-events: none; transform: tran
 
 /* descuento por medio de pago (efectivo al retirar) */
 .kit-sum__desc { color: var(--kit-accent); font-weight: 700; }
+
+/* ---------- encargos: día y franja de retiro (v1.3) ---------- */
+.kit-retiro, .kit-franjas { border: 0; padding: 0; margin: .1rem 0 0; min-width: 0; }
+.kit-retiro legend, .kit-franjas legend { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; font: 700 .78rem/1.2 var(--kit-font-body); text-transform: uppercase; letter-spacing: .06em; color: var(--kit-muted); margin-bottom: .55rem; padding: 0; }
+.kit-retiro legend small { font-weight: 600; text-transform: none; letter-spacing: 0; font-size: .82rem; }
+.kit-dias { display: flex; gap: .5rem; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; padding: 2px 2px 6px; margin: 0 -2px; scrollbar-width: none; }
+.kit-dias::-webkit-scrollbar { display: none; }
+.kit-dia, .kit-franja { position: relative; flex: 0 0 auto; scroll-snap-align: start; cursor: pointer; }
+.kit-dia input, .kit-franja input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.kit-dia span { display: grid; justify-items: center; gap: 2px; min-width: 56px; min-height: 64px; padding: .45rem .4rem; box-sizing: border-box; border: var(--kit-border-w) solid var(--kit-border); border-radius: var(--kit-radius-btn); background: var(--kit-surface); transition: background .2s, color .2s, border-color .2s, transform .15s; }
+.kit-dia small { font: 600 .72rem/1 var(--kit-font-body); text-transform: capitalize; color: var(--kit-muted); }
+.kit-dia b { font: 700 1.2rem/1 var(--kit-font-body); }
+.kit-dia.is-on span, .kit-dia input:checked + span { background: var(--kit-text); border-color: var(--kit-text); color: var(--kit-surface); }
+.kit-dia.is-on small, .kit-dia input:checked + span small { color: inherit; opacity: .8; }
+.kit-dia.is-off { cursor: not-allowed; } .kit-dia.is-off span { opacity: .38; }
+.kit-dia input:focus-visible + span, .kit-franja input:focus-visible + span { outline: 3px solid var(--kit-accent); outline-offset: 2px; }
+.kit-franjas__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr)); gap: .5rem; }
+.kit-franja span { display: grid; gap: 3px; min-height: 52px; padding: .55rem .75rem; box-sizing: border-box; border: var(--kit-border-w) solid var(--kit-border); border-radius: var(--kit-radius-btn); background: var(--kit-surface); transition: background .2s, color .2s, border-color .2s; }
+.kit-franja b { font: 700 .95rem/1 var(--kit-font-body); } .kit-franja small { font-size: .8rem; color: var(--kit-muted); }
+.kit-franja.is-on span, .kit-franja input:checked + span { background: var(--kit-text); border-color: var(--kit-text); color: var(--kit-surface); }
+.kit-franja.is-on small, .kit-franja input:checked + span small { color: inherit; opacity: .8; }
+.kit-franja.is-off { cursor: not-allowed; } .kit-franja.is-off span { opacity: .38; text-decoration: line-through; }
+.kit-hint { margin: .5rem 0 0; font-size: .85rem; line-height: 1.45; color: var(--kit-muted); }
+.kit-aviso { margin: 0 0 .7rem; padding: .65rem .8rem; border-radius: calc(var(--kit-radius) * .7); background: color-mix(in srgb, var(--kit-warn) 12%, var(--kit-surface)); color: color-mix(in srgb, var(--kit-warn) 55%, #000); font-size: .85rem; line-height: 1.45; }
+.kit-pay__opt.is-off { opacity: .55; cursor: not-allowed; }
+.kit-tab--especial { border-style: dashed; }
+
+/* botón de carrito propio de la demo ([data-kit-target]) */
+.kit-bump { animation: kit-bump .45s var(--kit-ease); }

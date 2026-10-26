@@ -20,17 +20,25 @@ export function armarPedido(productos, lineas, { tipo = 'retiro', pedidos = {}, 
   return { items, subtotal, envio, descuentoPct: pct, descuento, total: subtotal + envio - descuento, sinPrecio: items.some(i => i.precio == null) };
 }
 
-export function mensajePedido(pedido, { negocio, money }) {
+// Total para mostrar: con productos sin precio confirmado dice "a confirmar" (o "$X + a confirmar").
+export function totalTexto(c, money) {
+  const sin = c.sinPrecio ?? (c.items || []).some(i => i.precio == null);
+  if (!sin) return money(c.total);
+  return c.subtotal > 0 ? `${money(c.total)} ${t('masAConfirmar')}` : t('aConfirmar');
+}
+
+export function mensajePedido(pedido, { negocio, money, retiroTexto = '' }) {
   const L = [t('waPedido', { negocio }), '', `*${t('waCodigo', { codigo: pedido.codigo })}*`];
   pedido.items.forEach(i => {
-    L.push(`${i.cant}x ${i.nombre}${i.precio != null ? ` — ${money(i.subtotal)}` : ''}`);
+    L.push(`${i.cant}x ${i.nombre}${i.precio != null ? ` — ${money(i.subtotal)}` : ` (${t('precioAConfirmar')})`}`);
     if (i.nota) L.push(`   _${i.nota}_`);
   });
   if (pedido.envio) L.push(`${t('envio')}: ${money(pedido.envio)}`);
   if (pedido.descuento) L.push(`${t('descEfectivo', { pct: pedido.descuentoPct })}: -${money(pedido.descuento)}`);
-  L.push(`*${t('total')}: ${money(pedido.total)}*`, '');
+  L.push(`*${t('total')}: ${totalTexto(pedido, money)}*`, '');
   L.push(`${t('waNombre')}: ${pedido.cliente.nombre}`);
   L.push(`${t('waEntrega')}: ${pedido.tipo === 'delivery' ? `${t('delivery')} — ${pedido.cliente.direccion}` : t('retiro')}`);
+  if (retiroTexto) L.push(`${t(pedido.tipo === 'delivery' ? 'waCuandoEnvio' : 'waRetira')}: ${retiroTexto}`);
   if (pedido.sucursal) L.push(`${t('waSede')}: ${pedido.sucursal.nombre}${pedido.sucursal.direccion ? ` — ${pedido.sucursal.direccion}` : ''}`);
   if (pedido.nota) L.push(`${t('waNota')}: ${pedido.nota}`);
   L.push(`${t('waPago')}: ${pedido.pago === 'mercadopago' ? t('waPagoMP') : pedido.pago === 'efectivo' ? t('waPagoEfectivo') : t('waPagoWA')}`);

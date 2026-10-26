@@ -15,14 +15,15 @@ import { createStore } from './store/index.js';
 import { applyTheme } from './core/theme.js';
 import { setLang, t } from './core/i18n.js';
 import { pais, crearFormatoMoneda } from './core/pais.js';
-import { estadoAbierto } from './core/turnos.js';
+import { estadoAbierto, ahoraEn } from './core/turnos.js';
 import { efectivoHoy } from './core/descuentos.js';
+import { categoriasVisibles, estadoEspecial } from './core/encargos.js';
 import { h, esc } from './core/util.js';
 import { mountCarta } from './modules/carta.js';
 import { initCarrito } from './modules/carrito.js';
 import { initReservas } from './modules/reservas.js';
 
-export const VERSION = '1.2.0';
+export const VERSION = '1.3.0';
 
 export async function cargarConfig(src = 'cliente.json') {
   const url = new URL(src, location.href);
@@ -50,12 +51,20 @@ export async function crearContexto({ config, base }) {
     abierto: (horarios = config.horarios) => estadoAbierto(horarios, config.zonaHoraria),
     // { pct, dia, feriado } del descuento en efectivo de hoy (pagos.efectivo)
     efectivoHoy: () => efectivoHoy(config),
+    // ¿se puede sumar al carrito? Con "pedidos.sinPrecio": "a_confirmar" también los que no tienen precio.
+    pedible: (p) => !!p && p.disponible !== false && (p.precio != null || config.pedidos?.sinPrecio === 'a_confirmar'),
+    hoy: () => ahoraEn(config.zonaHoraria).fecha,
+    forzarEspecial: null,                                   // id de fecha especial a mostrar sí o sí (pitch: ?sala=pascuas)
+    visibles(cats) { return categoriasVisibles(cats, this.hoy(), this.forzarEspecial); },
+    especiales(cats) { return this.visibles(cats).filter(c => c.especial); },
+    estadoEspecial(cat) { return estadoEspecial(cat, this.hoy()); },
   };
 }
 
 export async function initKit(opts = {}) {
   const loaded = await cargarConfig(opts.config);
   const ctx = await crearContexto(loaded);
+  if (opts.fechaEspecial) ctx.forzarEspecial = opts.fechaEspecial;
   const M = ctx.config.modulos;
   document.documentElement.classList.add('kit-on', `kit-${ctx.store.modo}`);
 

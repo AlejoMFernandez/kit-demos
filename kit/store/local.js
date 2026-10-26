@@ -94,11 +94,11 @@ export function createLocalStore(config) {
     // ---- pedidos
     async createPedido(data) {
       return mut(db => {
-        const calc = armarPedido(db.productos, data.items, { tipo: data.tipo, pedidos: config.pedidos, descuentoPct: data.pago === 'efectivo' ? descuentoEfectivo(config) : 0 });
+        const calc = armarPedido(db.productos.filter(p => p.precio != null || config.pedidos?.sinPrecio === 'a_confirmar'), data.items, { tipo: data.tipo, pedidos: config.pedidos, descuentoPct: data.pago === 'efectivo' ? descuentoEfectivo(config) : 0 });
         if (!calc.items.length) throw Object.assign(new Error('vacio'), { code: 'vacio' });
         const p = {
           id: uid('o-'), codigo: codigoCorto(config.prefijoPedido || 'PD'), ...calc,
-          tipo: data.tipo, cliente: data.cliente, nota: data.nota || '', pago: data.pago, sucursal: data.sucursal || null,
+          tipo: data.tipo, cliente: data.cliente, nota: data.nota || '', pago: data.pago, sucursal: data.sucursal || null, retiro: data.retiro || null,
           pagoEstado: data.pago === 'mercadopago' ? 'pendiente' : 'a_coordinar', estado: 'pendiente', creado: new Date().toISOString(),
         };
         db.pedidos.push(p); return p;

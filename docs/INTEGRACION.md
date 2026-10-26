@@ -152,3 +152,25 @@ Para locales que cobran distinto en efectivo (ej. Bien être: 20% de martes a vi
 - El panel muestra "Efectivo −20% · cobrar $X".
 - En la web: `kit.efectivoHoy()` → `{ pct, dia, feriado }` para mostrar "Hoy 20% off en efectivo".
 - **Producción**: la función `crear_pedido` de Supabase todavía no aplica el descuento; antes de usarlo con un cliente real hay que sumarlo ahí (el servidor nunca confía en el total del navegador).
+
+## Panaderías y pastelerías: encargos con fecha, precio a confirmar y fechas especiales (kit 1.3)
+
+```json
+"pedidos": {
+  "salidas": ["whatsapp", "mercadopago"], "tipos": ["retiro"],
+  "sinPrecio": "a_confirmar",
+  "encargo": { "anticipacionHoras": 12, "diasAdelante": 14, "franjas": [
+    { "id": "manana", "nombre": "Mañana", "desde": "07:00", "hasta": "12:00" },
+    { "id": "tarde", "nombre": "Tarde", "desde": "16:00", "hasta": "20:30" } ] }
+},
+"carta": { "categorias": [
+  { "id": "tortas", "nombre": "Tortas", "anticipacionHoras": 48 },
+  { "id": "navidad", "nombre": "Navidad", "especial": true, "desde": "2026-12-01", "hasta": "2026-12-24", "avisoDias": 45, "bajada": "Pan dulce de la casa" }
+] }
+```
+
+- **Precio a confirmar** (`sinPrecio: "a_confirmar"`): los productos con `precio: null` se pueden sumar. Muestran “A confirmar”, el total dice “a confirmar” y el WhatsApp lo aclara en cada línea. Mercado Pago queda deshabilitado hasta que todos los productos del pedido tengan precio (el dueño los carga en /admin y se habilita solo). Sin esa clave, el comportamiento de siempre: “Consultar” y no se puede pedir.
+- **Encargo con fecha** (`encargo`): el checkout pide día y franja. Solo ofrece días en que el local abre (`horarios`), franjas que se superponen con el horario y que cumplen la anticipación (la mayor entre `encargo.anticipacionHoras` y la de cada sección del pedido). El pedido guarda `retiro: { fecha, franja }`, va en el WhatsApp (“Retira: lunes 26/10 · Mañana (7 a 12 h)”) y el panel ordena los pedidos por día de retiro y marca los de hoy.
+- **Fechas especiales**: categorías con `especial: true`. En la web se ven desde `desde − avisoDias` hasta `hasta` (pestaña punteada en la carta) y sus productos solo se retiran dentro de la ventana. El panel suma la pestaña **Fechas especiales** para crear la fecha, poner la ventana y cargar sus productos. Para mostrar una fecha fuera de temporada en un pitch: `initKit({ fechaEspecial: 'pascuas' })` (las demos lo leen de `?sala=pascuas`).
+- Desde la web: `kit.especiales(categorias)` devuelve las fechas visibles hoy y `kit.estadoEspecial(cat)` su estado (`aviso`, `en_curso`…); el evento `kit:carta` trae `detail.especiales`.
+- Producción: correr `supabase/migracion-encargos.sql`.

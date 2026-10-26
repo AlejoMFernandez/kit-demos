@@ -33,7 +33,7 @@ export function mountCarta(el, ctx, opts = {}) {
 
   function itemHTML(p, i) {
     if (opts.template) return opts.template(p, { ...ctx, index: i, etiquetaHTML });
-    const precio = ctx.money(p.precio) ?? `<span class="kit-price--na">${esc(t('sinPrecio'))}</span>`;
+    const precio = ctx.money(p.precio) ?? `<span class="kit-price--na">${esc(ctx.pedible(p) ? t('aConfirmar') : t('sinPrecio'))}</span>`;
     return `
       ${p.foto ? `<img class="kit-item__foto" src="${esc(ctx.asset(p.foto))}" alt="" loading="lazy">` : ''}
       <div class="kit-item__body">
@@ -42,28 +42,29 @@ export function mountCarta(el, ctx, opts = {}) {
       </div>
       <div class="kit-item__side">
         <span class="kit-price">${precio}</span>
-        ${ctx.carrito && p.disponible !== false && p.precio != null ? `<div class="kit-qty" data-kit-qty="${esc(p.id)}"></div>` : ''}
+        ${ctx.carrito && ctx.pedible(p) ? `<div class="kit-qty" data-kit-qty="${esc(p.id)}"></div>` : ''}
         ${p.disponible === false ? `<span class="kit-badge kit-badge--off">${esc(t('noDisponible'))}</span>` : ''}
       </div>`;
   }
 
   function render() {
-    const visibles = cats.filter(c => prods.some(p => p.categoria === c.id));
+    const mostrar = ctx.visibles(cats);
+    const visibles = mostrar.filter(c => prods.some(p => p.categoria === c.id));
     const sueltos = prods.filter(p => !cats.some(c => c.id === p.categoria));
-    const grupos = visibles.map(c => ({ id: c.id, nombre: c.nombre, items: prods.filter(p => p.categoria === c.id) }));
+    const grupos = visibles.map(c => ({ id: c.id, nombre: c.nombre, especial: !!c.especial, items: prods.filter(p => p.categoria === c.id) }));
     if (sueltos.length) grupos.push({ id: '_otros', nombre: t('sinCategoria'), items: sueltos });
     if (!grupos.some(g => g.id === actual)) actual = grupos[0]?.id || null;
     const uidp = 'kc' + Math.random().toString(36).slice(2, 7);
     el.innerHTML = `
       ${grupos.length > 1 ? `<div class="kit-tabs" role="tablist" aria-label="${esc(t('carta'))}">
-        ${grupos.map(g => `<button type="button" role="tab" class="kit-tab${g.id === actual ? ' is-on' : ''}" id="${uidp}-t-${esc(g.id)}" aria-controls="${uidp}-p-${esc(g.id)}" aria-selected="${g.id === actual}" data-cat="${esc(g.id)}">${esc(g.nombre)}</button>`).join('')}
+        ${grupos.map(g => `<button type="button" role="tab" class="kit-tab${g.id === actual ? ' is-on' : ''}${g.especial ? ' kit-tab--especial' : ''}" id="${uidp}-t-${esc(g.id)}" aria-controls="${uidp}-p-${esc(g.id)}" aria-selected="${g.id === actual}" data-cat="${esc(g.id)}">${esc(g.nombre)}</button>`).join('')}
       </div>` : ''}
       ${grupos.map(g => `<div class="kit-carta__panel" role="tabpanel" id="${uidp}-p-${esc(g.id)}" aria-labelledby="${uidp}-t-${esc(g.id)}" ${g.id === actual ? '' : 'hidden'}>
         ${g.items.map((p, i) => `<article class="kit-item${p.disponible === false ? ' is-off' : ''}${opts.itemClass ? ' ' + opts.itemClass : ''}" data-id="${esc(p.id)}" data-cat="${esc(g.id)}" ${p.foto ? `data-photo="${esc(ctx.asset(p.foto))}"` : ''} style="--i:${i}">${itemHTML(p, i)}</article>`).join('')}
       </div>`).join('')}`;
     el.removeAttribute('aria-busy');
     ctx.carrito?.sync(el);
-    document.dispatchEvent(new CustomEvent('kit:carta', { detail: { el, productos: prods, categorias: cats, temporada } }));
+    document.dispatchEvent(new CustomEvent('kit:carta', { detail: { el, productos: prods, categorias: cats, temporada, visibles: mostrar, especiales: mostrar.filter(c => c.especial) } }));
   }
 
   el.addEventListener('click', (e) => {

@@ -14,6 +14,8 @@ import { ahoraEn, horaVisible, aMin, diaSemana, diaNum, fechaDeNum, franjas, gen
 import { linkWhatsApp } from '../core/pedidos.js';
 import { sucursales } from '../core/sucursales.js';
 import { temporadasDe, seVe } from '../core/temporadas.js';
+import { estadoEspecial, textoRetiro, diasPara } from '../core/encargos.js';
+import { totalTexto } from '../core/pedidos.js';
 
 const ACTIVOS = ['pendiente', 'confirmado', 'listo'];
 const PAGADO = ['aprobado', 'cobrado'];
@@ -34,6 +36,7 @@ export async function initAdmin(opts = {}) {
     config.modulos.carrito && { id: 'pedidos', icono: '<path d="M5 8h14l-1.3 11.1a2 2 0 0 1-2 1.9H8.3a2 2 0 0 1-2-1.9L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>' },
     config.modulos.reservas && { id: 'reservas', icono: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>' },
     config.modulos.carta && { id: 'carta', icono: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/>' },
+    config.modulos.carta && (config.modulos.fechas || (config.carta?.categorias || []).some(c => c.especial)) && { id: 'fechas', icono: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m12 12.6.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3Z"/>' },
   ].filter(Boolean);
   let vista = (location.hash.slice(1) && vistas.some(v => v.id === location.hash.slice(1))) ? location.hash.slice(1) : vistas[0]?.id;
   const KEY = `kit:${config.id}:panel`;
@@ -47,6 +50,7 @@ export async function initAdmin(opts = {}) {
     fecha: null,                           // día elegido en reservas
     mes: null,                             // 'YYYY-MM' del calendario
     cat: null,                             // sección abierta en la carta
+    fe: null,                              // fecha especial abierta
     q: '',                                 // búsqueda en la carta
   };
   let pendientesAntes = null;
@@ -173,7 +177,7 @@ export async function initAdmin(opts = {}) {
   async function onChange(e) {
     const sf = e.target.closest('[data-sede-filtro]');
     if (sf) { st.sede = sf.value; pref.sede = st.sede; guardarPref(); render(); return; }
-    if (vista !== 'carta') return;
+    if (vista !== 'carta' && vista !== 'fechas') return;
     const fila = e.target.closest('[data-prod]'); if (!fila) return;
     const prods = await store.getProductos();
     const p = prods.find(x => x.id === fila.dataset.prod); if (!p) return;
@@ -235,7 +239,13 @@ export async function initAdmin(opts = {}) {
     const conDelivery = (config.pedidos?.tipos || []).includes('delivery') || todos.some(p => p.tipo === 'delivery');
     const sedes = sucursales(config);
     if (st.sede !== 'todas' && !sedes.some(s => s.id === st.sede)) st.sede = 'todas';
-    const filtrar = (arr) => arr.filter(p => (st.tipo === 'todos' || p.tipo === st.tipo) && (st.sede === 'todas' || p.sucursal?.id === st.sede));
+    const claveRetiro = (p) => p.retiro?.fecha ? `${p.retiro.fecha} ${p.retiro.franja?.desde || ''}` : `9999 ${p.creado}`;
+    const porRetiro = todos.some(p => p.retiro?.fecha);
+    const filtrar = (arr) => {
+      const r = arr.filter(p => (st.tipo === 'todos' || p.tipo === st.tipo) && (st.sede === 'todas' || p.sucursal?.id === st.sede));
+      return porRetiro ? r.sort((a, b) => claveRetiro(a).localeCompare(claveRetiro(b))).reverse() : r;   // .reverse() de abajo lo deja en orden de retiro
+    };
+    const retiranHoy = todos.filter(p => p.retiro?.fecha === hoy() && ACTIVOS.includes(p.estado)).length;
     const cols = [
       { id: 'pendiente', corto: t('tabNuevos'), titulo: t('colNuevos'), items: filtrar(todos.filter(p => p.estado === 'pendiente')).reverse(), clase: 'nuevos' },
       { id: 'confirmado', corto: t('tabPreparando'), titulo: t('colPreparando'), items: filtrar(todos.filter(p => p.estado === 'confirmado')).reverse() },
@@ -250,8 +260,9 @@ export async function initAdmin(opts = {}) {
         <h1>${esc(t('pedidosHoy'))}</h1>
         <div class="kad-stats">
           <span>${esc(t('nPedidos', { n: validos.length }))}</span>
-          <span>${esc(t('vendidos', { monto: ctx.money(validos.reduce((s, p) => s + (p.total || 0), 0)) || '0' }))}</span>
-          ${sinCobrar.length ? `<span class="kad-stats__warn">${esc(t('sinCobrar', { n: sinCobrar.length, monto: ctx.money(sinCobrar.reduce((s, p) => s + (p.total || 0), 0)) }))}</span>` : ''}
+          ${porRetiro ? `<span class="kad-stats__info">${esc(t('retiranHoy', { n: retiranHoy }))}</span>` : ''}
+          ${validos.some(p => p.total > 0) || !validos.length ? `<span>${esc(t('vendidos', { monto: ctx.money(validos.reduce((s, p) => s + (p.total || 0), 0)) || '0' }))}</span>` : ''}
+          ${sinCobrar.some(p => p.total > 0) ? `<span class="kad-stats__warn">${esc(t('sinCobrar', { n: sinCobrar.length, monto: ctx.money(sinCobrar.reduce((s, p) => s + (p.total || 0), 0)) }))}</span>` : ''}
         </div>
         ${sedes.length > 1 ? `<label class="kad-sede"><span class="kit-sr">${esc(t('sede'))}</span><select data-sede-filtro>
           <option value="todas" ${st.sede === 'todas' ? 'selected' : ''}>${esc(t('todasSedes'))}</option>
@@ -270,6 +281,8 @@ export async function initAdmin(opts = {}) {
   }
 
   function chipPago(p) {
+    const sinPrecio = p.sinPrecio ?? (p.items || []).some(i => i.precio == null);
+    if (sinPrecio && !PAGADO.includes(p.pagoEstado)) return `<span class="kad-chip kad-chip--warn">${esc(t('confirmarPrecio'))}${p.total ? ` · ${esc(totalTexto(p, ctx.money))}` : ''}</span>`;
     if (p.pagoEstado === 'aprobado') return `<span class="kad-chip kad-chip--ok">${esc(t('pagadoMP'))}</span>`;
     if (p.pagoEstado === 'cobrado') return `<span class="kad-chip kad-chip--ok">${esc(t('cobrado'))}</span>`;
     if (p.pago === 'mercadopago' && p.pagoEstado === 'pendiente') return `<span class="kad-chip kad-chip--warn">${esc(t('pagoPendMP'))}</span>`;
@@ -296,8 +309,9 @@ export async function initAdmin(opts = {}) {
         <b class="kad-code">${esc(p.codigo)}</b>
         <time class="kad-reloj${urg}" datetime="${esc(p.creado)}">${esc(relativo(p.creado))}</time>
       </header>
+      ${p.retiro?.fecha ? `<p class="kad-retiro${p.retiro.fecha === hoy() ? ' is-hoy' : p.retiro.fecha < hoy() ? ' is-vencido' : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>${esc(t('retira', { cuando: textoRetiro(p.retiro, { dias: t('dias'), hoy: hoy() }) }))}</span></p>` : ''}
       <div class="kad-chips">${chipPago(p)}<span class="kad-chip">${esc(delivery ? t('chipDelivery') : t('chipRetiro'))}</span>${p.sucursal ? `<span class="kad-chip kad-chip--sede">${esc(p.sucursal.nombre)}</span>` : ''}</div>
-      <ul class="kad-items">${(p.items || []).map(i => `<li><b>${i.cant} ×</b> <span>${esc(i.nombre)}${i.nota ? `<em>${esc(i.nota)}</em>` : ''}</span></li>`).join('')}</ul>
+      <ul class="kad-items">${(p.items || []).map(i => `<li><b>${i.cant} ×</b> <span>${esc(i.nombre)}${i.precio == null && (p.items || []).some(x => x.precio != null) ? ` <small class="kad-sinprecio">${esc(t('aConfirmar'))}</small>` : ''}${i.nota ? `<em>${esc(i.nota)}</em>` : ''}</span></li>`).join('')}</ul>
       ${p.nota ? `<p class="kad-note"><b>${esc(t('waNota'))}:</b> ${esc(p.nota)}</p>` : ''}
       ${delivery && p.cliente?.direccion ? `<a class="kad-dir" href="${esc(mapsUrl(p.cliente.direccion))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg><span><b>${esc(p.cliente.direccion)}</b> · ${esc(t('abrirMaps'))}</span></a>` : ''}
       <div class="kad-quien"><span>${esc(nombre)}${p.cliente?.telefono ? ` · ${esc(p.cliente.telefono)}` : ''}</span>${waGen ? `<a href="${esc(waGen)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</div>
@@ -484,7 +498,9 @@ export async function initAdmin(opts = {}) {
   // =====================================================================
   let cartaCache = { cats: [], prods: [] };
   async function vistaCarta(main) {
-    let [cats, prods, tempActiva] = await Promise.all([store.getCategorias(), store.getProductos(), store.getTemporada ? store.getTemporada() : null]);
+    let [todasCats, prods, tempActiva] = await Promise.all([store.getCategorias(), store.getProductos(), store.getTemporada ? store.getTemporada() : null]);
+    const cats = todasCats.filter(c => !c.especial);
+    prods = prods.filter(p => !todasCats.some(c => c.especial && c.id === p.categoria));
     cartaCache = { cats, prods };
     const temps = temporadasDe(config);
     const nombreTemp = (id) => temps.find(x => x.id === id)?.nombre || id;
@@ -583,16 +599,85 @@ export async function initAdmin(opts = {}) {
         <button type="button" class="kit-btn" data-nuevo-prod="${esc(cat?.id || '')}">+ ${esc(t('agregarPlato'))}</button>
       </div>
       ${lista.length ? `<div class="kad-prods-head" aria-hidden="true"><span></span><span>${esc(t('plato'))}</span><span>${esc(t('precio'))}</span><span>${esc(t('hayHoy'))}</span><span></span></div>
-      <ul class="kad-prods">${lista.map(p => `<li class="kad-prod${p.disponible === false ? ' is-off' : ''}" data-prod="${esc(p.id)}">
-          <button type="button" class="kad-prod__img" data-editar aria-label="${esc(t('editar'))} ${esc(p.nombre)}">${p.foto ? `<img src="${esc(ctx.asset(p.foto))}" alt="" loading="lazy" decoding="async">` : `<span>${esc(t('fotoAgregar'))}</span>`}</button>
-          <button type="button" class="kad-prod__main" data-editar><b>${esc(p.nombre)}</b>${q ? `<small class="kad-prod__cat">${esc(nombreCat(p.categoria))}</small>` : ''}${p.descripcion ? `<span>${esc(p.descripcion)}</span>` : ''}</button>
-          <label class="kad-precio"><span aria-hidden="true">${esc(ctx.pais.simbolo || '$')}</span><input type="text" inputmode="decimal" data-precio value="${p.precio != null ? esc(formatoNumero(p.precio)) : ''}" placeholder="${esc(t('sinPrecio'))}" aria-label="${esc(t('precio'))} ${esc(p.nombre)}"></label>
-          <label class="kad-switch"><input type="checkbox" data-disp ${p.disponible !== false ? 'checked' : ''}><span class="kad-switch__ui" aria-hidden="true"></span><span class="kad-switch__txt">${esc(p.disponible !== false ? t('hay') : t('noHay'))}</span></label>
-          <span class="kad-prod__fin"><span class="kad-ok" aria-live="polite">${esc(t('guardadoOk'))}</span><button type="button" class="kad-mini kad-mini--ghost" data-editar>${esc(t('editar'))}</button></span>
-        </li>`).join('')}</ul>` : `<div class="kit-empty"><p>${esc(q ? t('nadaAca') : t('seccionVacia'))}</p></div>`}
+      <ul class="kad-prods">${lista.map(p => filaProducto(p, q ? nombreCat(p.categoria) : '')).join('')}</ul>` : `<div class="kit-empty"><p>${esc(q ? t('nadaAca') : t('seccionVacia'))}</p></div>`}
       ${!q && cat && lista.some(p => p.precio != null) ? `<div class="kad-pct"><b>${esc(t('subirPrecios'))}</b>
         <button type="button" class="kad-mini kad-mini--ghost" data-pct="5">+ 5%</button><button type="button" class="kad-mini kad-mini--ghost" data-pct="10">+ 10%</button><button type="button" class="kad-mini kad-mini--ghost" data-pct="otro">${esc(t('otroPct'))}</button>
         <span class="kad-muted">${esc(t('redondea', { n: ctx.money(Number(red)) }))}</span></div>` : ''}`;
+  }
+
+  function filaProducto(p, catTxt = '') {
+    const ph = ctx.pedible(p) && p.precio == null ? t('aConfirmar') : t('sinPrecio');
+    return `<li class="kad-prod${p.disponible === false ? ' is-off' : ''}" data-prod="${esc(p.id)}">
+          <button type="button" class="kad-prod__img" data-editar aria-label="${esc(t('editar'))} ${esc(p.nombre)}">${p.foto ? `<img src="${esc(ctx.asset(p.foto))}" alt="" loading="lazy" decoding="async">` : `<span>${esc(t('fotoAgregar'))}</span>`}</button>
+          <button type="button" class="kad-prod__main" data-editar><b>${esc(p.nombre)}</b>${catTxt ? `<small class="kad-prod__cat">${esc(catTxt)}</small>` : ''}${p.descripcion ? `<span>${esc(p.descripcion)}</span>` : ''}</button>
+          <label class="kad-precio"><span aria-hidden="true">${esc(ctx.pais.simbolo || '$')}</span><input type="text" inputmode="decimal" data-precio value="${p.precio != null ? esc(formatoNumero(p.precio)) : ''}" placeholder="${esc(ph)}" aria-label="${esc(t('precio'))} ${esc(p.nombre)}"></label>
+          <label class="kad-switch"><input type="checkbox" data-disp ${p.disponible !== false ? 'checked' : ''}><span class="kad-switch__ui" aria-hidden="true"></span><span class="kad-switch__txt">${esc(p.disponible !== false ? t('hay') : t('noHay'))}</span></label>
+          <span class="kad-prod__fin"><span class="kad-ok" aria-live="polite">${esc(t('guardadoOk'))}</span><button type="button" class="kad-mini kad-mini--ghost" data-editar>${esc(t('editar'))}</button></span>
+        </li>`;
+  }
+
+  // =====================================================================
+  // FECHAS ESPECIALES: Navidad, Pascuas, Día de la Madre… con su ventana y sus productos
+  // =====================================================================
+  const EST = { borrador: 'estBorrador', programada: 'estProgramada', aviso: 'estAviso', en_curso: 'estEnCurso', termino: 'estTermino' };
+  async function vistaFechas(main) {
+    const [cats, prods] = await Promise.all([store.getCategorias(), store.getProductos()]);
+    const fechas = cats.filter(c => c.especial).sort((a, b) => {
+      const o = { en_curso: 0, aviso: 1, programada: 2, borrador: 3, termino: 4 };
+      return (o[estadoEspecial(a, hoy())] - o[estadoEspecial(b, hoy())]) || String(a.desde || '9').localeCompare(String(b.desde || '9'));
+    });
+    if (!fechas.some(f => f.id === st.fe)) st.fe = fechas[0]?.id || null;
+    const fe = fechas.find(f => f.id === st.fe);
+    const lista = fe ? prods.filter(p => p.categoria === fe.id) : [];
+    const fmt = (f) => { if (!f) return '—'; const [, m, d] = f.split('-').map(Number); return `${d} ${t('meses')[m - 1]}`; };
+    const chip = (c) => { const e = estadoEspecial(c, hoy()); return `<span class="kad-est kad-fest kad-fest--${e}">${esc(t(EST[e]))}</span>`; };
+    const cuenta = (c) => { const e = estadoEspecial(c, hoy()); if (e === 'aviso' || e === 'programada') { const n = diasPara(c.desde, hoy()); return n > 0 ? ` · faltan ${n} días` : ''; } return ''; };
+    main.innerHTML = `
+      <div class="kad-head kad-head--row"><h1>${esc(t('fechas'))}</h1><button type="button" class="kit-btn" data-fe-nueva>+ ${esc(t('nuevaFecha'))}</button></div>
+      ${fechas.length ? `<div class="kad-carta kad-fechas">
+        <aside class="kad-cats"><ul class="kad-catlist kad-felist">${fechas.map(c => `<li><button type="button" data-fe="${esc(c.id)}" aria-current="${c.id === st.fe}">
+          <span><b>${esc(c.nombre)}</b><small>${c.desde ? `${esc(fmt(c.desde))} – ${esc(fmt(c.hasta))}` : esc(t('estBorrador'))}${esc(cuenta(c))}</small></span>${chip(c)}</button></li>`).join('')}</ul></aside>
+        <section class="kad-platos">
+          <form class="kit-form kad-fe-form" data-fe-form>
+            <div class="kad-fe-grid">
+              <label class="kit-field"><span>${esc(t('nombre'))}</span><input name="nombre" required maxlength="40" value="${esc(fe.nombre)}"></label>
+              <label class="kit-field"><span>${esc(t('fechaDesde'))}</span><input name="desde" type="date" value="${esc(fe.desde || '')}"></label>
+              <label class="kit-field"><span>${esc(t('fechaHasta'))}</span><input name="hasta" type="date" value="${esc(fe.hasta || '')}"></label>
+              <label class="kit-field"><span>${esc(t('avisoDias'))}</span><input name="avisoDias" type="number" min="0" max="120" inputmode="numeric" value="${esc(fe.avisoDias ?? 30)}"></label>
+            </div>
+            <label class="kit-field"><span>${esc(t('bajada'))}</span><input name="bajada" maxlength="140" value="${esc(fe.bajada || '')}"></label>
+            <div class="kit-row kit-row--between"><button type="button" class="kit-btn kit-btn--ghost kit-btn--danger-t" data-fe-borrar>${esc(t('borrar'))}</button>
+              <div class="kit-row"><a class="kit-btn kit-btn--ghost" href="${esc(sitio)}?sala=${encodeURIComponent(fe.id)}" target="_blank" rel="noopener">${esc(t('verEnWeb'))} ↗</a><button class="kit-btn">${esc(t('guardar'))}</button></div></div>
+          </form>
+          <div class="kad-platos__head"><h2 class="kad-fe-t">${esc(t('productosFecha'))}</h2><span class="kad-vivo">${esc(t('alInstante'))}</span><button type="button" class="kit-btn" data-nuevo-prod="${esc(fe.id)}">+ ${esc(t('agregarPlato'))}</button></div>
+          ${lista.length ? `<div class="kad-prods-head" aria-hidden="true"><span></span><span>${esc(t('plato'))}</span><span>${esc(t('precio'))}</span><span>${esc(t('hayHoy'))}</span><span></span></div>
+          <ul class="kad-prods">${lista.map(p => filaProducto(p)).join('')}</ul>` : `<div class="kit-empty"><p>${esc(t('seccionVacia'))}</p></div>`}
+        </section></div>`
+      : `<div class="kit-empty"><p class="kit-empty__t">${esc(t('sinFechas'))}</p><p>${esc(t('sinFechasSub'))}</p><button type="button" class="kit-btn" data-fe-nueva>+ ${esc(t('nuevaFecha'))}</button></div>`}`;
+
+    main.onclick = async (e) => {
+      const sel = e.target.closest('[data-fe]'); if (sel) { st.fe = sel.dataset.fe; render(); return; }
+      if (e.target.closest('[data-fe-nueva]')) {
+        const nombre = (prompt(t('nombre')) || '').trim(); if (!nombre) return;
+        let id = slug(nombre); while (cats.some(c => c.id === id)) id += '-2';
+        await store.saveCategoria({ id, nombre, especial: true, desde: '', hasta: '', avisoDias: 30, bajada: '', orden: cats.length + 1 });
+        st.fe = id; toast(t('fechaGuardada')); render(); return;
+      }
+      if (e.target.closest('[data-fe-borrar]') && fe) {
+        if (!(await confirmar(t('borrarFecha', { nombre: fe.nombre }), { ok: t('borrar'), peligro: true }))) return;
+        for (const p of lista) await store.deleteProducto(p.id);
+        await store.deleteCategoria(fe.id); st.fe = null; toast(t('borrado')); render(); return;
+      }
+      const fresh = await store.getProductos();
+      const np = e.target.closest('[data-nuevo-prod]'); if (np) return editorProducto(null, cats, fresh, np.dataset.nuevoProd);
+      const ed = e.target.closest('[data-editar]'); if (ed) return editorProducto(fresh.find(p => p.id === ed.closest('[data-prod]').dataset.prod), cats, fresh);
+    };
+    $('[data-fe-form]', main)?.addEventListener('submit', async (e) => {
+      e.preventDefault(); const f = e.target;
+      const desde = f.desde.value, hasta = f.hasta.value;
+      await store.saveCategoria({ ...fe, nombre: f.nombre.value.trim() || fe.nombre, desde, hasta: hasta && desde && hasta < desde ? desde : hasta, avisoDias: Math.max(0, Number(f.avisoDias.value) || 0), bajada: f.bajada.value.trim() });
+      toast(t('fechaGuardada')); render();
+    });
   }
 
   function editorCategoria(cat, cats) {
@@ -697,6 +782,7 @@ export async function initAdmin(opts = {}) {
       if (vista === 'pedidos') await vistaPedidos(main);
       else if (vista === 'reservas') await vistaReservas(main);
       else if (vista === 'carta') await vistaCarta(main);
+      else if (vista === 'fechas') await vistaFechas(main);
     } catch (err) { console.error('[kit] panel', err); main.innerHTML = `<p class="kit-error">${esc(t('error'))}</p>`; }
     if (Math.abs(scrollY - y) > 2) scrollTo({ top: y });
     contadores();

@@ -8,9 +8,15 @@ const SUPABASE_ESM = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/
 const aPedido = (r) => r && ({
   id: r.id, codigo: r.codigo, items: r.items, subtotal: Number(r.subtotal), envio: Number(r.envio), total: Number(r.total),
   tipo: r.tipo, cliente: r.cliente, nota: r.nota, pago: r.pago, pagoEstado: r.pago_estado, pagoId: r.pago_id, sucursal: r.sucursal || null,
+  retiro: r.retiro || null, sinPrecio: !!r.sin_precio,
   estado: r.estado, creado: r.creado,
 });
 const aReserva = (r) => r && ({ ...r });
+const aCategoria = (r) => r && ({ id: r.id, nombre: r.nombre, orden: r.orden, ...(r.temporada !== undefined ? { temporada: r.temporada } : {}), ...(r.especial ? { especial: true, desde: r.desde || '', hasta: r.hasta || '', avisoDias: r.aviso_dias ?? 30, bajada: r.bajada || '' } : {}), ...(r.anticipacion_horas != null ? { anticipacionHoras: r.anticipacion_horas } : {}) });
+// columnas nuevas (kit 1.3) solo si la categoría las usa: así los clientes sin la migración siguen andando
+const extrasCategoria = (c) => ({
+  ...(c.especial ? { especial: true, desde: c.desde || null, hasta: c.hasta || null, aviso_dias: Number(c.avisoDias ?? 30), bajada: c.bajada || null } : {}),
+  ...(c.anticipacionHoras != null ? { anticipacion_horas: Number(c.anticipacionHoras) } : {}) });
 const aProducto = (r) => r && ({
   id: r.id, categoria: r.categoria, nombre: r.nombre, descripcion: r.descripcion || '', precio: r.precio == null ? null : Number(r.precio),
   foto: r.foto, etiquetas: r.etiquetas || [], disponible: r.disponible, orden: r.orden,
@@ -39,13 +45,14 @@ export async function createSupabaseStore(config) {
   // la columna categorias.temporada solo existe en clientes con temporadas (supabase/migracion-temporadas.sql)
   const conTemporadas = temporadasDe(config).length > 0;
   const filaCat = (c, i) => ({ negocio: N, id: c.id, nombre: c.nombre, orden: c.orden ?? i ?? 0, ...(conTemporadas ? { temporada: c.temporada || null } : {}) });
+  const filaCatFull = (c, i) => ({ ...filaCat(c, i), ...extrasCategoria(c) });
 
   return {
     modo: 'produccion',
     client: sb,
 
-    async getCategorias() { return ok(await sb.from('categorias').select('*').eq('negocio', N).order('orden')); },
-    async saveCategoria(c) { const r = ok(await sb.from('categorias').upsert(filaCat(c, 0)).select().single()); emitir(); return r; },
+    async getCategorias() { return ok(await sb.from('categorias').select('*').eq('negocio', N).order('orden')).map(aCategoria); },
+    async saveCategoria(c) { const r = aCategoria(ok(await sb.from('categorias').upsert(filaCatFull(c, 0)).select().single())); emitir(); return r; },
     async getTemporada() {
       if (!conTemporadas) return null;
       const r = ok(await sb.from('negocios').select('config').eq('id', N).maybeSingle());
@@ -88,6 +95,7 @@ export async function createSupabaseStore(config) {
       const args = { p_negocio: N, p_items: d.items.map(i => ({ id: i.id, cant: i.cant, nota: i.nota || '' })), p_tipo: d.tipo, p_cliente: d.cliente, p_nota: d.nota || '', p_pago: d.pago };
       // solo las cadenas mandan la sede (así los clientes de un solo local no necesitan la migración)
       if (d.sucursal) args.p_sucursal = d.sucursal;
+      if (d.retiro) args.p_retiro = d.retiro;   // encargos con fecha (necesita supabase/migracion-encargos.sql, kit 1.3)
       const r = ok(await sb.rpc('crear_pedido', args));
       return aPedido(r);
     },
@@ -108,7 +116,7 @@ export async function createSupabaseStore(config) {
     async reset() { throw new Error('reset solo existe en demo'); },
     async importarCarta() {
       const c = config.carta || {};
-      if (c.categorias?.length) ok(await sb.from('categorias').upsert(c.categorias.map((x, i) => filaCat(x, i + 1))));
+      if (c.categorias?.length) ok(await sb.from('categorias').upsert(c.categorias.map((x, i) => filaCatFull(x, i + 1))));
       if (c.productos?.length) ok(await sb.from('productos').upsert(c.productos.map((p, i) => ({ negocio: N, id: p.id, categoria: p.categoria, nombre: p.nombre, descripcion: p.descripcion || '', precio: p.precio ?? null, foto: p.foto || null, etiquetas: p.etiquetas || [], disponible: p.disponible !== false, orden: p.orden ?? i + 1 }))));
       emitir();
     },

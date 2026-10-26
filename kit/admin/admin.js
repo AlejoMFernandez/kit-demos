@@ -12,6 +12,7 @@ import { t } from '../core/i18n.js';
 import { popup, confirmar, toast } from '../core/ui.js';
 import { ahoraEn, horaVisible, aMin, diaSemana, diaNum, fechaDeNum, franjas, generarTurnos, configReservas, serviciosDe, tandaDe, serviciosDelDia } from '../core/turnos.js';
 import { configGiftcards, estadoGiftcard, canjeable, normalizarCodigo } from '../core/giftcards.js';
+import { tieneVariantes, precioDesde } from '../core/variantes.js';
 import { linkWhatsApp } from '../core/pedidos.js';
 import { sucursales } from '../core/sucursales.js';
 import { temporadasDe, seVe } from '../core/temporadas.js';
@@ -302,6 +303,7 @@ export async function initAdmin(opts = {}) {
   function chipPago(p) {
     const sinPrecio = p.sinPrecio ?? (p.items || []).some(i => i.precio == null);
     if (sinPrecio && !PAGADO.includes(p.pagoEstado)) return `<span class="kad-chip kad-chip--warn">${esc(t('confirmarPrecio'))}${p.total ? ` · ${esc(totalTexto(p, ctx.money))}` : ''}</span>`;
+    if (p.saldo > 0 && p.pagoEstado === 'aprobado') return `<span class="kad-chip kad-chip--ok">${esc(t('senaPagada', { monto: ctx.money(p.aPagar) }))}</span><span class="kad-chip kad-chip--warn">${esc(t('restoRetirar', { monto: ctx.money(p.saldo) }))}</span>`;
     if (p.pagoEstado === 'aprobado') return `<span class="kad-chip kad-chip--ok">${esc(t('pagadoMP'))}</span>`;
     if (p.pagoEstado === 'cobrado') return `<span class="kad-chip kad-chip--ok">${esc(t('cobrado'))}</span>`;
     if (p.pago === 'mercadopago' && p.pagoEstado === 'pendiente') return `<span class="kad-chip kad-chip--warn">${esc(t('pagoPendMP'))}</span>`;
@@ -321,7 +323,7 @@ export async function initAdmin(opts = {}) {
     else if (p.estado === 'confirmado') accion = `<button type="button" class="kad-accion kad-accion--ok" data-estado="listo">${esc(delivery ? t('listoEnviar') : t('listoRetirar'))}</button>`;
     else if (p.estado === 'listo') accion = `<div class="kad-acciones2">
         ${waAviso ? `<a class="kad-accion kad-accion--ghost" href="${esc(waAviso)}" target="_blank" rel="noopener">${esc(t('avisarListo'))}</a>` : ''}
-        <button type="button" class="kad-accion" data-estado="entregado" ${pagado(p) ? '' : 'data-cobrar="1"'}>${esc(pagado(p) ? t('marcarEntregado') : t('cobradoEntregado'))}</button></div>`;
+        <button type="button" class="kad-accion" data-estado="entregado" ${pagado(p) && !(p.saldo > 0 && p.pagoEstado === 'aprobado') ? '' : 'data-cobrar="1"'}>${esc(p.saldo > 0 && p.pagoEstado === 'aprobado' ? t('cobreResto') : pagado(p) ? t('marcarEntregado') : t('cobradoEntregado'))}</button></div>`;
     const llega = tableroVisto && !yaVistos.has(p.id); yaVistos.add(p.id);
     return `<article class="kad-card kad-card--${p.estado}${llega ? ' is-nueva' : ''}" data-id="${esc(p.id)}">
       <header class="kad-card__head">
@@ -330,7 +332,7 @@ export async function initAdmin(opts = {}) {
       </header>
       ${p.retiro?.fecha ? `<p class="kad-retiro${p.retiro.fecha === hoy() ? ' is-hoy' : p.retiro.fecha < hoy() ? ' is-vencido' : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>${esc(t('retira', { cuando: textoRetiro(p.retiro, { dias: t('dias'), hoy: hoy() }) }))}</span></p>` : ''}
       <div class="kad-chips">${chipPago(p)}<span class="kad-chip">${esc(delivery ? t('chipDelivery') : t('chipRetiro'))}</span>${p.sucursal ? `<span class="kad-chip kad-chip--sede">${esc(p.sucursal.nombre)}</span>` : ''}</div>
-      <ul class="kad-items">${(p.items || []).map(i => `<li><b>${i.cant} ×</b> <span>${esc(i.nombre)}${i.precio == null && (p.items || []).some(x => x.precio != null) ? ` <small class="kad-sinprecio">${esc(t('aConfirmar'))}</small>` : ''}${i.nota ? `<em>${esc(i.nota)}</em>` : ''}</span></li>`).join('')}</ul>
+      <ul class="kad-items">${(p.items || []).map(i => `<li><b>${i.cant} ×</b> <span>${esc(i.nombre)}${i.detalle ? ` <em>${esc(i.detalle)}</em>` : ''}${i.precio == null && (p.items || []).some(x => x.precio != null) ? ` <small class="kad-sinprecio">${esc(t('aConfirmar'))}</small>` : ''}${i.nota ? `<em>${esc(i.nota)}</em>` : ''}</span></li>`).join('')}</ul>
       ${p.nota ? `<p class="kad-note"><b>${esc(t('waNota'))}:</b> ${esc(p.nota)}</p>` : ''}
       ${delivery && p.cliente?.direccion ? `<a class="kad-dir" href="${esc(mapsUrl(p.cliente.direccion))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg><span><b>${esc(p.cliente.direccion)}</b> · ${esc(t('abrirMaps'))}</span></a>` : ''}
       <div class="kad-quien"><span>${esc(nombre)}${p.cliente?.telefono ? ` · ${esc(p.cliente.telefono)}` : ''}</span>${waGen ? `<a href="${esc(waGen)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</div>
@@ -585,10 +587,11 @@ export async function initAdmin(opts = {}) {
         let v = pct.dataset.pct;
         if (v === 'otro') { v = prompt(t('pctPregunta')); if (!v) return; }
         v = Number(String(v).replace(',', '.')); if (!(v > 0 && v < 500)) return;
-        const items = prods.filter(p => p.categoria === cat.id && p.precio != null);
+        const items = prods.filter(p => p.categoria === cat.id && (p.precio != null || tieneVariantes(p)));
         if (!(await confirmar(t('confirmaPct', { pct: v, n: items.length, cat: cat.nombre }), { ok: `+${v}%` }))) return;
         const red = ctx.pais.decimales ? 1 : 100;
-        for (const p of items) await store.saveProducto({ ...p, precio: Math.round(p.precio * (1 + v / 100) / red) * red });
+        const sube = (n) => n == null ? n : Math.round(n * (1 + v / 100) / red) * red;
+        for (const p of items) await store.saveProducto({ ...p, precio: sube(p.precio), ...(tieneVariantes(p) ? { variantes: p.variantes.map(x => ({ ...x, precio: sube(x.precio) })) } : {}) });
         toast(t('guardado')); render();
       }
     };
@@ -619,7 +622,7 @@ export async function initAdmin(opts = {}) {
       </div>
       ${lista.length ? `<div class="kad-prods-head" aria-hidden="true"><span></span><span>${esc(t('plato'))}</span><span>${esc(t('precio'))}</span><span>${esc(t('hayHoy'))}</span><span></span></div>
       <ul class="kad-prods">${lista.map(p => filaProducto(p, q ? nombreCat(p.categoria) : '')).join('')}</ul>` : `<div class="kit-empty"><p>${esc(q ? t('nadaAca') : t('seccionVacia'))}</p></div>`}
-      ${!q && cat && lista.some(p => p.precio != null) ? `<div class="kad-pct"><b>${esc(t('subirPrecios'))}</b>
+      ${!q && cat && lista.some(p => p.precio != null || tieneVariantes(p)) ? `<div class="kad-pct"><b>${esc(t('subirPrecios'))}</b>
         <button type="button" class="kad-mini kad-mini--ghost" data-pct="5">+ 5%</button><button type="button" class="kad-mini kad-mini--ghost" data-pct="10">+ 10%</button><button type="button" class="kad-mini kad-mini--ghost" data-pct="otro">${esc(t('otroPct'))}</button>
         <span class="kad-muted">${esc(t('redondea', { n: ctx.money(Number(red)) }))}</span></div>` : ''}`;
   }
@@ -629,7 +632,8 @@ export async function initAdmin(opts = {}) {
     return `<li class="kad-prod${p.disponible === false ? ' is-off' : ''}" data-prod="${esc(p.id)}">
           <button type="button" class="kad-prod__img" data-editar aria-label="${esc(t('editar'))} ${esc(p.nombre)}">${p.foto ? `<img src="${esc(ctx.asset(p.foto))}" alt="" loading="lazy" decoding="async">` : `<span>${esc(t('fotoAgregar'))}</span>`}</button>
           <button type="button" class="kad-prod__main" data-editar><b>${esc(p.nombre)}</b>${catTxt ? `<small class="kad-prod__cat">${esc(catTxt)}</small>` : ''}${p.descripcion ? `<span>${esc(p.descripcion)}</span>` : ''}</button>
-          <label class="kad-precio"><span aria-hidden="true">${esc(ctx.pais.simbolo || '$')}</span><input type="text" inputmode="decimal" data-precio value="${p.precio != null ? esc(formatoNumero(p.precio)) : ''}" placeholder="${esc(ph)}" aria-label="${esc(t('precio'))} ${esc(p.nombre)}"></label>
+          ${tieneVariantes(p) ? `<button type="button" class="kad-precio kad-precio--var" data-editar>${esc(p.variantes.map(v => `${v.nombre} ${ctx.money(v.precio) || '—'}`).join(' · '))}</button>`
+            : `<label class="kad-precio"><span aria-hidden="true">${esc(ctx.pais.simbolo || '$')}</span><input type="text" inputmode="decimal" data-precio value="${p.precio != null ? esc(formatoNumero(p.precio)) : ''}" placeholder="${esc(ph)}" aria-label="${esc(t('precio'))} ${esc(p.nombre)}"></label>`}
           <label class="kad-switch"><input type="checkbox" data-disp ${p.disponible !== false ? 'checked' : ''}><span class="kad-switch__ui" aria-hidden="true"></span><span class="kad-switch__txt">${esc(p.disponible !== false ? t('hay') : t('noHay'))}</span></label>
           <span class="kad-prod__fin"><span class="kad-ok" aria-live="polite">${esc(t('guardadoOk'))}</span><button type="button" class="kad-mini kad-mini--ghost" data-editar>${esc(t('editar'))}</button></span>
         </li>`;
@@ -727,8 +731,10 @@ export async function initAdmin(opts = {}) {
         </div>
       </div>
       <label class="kit-field"><span>${esc(t('nombre'))}</span><input name="nombre" required maxlength="80" value="${esc(p0.nombre)}"></label>
+      ${tieneVariantes(p0) ? `<fieldset class="kad-vars"><legend>${esc(t('tamanos'))} (${esc(ctx.pais.moneda)})</legend><div class="kit-field-row">
+        ${p0.variantes.map(v => `<label class="kit-field"><span>${esc(v.nombre)}</span><input data-var="${esc(v.id)}" type="number" inputmode="decimal" min="0" step="${ctx.pais.decimales ? '0.01' : '1'}" value="${v.precio ?? ''}"></label>`).join('')}</div></fieldset>` : ''}
       <div class="kit-field-row">
-        <label class="kit-field"><span>${esc(t('precio'))} (${esc(ctx.pais.moneda)})</span><input name="precio" type="number" inputmode="decimal" min="0" step="${ctx.pais.decimales ? '0.01' : '1'}" value="${p0.precio ?? ''}"></label>
+        ${tieneVariantes(p0) ? '<input name="precio" type="hidden" value="">' : `<label class="kit-field"><span>${esc(t('precio'))} (${esc(ctx.pais.moneda)})</span><input name="precio" type="number" inputmode="decimal" min="0" step="${ctx.pais.decimales ? '0.01' : '1'}" value="${p0.precio ?? ''}"></label>`}
         <label class="kit-field"><span>${esc(t('categoria'))}</span><select name="categoria">${cats.map(c => `<option value="${esc(c.id)}" ${c.id === p0.categoria ? 'selected' : ''}>${esc(c.nombre)}</option>`).join('')}<option value="" ${!p0.categoria ? 'selected' : ''}>${esc(t('sinCategoria'))}</option></select></label>
       </div>
       <label class="kit-field"><span>${esc(t('descripcion'))}</span><textarea name="descripcion" rows="3" maxlength="400">${esc(p0.descripcion)}</textarea></label>
@@ -766,6 +772,7 @@ export async function initAdmin(opts = {}) {
         await store.saveProducto({
           ...(prod || {}), id, nombre, descripcion: f.descripcion.value.trim(),
           precio: f.precio.value === '' ? null : Number(f.precio.value), categoria: f.categoria.value || null,
+          ...(tieneVariantes(p0) ? { variantes: p0.variantes.map(v => { const inp = f.querySelector(`[data-var="${CSS.escape(String(v.id))}"]`); return { ...v, precio: inp && inp.value !== '' ? Number(inp.value) : null }; }) } : {}),
           etiquetas: f.etiquetas.value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
           disponible: f.disponible.checked, foto, orden: prod?.orden ?? (Math.max(0, ...enCat.map(x => x.orden || 0)) + 1),
         });

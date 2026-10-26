@@ -8,6 +8,7 @@
 //   numerar: true  → "01, 02…" por categoría
 import { esc, $$ } from '../core/util.js';
 import { t } from '../core/i18n.js';
+import { tieneVariantes, precioDesde } from '../core/variantes.js';
 import { filtrarCarta } from '../core/temporadas.js';
 
 const ICONOS = {
@@ -33,7 +34,7 @@ export function mountCarta(el, ctx, opts = {}) {
 
   function itemHTML(p, i) {
     if (opts.template) return opts.template(p, { ...ctx, index: i, etiquetaHTML });
-    const precio = ctx.money(p.precio) ?? `<span class="kit-price--na">${esc(ctx.pedible(p) ? t('aConfirmar') : t('sinPrecio'))}</span>`;
+    const precio = tieneVariantes(p) ? esc(t('desdePrecio', { precio: ctx.money(precioDesde(p)) })) : ctx.money(p.precio) ?? `<span class="kit-price--na">${esc(ctx.pedible(p) ? t('aConfirmar') : t('sinPrecio'))}</span>`;
     return `
       ${p.foto ? `<img class="kit-item__foto" src="${esc(ctx.asset(p.foto))}" alt="" loading="lazy">` : ''}
       <div class="kit-item__body">

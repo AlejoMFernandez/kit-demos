@@ -175,6 +175,27 @@ Para locales que cobran distinto en efectivo (ej. Bien être: 20% de martes a vi
 - Desde la web: `kit.especiales(categorias)` devuelve las fechas visibles hoy y `kit.estadoEspecial(cat)` su estado (`aviso`, `en_curso`…); el evento `kit:carta` trae `detail.especiales`.
 - Producción: correr `supabase/migracion-encargos.sql`.
 
+## Tamaños, adicionales y seña (1.5)
+
+Para tortas por encargo con precio por tamaño, extras y una seña online.
+
+```json
+"carta": {
+  "categorias": [{ "id": "tortas", "nombre": "Tortas", "anticipacionHoras": 96, "sena": 0.5 }],
+  "productos": [{ "id": "marquise-pistacho", "categoria": "tortas", "nombre": "Marquise pistacho", "precio": null,
+    "variantes": [{ "id": "20", "nombre": "20 cm", "precio": 95000 }, { "id": "24", "nombre": "24 cm", "precio": 113500 }],
+    "adicionales": [{ "id": "macarons", "nombre": "Macarons", "precios": { "20": 12000, "24": 21000 } }] }]
+}
+```
+
+- **Tamaños**: el precio sale de la variante elegida (`kit.carrito.agregar(id, 1, { variante: '24', extras: ['macarons'] })`). Sin variante elegida, la primera. La carta muestra “desde $X”. Cada tamaño/adicional es una línea distinta del carrito, y el panel la muestra con su detalle (“24 cm + Macarons”).
+- **Adicionales**: `precio` fijo o `precios` por id de variante. Se recalculan siempre con la carta guardada.
+- **Seña** (`"sena": 0.5` en la categoría): el checkout muestra Total / Resto al retirar / **Hoy pagás**, el botón dice “Pagar la seña · $X” y Mercado Pago cobra solo la seña de esos productos (más el total de los demás). El pedido guarda `aPagar` y `saldo`; el panel muestra “Seña pagada” y “Resto $X al retirar”, y la entrega se marca como “cobré el resto”.
+- `kit.carrito.setRetiro({ fecha, franja })` deja elegido el día y la franja desde un selector propio de la demo (los helpers de `core/encargos.js`, `opcionesRetiro`, sirven para pintarlo con las mismas reglas que el checkout).
+- Panel → Carta: los productos con tamaños muestran y editan el precio de cada tamaño, y “Subir precios %” también los actualiza.
+- Helpers puros en `kit/core/variantes.js`: `precioLinea`, `precioDesde`, `claveLinea`, `pctSena`, `tieneVariantes`.
+- **Producción**: por ahora solo modo demo. Antes de usarlo con un cliente real hay que extender `crear_pedido` en Supabase para recalcular variantes, adicionales y seña (y cobrar `aPagar` en `mp-preference.js` de producción).
+
 ## Reservas por servicio y tanda (1.4)
 
 Para locales que trabajan con turnos fijos (bodegones, parrillas con dos vueltas de cena) en vez de “cada 30 minutos dentro del horario”:

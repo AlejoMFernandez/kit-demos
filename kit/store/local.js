@@ -3,6 +3,7 @@
 // Se siembra con la carta de cliente.json y se puede reiniciar desde el panel.
 import { uid, clone, codigoCorto } from '../core/util.js';
 import { armarPedido } from '../core/pedidos.js';
+import { tieneVariantes } from '../core/variantes.js';
 import { configReservas, serviciosDe, tandaDe, usadosEn, capacidadEn } from '../core/turnos.js';
 import { temporadaValida } from '../core/temporadas.js';
 import { descuentoEfectivo } from '../core/descuentos.js';
@@ -106,7 +107,7 @@ export function createLocalStore(config) {
     // ---- pedidos
     async createPedido(data) {
       return mut(db => {
-        const calc = armarPedido(db.productos.filter(p => p.precio != null || config.pedidos?.sinPrecio === 'a_confirmar'), data.items, { tipo: data.tipo, pedidos: config.pedidos, descuentoPct: data.pago === 'efectivo' ? descuentoEfectivo(config) : 0, giftcards: GC });
+        const calc = armarPedido(db.productos.filter(p => p.precio != null || tieneVariantes(p) || config.pedidos?.sinPrecio === 'a_confirmar'), data.items, { tipo: data.tipo, pedidos: config.pedidos, descuentoPct: data.pago === 'efectivo' ? descuentoEfectivo(config) : 0, giftcards: GC, categorias: db.categorias });
         if (!calc.items.length) throw Object.assign(new Error('vacio'), { code: 'vacio' });
         const p = {
           id: uid('o-'), codigo: codigoCorto(config.prefijoPedido || 'PD'), ...calc,
@@ -131,7 +132,7 @@ export function createLocalStore(config) {
         return p;
       });
     },
-    async getPedidoPublico(id) { const p = leer().pedidos.find(x => x.id === id); return p ? { id: p.id, codigo: p.codigo, estado: p.estado, pagoEstado: p.pagoEstado, total: p.total } : null; },
+    async getPedidoPublico(id) { const p = leer().pedidos.find(x => x.id === id); return p ? { id: p.id, codigo: p.codigo, estado: p.estado, pagoEstado: p.pagoEstado, total: p.total, aPagar: p.aPagar, saldo: p.saldo } : null; },
     // Solo demo: lo usa el retorno de Mercado Pago (en producción lo actualiza el webhook).
     async marcarPago(id, pagoEstado, pagoId = '') { return this.updatePedido(id, { pagoEstado, pagoId }); },
 

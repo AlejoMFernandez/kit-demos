@@ -11,10 +11,14 @@
 // data-kit-sucursal="<id>" deja elegida esa sede (cadenas con "sucursales" en cliente.json).
 // kit.carrito.agregar(id, n, { nota }) suma con una aclaración propia (ej. "salchicha alemana").
 // kit.carrito.agregarGiftcard({ monto, para, de, mensaje }) suma una gift card (cliente.json → giftcards).
+// Tamaños y adicionales: kit.carrito.agregar(id, 1, { variante: '24', extras: ['macarons'] }).
+// kit.carrito.setRetiro({ fecha, franja }) deja elegido el día y la franja (ej. desde un selector propio de la demo).
+// Seña (categoría con "sena": 0.5): el checkout muestra Hoy pagás / Resto al retirar y Mercado Pago cobra solo la seña.
 import { esc, h, $$, telValido, uid } from '../core/util.js';
 import { t } from '../core/i18n.js';
 import { popup, toast, copiar } from '../core/ui.js';
-import { armarPedido, mensajePedido, linkWhatsApp, totalTexto } from '../core/pedidos.js';
+import { armarPedido, mensajePedido, linkWhatsApp, totalTexto, itemsCobro } from '../core/pedidos.js';
+import { precioLinea, claveLinea } from '../core/variantes.js';
 import { configEncargo, opcionesRetiro, textoRetiro } from '../core/encargos.js';
 import { sucursales, sucursalPorId, pideSucursal, resumenSucursal } from '../core/sucursales.js';
 import { descuentoEfectivo } from '../core/descuentos.js';
@@ -49,7 +53,8 @@ export function initCarrito(ctx, opts = {}) {
   const cantDe = (id) => lineas.filter(l => l.id === id).reduce((s, l) => s + l.cant, 0);
   const pctPago = (pago) => pago === 'efectivo' ? descuentoEfectivo(config) : 0;
   const GC = configGiftcards(config);
-  const calc = () => armarPedido(productos, lineas, { tipo: datos.tipo, pedidos: P, descuentoPct: pctPago(datos.pago), giftcards: GC });
+  const calc = () => armarPedido(productos, lineas, { tipo: datos.tipo, pedidos: P, descuentoPct: pctPago(datos.pago), giftcards: GC, categorias });
+  const conSena = (c) => c.saldo > 0;
 
   // ---------- botón flotante
   const fab = h(`<button type="button" class="kit-root kit-fab" aria-label="${esc(t('verPedido'))}" hidden>
@@ -86,16 +91,17 @@ export function initCarrito(ctx, opts = {}) {
   }
   function sync(root = document) { $$('[data-kit-qty]', root).forEach(el => { el.innerHTML = qtyHTML(el.dataset.kitQty); }); }
 
-  const claveLinea = (l) => l.gc ? `gc|${l.key}` : `${l.id}|${l.nota || ''}`;
-  function cambiar(id, delta, origen, nota = '') {
+  function cambiar(id, delta, origen, nota = '', opc = {}) {
     const p = productos.find(x => x.id === id);
     if (!p || !ctx.pedible(p)) return;
+    const pl = precioLinea(p, opc);
     // la posición del botón se toma ANTES de redibujar (sync reemplaza el botón y su rect queda en 0,0)
     const desde = origen && origen.isConnected ? origen.getBoundingClientRect() : null;
     nota = String(nota || '').trim().slice(0, 140);
-    const l = lineas.find(x => x.id === id && (x.nota || '') === nota);
+    const nueva = { id, cant: delta, nota, ...(pl.variante ? { variante: pl.variante } : {}), ...(pl.extras.length ? { extras: pl.extras } : {}) };
+    const l = lineas.find(x => !x.gc && claveLinea(x) === claveLinea(nueva));
     if (l) l.cant = Math.max(0, Math.min(99, l.cant + delta));
-    else if (delta > 0) lineas.push({ id, cant: delta, nota });
+    else if (delta > 0) lineas.push(nueva);
     lineas = lineas.filter(x => x.cant > 0);
     guardar(); sync(); pintarFab(delta > 0);
     if (pop) pintarDrawer();
@@ -147,7 +153,7 @@ export function initCarrito(ctx, opts = {}) {
     const dec = e.target.closest('[data-kit-dec]'); if (dec) { e.preventDefault(); cambiar(dec.dataset.kitDec, -1); return; }
     const gq = e.target.closest('[data-kit-gc-quitar]'); if (gq) { e.preventDefault(); quitarGiftcard(gq.dataset.kitGcQuitar); return; }
     const li = e.target.closest('[data-kit-linea]');
-    if (li) { e.preventDefault(); const [id, ...n] = li.dataset.kitLinea.split('|'); cambiar(id, Number(li.dataset.delta) || 0, li, n.join('|')); return; }
+    if (li) { e.preventDefault(); const l = lineas.find(x => !x.gc && claveLinea(x) === li.dataset.kitLinea); if (l) cambiar(l.id, Number(li.dataset.delta) || 0, li, l.nota || '', { variante: l.variante, extras: l.extras }); return; }
     const suc = e.target.closest('[data-kit-sucursal]'); if (suc) setSucursal(suc.dataset.kitSucursal);
     const op = e.target.closest('[data-kit-open="carrito"]'); if (op) { e.preventDefault(); abrir(); }
   });
@@ -180,8 +186,8 @@ export function initCarrito(ctx, opts = {}) {
           const p = productos.find(x => x.id === i.id) || {};
           return `<li class="kit-line">
             ${p.foto ? `<img src="${esc(ctx.asset(p.foto))}" alt="" class="kit-line__img">` : '<span class="kit-line__img kit-line__img--na"></span>'}
-            <div class="kit-line__body"><b>${esc(i.nombre)}</b>${i.nota ? `<em class="kit-line__nota">${esc(i.nota)}</em>` : ''}<span>${i.precio != null ? ctx.money(i.precio) : `<span class="kit-price--na">${esc(t('aConfirmar'))}</span>`}</span></div>
-            <div class="kit-qty">${i.nota ? lineaQtyHTML(i) : qtyHTML(i.id)}</div>
+            <div class="kit-line__body"><b>${esc(i.nombre)}</b>${i.detalle ? `<em class="kit-line__det">${esc(i.detalle)}</em>` : ''}${i.nota ? `<em class="kit-line__nota">${esc(i.nota)}</em>` : ''}<span>${i.precio != null ? ctx.money(i.precio) : `<span class="kit-price--na">${esc(t('aConfirmar'))}</span>`}${i.sena ? ` <small class="kit-line__sena">${esc(t('senaDe', { pct: Math.round(i.sena * 100) }))}</small>` : ''}</span></div>
+            <div class="kit-qty">${i.nota || i.variante || i.extras ? lineaQtyHTML(i) : qtyHTML(i.id)}</div>
           </li>`;
         }).join('')}</ul>
 
@@ -207,11 +213,14 @@ export function initCarrito(ctx, opts = {}) {
           ${c.envio || c.descuento ? `<div><span>${esc(t('subtotal'))}</span><span>${ctx.money(c.subtotal)}</span></div>` : ''}
           ${c.envio ? `<div><span>${esc(t('envio'))}</span><span>${ctx.money(c.envio)}</span></div>` : ''}
           ${c.descuento ? `<div class="kit-sum__desc"><span>${esc(t('descEfectivo', { pct: c.descuentoPct }))}</span><span>−${ctx.money(c.descuento)}</span></div>` : ''}
-          <div class="kit-sum__total"><span>${esc(t('total'))}</span><b>${esc(totalTexto(c, ctx.money))}</b></div>
+          ${conSena(c) ? `<div><span>${esc(t('total'))}</span><span>${esc(totalTexto(c, ctx.money))}</span></div>
+          <div class="kit-sum__resto"><span>${esc(t('saldoRetiro'))}</span><span>${ctx.money(c.saldo)}</span></div>
+          <div class="kit-sum__total"><span>${esc(t('hoyPagas'))}</span><b>${ctx.money(c.aPagar)}</b></div>`
+          : `<div class="kit-sum__total"><span>${esc(t('total'))}</span><b>${esc(totalTexto(c, ctx.money))}</b></div>`}
         </div>
         ${c.sinPrecio ? `<p class="kit-aviso">${esc(t('avisoSinPrecio'))}</p>` : ''}
         <p class="kit-msg" role="alert" hidden></p>
-        <button type="button" class="kit-btn kit-btn--block kit-btn--big" data-enviar>${esc(datos.pago === 'mercadopago' ? t('pagar') : t('enviarPedido'))}</button>
+        <button type="button" class="kit-btn kit-btn--block kit-btn--big" data-enviar>${esc(textoBoton(c))}</button>
       </div>`;
     body.querySelector('.kit-cart__scroll').scrollTop = scroll;
     const form = body.querySelector('form');
@@ -222,12 +231,21 @@ export function initCarrito(ctx, opts = {}) {
       if (f.name === 'retiroFecha') { datos.retiroFranja = ''; pintarDrawer(); return; }
       if (f.name === 'retiroFranja') { $$('.kit-franja', body).forEach(l => l.classList.toggle('is-on', l.querySelector('input').checked)); return; }
       if (f.name === 'tipo') { body.querySelector('[data-dir]').hidden = f.value !== 'delivery'; pintarTotales(); }
-      if (f.name === 'pago') { if (pctPago(f.value) || c.descuento) { pintarTotales(); return; } body.querySelector('[data-enviar]').textContent = f.value === 'mercadopago' ? t('pagar') : t('enviarPedido'); }
+      if (f.name === 'pago') { if (pctPago(f.value) || c.descuento) { pintarTotales(); return; } body.querySelector('[data-enviar]').textContent = textoBoton(calc()); }
     });
     form.addEventListener('submit', (e) => { e.preventDefault(); enviar(); });
     body.querySelector('[data-enviar]').addEventListener('click', enviar);
   }
   function pintarTotales() { if (pop) pintarDrawer(); }
+  function textoBoton(c) {
+    if (datos.pago !== 'mercadopago') return t('enviarPedido');
+    return conSena(c) ? `${t('pagarSena')} · ${ctx.money(c.aPagar)}` : t('pagar');
+  }
+  function setRetiro({ fecha, franja } = {}) {
+    if (fecha !== undefined) datos.retiroFecha = fecha || '';
+    if (franja !== undefined) datos.retiroFranja = franja || '';
+    if (pop) pintarDrawer();
+  }
 
   // ---------- encargo: día y franja de retiro
   function retiroOpciones() {
@@ -283,7 +301,7 @@ export function initCarrito(ctx, opts = {}) {
     const btn = pop.body.querySelector('[data-enviar]'); btn.disabled = true; btn.classList.add('is-loading');
     try {
       const pedido = await store.createPedido({
-        items: lineas.map(l => l.gc ? { id: 'giftcard', cant: 1, gc: l.gc } : { id: l.id, cant: l.cant, nota: l.nota }), tipo: datos.tipo,
+        items: lineas.map(l => l.gc ? { id: 'giftcard', cant: 1, gc: l.gc } : { id: l.id, cant: l.cant, nota: l.nota, variante: l.variante, extras: l.extras }), tipo: datos.tipo,
         cliente: { nombre: datos.nombre.trim(), telefono: datos.telefono.trim(), direccion: datos.tipo === 'delivery' ? datos.direccion.trim() : '' },
         nota: datos.nota.trim(), pago: datos.pago, ...(retiro ? { retiro } : {}),
         ...(sedes.length ? { sucursal: resumenSucursal(sucursalPorId(config, datos.sucursal)) } : {}),
@@ -308,7 +326,7 @@ export function initCarrito(ctx, opts = {}) {
     if (url) window.open(url, '_blank', 'noopener');
   }
 
-  function vaciar() { lineas = []; guardar(); sync(); pintarFab(); }
+  function vaciar() { lineas = []; guardar(); sync(); pintarFab(); document.dispatchEvent(new CustomEvent('kit:carrito', { detail: { lineas: [], delta: 0 } })); }
 
   function exito(titulo, sub, waUrl, tipo = 'ok') {
     if (pop) pop.close();
@@ -346,7 +364,7 @@ export function initCarrito(ctx, opts = {}) {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           negocio: config.id, pais: config.pais, modo: mp.modo || 'sandbox', pedidoId: pedido.id, codigo: pedido.codigo,
-          items: pedido.items.map(i => ({ title: i.nombre, quantity: i.cant, unit_price: i.precio })),
+          items: itemsCobro(pedido, { prefijoSena: t('senaCorta') }),
           envio: pedido.envio, backUrl: urlRetorno(pedido), payer: { name: pedido.cliente.nombre },
         }),
       });
@@ -368,7 +386,7 @@ export function initCarrito(ctx, opts = {}) {
     const box = h(`<div class="kit-sim">
       <p class="kit-sim__tag">DEMO</p>
       <p>${esc(t('mpSimuladoSub'))}</p>
-      <div class="kit-sim__total"><span>${esc(pedido.codigo)}</span><b>${ctx.money(pedido.total)}</b></div>
+      <div class="kit-sim__total"><span>${esc(pedido.codigo)}${pedido.saldo > 0 ? ` · ${esc(t('senaCorta'))}` : ''}</span><b>${ctx.money(pedido.aPagar ?? pedido.total)}</b></div>
       <div class="kit-row kit-row--stack">
         <button type="button" class="kit-btn kit-btn--block" data-ok>${esc(t('mpAprobar'))}</button>
         <button type="button" class="kit-btn kit-btn--ghost kit-btn--block" data-no>${esc(t('mpRechazar'))}</button>
@@ -419,7 +437,8 @@ export function initCarrito(ctx, opts = {}) {
 
   return {
     abrir, sync, listo,
-    agregar: (id, n = 1, o = {}) => cambiar(id, n, o.origen || null, o.nota || ''),
+    agregar: (id, n = 1, o = {}) => cambiar(id, n, o.origen || null, o.nota || '', { variante: o.variante, extras: o.extras }),
+    setRetiro, get retiro() { return { fecha: datos.retiroFecha, franja: datos.retiroFranja }; },
     agregarGiftcard: (gc, o = {}) => agregarGiftcard(gc, o.origen || null), quitarGiftcard,
     setSucursal, get sucursal() { return sucursalPorId(config, datos.sucursal); },
     vaciar, get lineas() { return lineas.slice(); }, calc, retiroOpciones,

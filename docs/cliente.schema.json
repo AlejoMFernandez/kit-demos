@@ -140,6 +140,7 @@
         "temporadaActiva": { "type": "string", "description": "Temporada que se ve al sembrar la demo (o hasta que el dueño la cambie)." },
         "categorias": { "type": "array", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" }, "orden": { "type": "integer" }, "temporada": { "type": ["string", "null"], "description": "Sin temporada = se ve siempre (ej. bebidas)." },
           "anticipacionHoras": { "type": "integer", "description": "Encargos: horas mínimas para esta sección (ej. tortas 48)." },
+          "sena": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1, "description": "Seña (1.5): porcentaje que se cobra al encargar los productos de esta sección (0.5 = 50%); el resto, al retirar." },
           "especial": { "type": "boolean", "description": "Fecha especial (Navidad, Pascuas…): solo se ve en la web desde desde−avisoDias hasta hasta." },
           "desde": { "type": "string", "format": "date" }, "hasta": { "type": "string", "format": "date" }, "avisoDias": { "type": "integer" }, "bajada": { "type": "string" } } } },
         "productos": {
@@ -150,7 +151,9 @@
               "id": { "type": "string" }, "categoria": { "type": ["string", "null"] }, "nombre": { "type": "string" }, "descripcion": { "type": "string" },
               "precio": { "type": ["number", "null"], "description": "null = sin precio confirmado: se muestra 'Consultar' y no se puede pedir." },
               "foto": { "type": "string" }, "etiquetas": { "type": "array", "items": { "type": "string" } },
-              "disponible": { "type": "boolean" }, "orden": { "type": "integer" }
+              "disponible": { "type": "boolean" }, "orden": { "type": "integer" },
+              "variantes": { "type": "array", "description": "Tamaños con precio propio (1.5). El precio del producto sale de la variante elegida.", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" }, "precio": { "type": ["number", "null"] } } } },
+              "adicionales": { "type": "array", "description": "Extras que se suman al precio (1.5): precio fijo o precios por id de variante.", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" }, "precio": { "type": "number" }, "precios": { "type": "object" } } } }
             }
           }
         }

@@ -21,11 +21,12 @@ import { efectivoHoy } from './core/descuentos.js';
 import { categoriasVisibles, estadoEspecial } from './core/encargos.js';
 import { h, esc } from './core/util.js';
 import { mountCarta } from './modules/carta.js';
+import { tieneVariantes } from './core/variantes.js';
 import { initCarrito } from './modules/carrito.js';
 import { initReservas } from './modules/reservas.js';
 import { initGiftcards } from './modules/giftcards.js';
 
-export const VERSION = '1.4.0';
+export const VERSION = '1.5.0';
 
 export async function cargarConfig(src = 'cliente.json') {
   const url = new URL(src, location.href);
@@ -54,7 +55,7 @@ export async function crearContexto({ config, base }) {
     // { pct, dia, feriado } del descuento en efectivo de hoy (pagos.efectivo)
     efectivoHoy: () => efectivoHoy(config),
     // ¿se puede sumar al carrito? Con "pedidos.sinPrecio": "a_confirmar" también los que no tienen precio.
-    pedible: (p) => !!p && p.disponible !== false && (p.precio != null || config.pedidos?.sinPrecio === 'a_confirmar'),
+    pedible: (p) => !!p && p.disponible !== false && (p.precio != null || tieneVariantes(p) || config.pedidos?.sinPrecio === 'a_confirmar'),
     hoy: () => ahoraEn(config.zonaHoraria).fecha,
     forzarEspecial: null,                                   // id de fecha especial a mostrar sí o sí (pitch: ?sala=pascuas)
     visibles(cats) { return categoriasVisibles(cats, this.hoy(), this.forzarEspecial); },

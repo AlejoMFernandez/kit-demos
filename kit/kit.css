@@ -345,3 +345,8 @@ html.kit-lock .kit-demo-pill { opacity: 0; pointer-events: none; transform: tran
 .kit-gcs span, .kit-gcs small { color: var(--kit-muted); font-size: .88rem; }
 .kit-gcform { display: grid; gap: 1.1rem; }
 [data-kit="giftcard"] .kit-gcform { padding: clamp(16px, 4vw, 28px); background: var(--kit-bg); border: var(--kit-border-w) solid var(--kit-text); border-radius: var(--kit-radius); box-shadow: var(--kit-shadow); }
+
+/* ---------- tamaños y seña (1.5) ---------- */
+.kit-line__det { display: block; font-style: normal; font-size: .85rem; color: var(--kit-muted); }
+.kit-line__sena { display: inline-block; margin-left: .3rem; padding: .05rem .45rem; border-radius: 999px; background: var(--kit-accent); color: var(--kit-on-accent); font-size: .72rem; font-weight: 700; vertical-align: 1px; }
+.kit-sum__resto { color: var(--kit-muted); }

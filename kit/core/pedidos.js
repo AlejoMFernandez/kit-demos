@@ -2,7 +2,7 @@
 import { t } from './i18n.js';
 
 // Recalcula el pedido con los precios de la carta (nunca confía en el precio que trae el carrito).
-export function armarPedido(productos, lineas, { tipo = 'retiro', pedidos = {} } = {}) {
+export function armarPedido(productos, lineas, { tipo = 'retiro', pedidos = {}, descuentoPct = 0 } = {}) {
   const porId = new Map(productos.map(p => [p.id, p]));
   const items = [];
   for (const l of lineas) {
@@ -14,7 +14,10 @@ export function armarPedido(productos, lineas, { tipo = 'retiro', pedidos = {} }
   }
   const subtotal = items.reduce((s, i) => s + i.subtotal, 0);
   const envio = tipo === 'delivery' ? Number(pedidos.envio || 0) : 0;
-  return { items, subtotal, envio, total: subtotal + envio, sinPrecio: items.some(i => i.precio == null) };
+  // descuento (ej. efectivo al retirar): se aplica sobre los productos, no sobre el envío
+  const pct = Math.max(0, Math.min(100, Number(descuentoPct) || 0));
+  const descuento = pct ? Math.round(subtotal * pct / 100) : 0;
+  return { items, subtotal, envio, descuentoPct: pct, descuento, total: subtotal + envio - descuento, sinPrecio: items.some(i => i.precio == null) };
 }
 
 export function mensajePedido(pedido, { negocio, money }) {
@@ -24,12 +27,13 @@ export function mensajePedido(pedido, { negocio, money }) {
     if (i.nota) L.push(`   _${i.nota}_`);
   });
   if (pedido.envio) L.push(`${t('envio')}: ${money(pedido.envio)}`);
+  if (pedido.descuento) L.push(`${t('descEfectivo', { pct: pedido.descuentoPct })}: -${money(pedido.descuento)}`);
   L.push(`*${t('total')}: ${money(pedido.total)}*`, '');
   L.push(`${t('waNombre')}: ${pedido.cliente.nombre}`);
   L.push(`${t('waEntrega')}: ${pedido.tipo === 'delivery' ? `${t('delivery')} — ${pedido.cliente.direccion}` : t('retiro')}`);
   if (pedido.sucursal) L.push(`${t('waSede')}: ${pedido.sucursal.nombre}${pedido.sucursal.direccion ? ` — ${pedido.sucursal.direccion}` : ''}`);
   if (pedido.nota) L.push(`${t('waNota')}: ${pedido.nota}`);
-  L.push(`${t('waPago')}: ${pedido.pago === 'mercadopago' ? t('waPagoMP') : t('waPagoWA')}`);
+  L.push(`${t('waPago')}: ${pedido.pago === 'mercadopago' ? t('waPagoMP') : pedido.pago === 'efectivo' ? t('waPagoEfectivo') : t('waPagoWA')}`);
   return L.join('\n');
 }
 

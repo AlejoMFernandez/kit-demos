@@ -2,6 +2,8 @@
 // Salidas configurables en cliente.json → "pedidos": { "salidas": ["whatsapp", "mercadopago"] }
 //   whatsapp     → guarda el pedido (entra al panel) y abre WhatsApp con el mensaje armado.
 //   mercadopago  → guarda el pedido, crea la preferencia en /api/mp-preference y redirige al checkout.
+//   efectivo     → como whatsapp, pero "pagás en efectivo al retirar" con el descuento del día
+//                  (pagos.efectivo en cliente.json, ver core/descuentos.js).
 //
 // Cualquier botón con data-kit-add="<idProducto>" suma al carrito.
 // Cualquier elemento con data-kit-qty="<idProducto>" muestra "Agregar" o el selector − n +.
@@ -13,6 +15,7 @@ import { t } from '../core/i18n.js';
 import { popup, toast, copiar } from '../core/ui.js';
 import { armarPedido, mensajePedido, linkWhatsApp } from '../core/pedidos.js';
 import { sucursales, sucursalPorId, pideSucursal, resumenSucursal } from '../core/sucursales.js';
+import { descuentoEfectivo } from '../core/descuentos.js';
 
 export function initCarrito(ctx, opts = {}) {
   const { config, store } = ctx;
@@ -39,7 +42,8 @@ export function initCarrito(ctx, opts = {}) {
   function leer() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (_) { return []; } }
   function guardar() { try { localStorage.setItem(KEY, JSON.stringify(lineas)); } catch (_) { /* sin storage: queda en memoria */ } }
   const cantDe = (id) => lineas.filter(l => l.id === id).reduce((s, l) => s + l.cant, 0);
-  const calc = () => armarPedido(productos, lineas, { tipo: datos.tipo, pedidos: P });
+  const pctPago = (pago) => pago === 'efectivo' ? descuentoEfectivo(config) : 0;
+  const calc = () => armarPedido(productos, lineas, { tipo: datos.tipo, pedidos: P, descuentoPct: pctPago(datos.pago) });
 
   // ---------- botón flotante
   const fab = h(`<button type="button" class="kit-root kit-fab" aria-label="${esc(t('verPedido'))}" hidden>
@@ -155,13 +159,15 @@ export function initCarrito(ctx, opts = {}) {
           <label class="kit-field"><span>${esc(t('notaPedido'))}</span><textarea name="nota" rows="2" maxlength="280">${esc(datos.nota)}</textarea></label>
           ${salidas.length > 1 ? `<fieldset class="kit-pay"><legend>${esc(t('comoPagas'))}</legend>
             ${salidas.map(s => `<label class="kit-pay__opt"><input type="radio" name="pago" value="${s}" ${datos.pago === s ? 'checked' : ''}>
-              <span class="kit-pay__card"><b>${esc(t(s === 'whatsapp' ? 'porWhatsapp' : 'porMP'))}</b><small>${esc(t(s === 'whatsapp' ? 'porWhatsappSub' : 'porMPSub'))}</small></span></label>`).join('')}
+              <span class="kit-pay__card"><b>${esc(t(s === 'whatsapp' ? 'porWhatsapp' : s === 'efectivo' ? 'porEfectivo' : 'porMP'))}</b><small>${esc(s === 'efectivo' ? (pctPago(s) ? t('porEfectivoSub', { pct: pctPago(s) }) : t('porEfectivoSubSin')) : t(s === 'whatsapp' ? 'porWhatsappSub' : 'porMPSub'))}</small></span></label>`).join('')}
           </fieldset>` : ''}
         </form>
       </div>
       <div class="kit-cart__foot">
         <div class="kit-sum">
-          ${c.envio ? `<div><span>${esc(t('subtotal'))}</span><span>${ctx.money(c.subtotal)}</span></div><div><span>${esc(t('envio'))}</span><span>${ctx.money(c.envio)}</span></div>` : ''}
+          ${c.envio || c.descuento ? `<div><span>${esc(t('subtotal'))}</span><span>${ctx.money(c.subtotal)}</span></div>` : ''}
+          ${c.envio ? `<div><span>${esc(t('envio'))}</span><span>${ctx.money(c.envio)}</span></div>` : ''}
+          ${c.descuento ? `<div class="kit-sum__desc"><span>${esc(t('descEfectivo', { pct: c.descuentoPct }))}</span><span>−${ctx.money(c.descuento)}</span></div>` : ''}
           <div class="kit-sum__total"><span>${esc(t('total'))}</span><b>${ctx.money(c.total)}</b></div>
         </div>
         <p class="kit-msg" role="alert" hidden></p>
@@ -174,7 +180,7 @@ export function initCarrito(ctx, opts = {}) {
       if (f.name === 'sucursal') { setSucursal(f.value); return; }
       datos[f.name] = f.value;
       if (f.name === 'tipo') { body.querySelector('[data-dir]').hidden = f.value !== 'delivery'; pintarTotales(); }
-      if (f.name === 'pago') body.querySelector('[data-enviar]').textContent = f.value === 'mercadopago' ? t('pagar') : t('enviarPedido');
+      if (f.name === 'pago') { if (pctPago(f.value) || c.descuento) { pintarTotales(); return; } body.querySelector('[data-enviar]').textContent = f.value === 'mercadopago' ? t('pagar') : t('enviarPedido'); }
     });
     form.addEventListener('submit', (e) => { e.preventDefault(); enviar(); });
     body.querySelector('[data-enviar]').addEventListener('click', enviar);

@@ -16,6 +16,7 @@ import { applyTheme } from './core/theme.js';
 import { setLang, t } from './core/i18n.js';
 import { pais, crearFormatoMoneda } from './core/pais.js';
 import { estadoAbierto } from './core/turnos.js';
+import { efectivoHoy } from './core/descuentos.js';
 import { h, esc } from './core/util.js';
 import { mountCarta } from './modules/carta.js';
 import { initCarrito } from './modules/carrito.js';
@@ -47,6 +48,8 @@ export async function crearContexto({ config, base }) {
     // rutas de cliente.json (img/…) relativas al propio cliente.json: funcionan igual desde / y desde /admin
     asset: (p) => !p ? '' : /^(data:|blob:|https?:|\/)/.test(p) ? p : new URL(p, base).href,
     abierto: (horarios = config.horarios) => estadoAbierto(horarios, config.zonaHoraria),
+    // { pct, dia, feriado } del descuento en efectivo de hoy (pagos.efectivo)
+    efectivoHoy: () => efectivoHoy(config),
   };
 }
 

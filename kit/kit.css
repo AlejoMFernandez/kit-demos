@@ -289,3 +289,6 @@ html.kit-lock .kit-demo-pill { opacity: 0; pointer-events: none; transform: tran
 @media (prefers-reduced-motion: reduce) {
   .kit-root *, .kit-fab, .kit-pop__box, .kit-item { animation: none !important; transition: none !important; }
 }
+
+/* descuento por medio de pago (efectivo al retirar) */
+.kit-sum__desc { color: var(--kit-accent); font-weight: 700; }

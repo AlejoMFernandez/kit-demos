@@ -138,3 +138,17 @@ kit.reservas.abrir({ fecha, hora: '19:00', personas: 2 });  // popup del kit con
 ```
 
 O sin JS: `<button data-kit-open="reservas" data-kit-fecha="2026-10-27" data-kit-hora="19:00">`.
+
+## Descuento en efectivo al retirar
+
+Para locales que cobran distinto en efectivo (ej. Bien être: 20% de martes a viernes, 15% fines de semana y feriados):
+
+```json
+"pedidos": { "salidas": ["efectivo", "mercadopago"], "tipos": ["retiro"] },
+"pagos": { "efectivo": { "porDia": { "mar": 20, "mie": 20, "jue": 20, "vie": 20, "sab": 15, "dom": 15 }, "feriado": 15, "feriados": ["2026-11-23"] } }
+```
+
+- La salida `efectivo` funciona como `whatsapp` (guarda el pedido y abre WhatsApp), pero el total ya trae el descuento del día y el mensaje dice "Pago: efectivo al retirar".
+- El panel muestra "Efectivo −20% · cobrar $X".
+- En la web: `kit.efectivoHoy()` → `{ pct, dia, feriado }` para mostrar "Hoy 20% off en efectivo".
+- **Producción**: la función `crear_pedido` de Supabase todavía no aplica el descuento; antes de usarlo con un cliente real hay que sumarlo ahí (el servidor nunca confía en el total del navegador).

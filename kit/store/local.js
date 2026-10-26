@@ -5,6 +5,7 @@ import { uid, clone, codigoCorto } from '../core/util.js';
 import { armarPedido } from '../core/pedidos.js';
 import { configReservas } from '../core/turnos.js';
 import { temporadaValida } from '../core/temporadas.js';
+import { descuentoEfectivo } from '../core/descuentos.js';
 
 const VERSION = 1;
 
@@ -93,7 +94,7 @@ export function createLocalStore(config) {
     // ---- pedidos
     async createPedido(data) {
       return mut(db => {
-        const calc = armarPedido(db.productos, data.items, { tipo: data.tipo, pedidos: config.pedidos });
+        const calc = armarPedido(db.productos, data.items, { tipo: data.tipo, pedidos: config.pedidos, descuentoPct: data.pago === 'efectivo' ? descuentoEfectivo(config) : 0 });
         if (!calc.items.length) throw Object.assign(new Error('vacio'), { code: 'vacio' });
         const p = {
           id: uid('o-'), codigo: codigoCorto(config.prefijoPedido || 'PD'), ...calc,

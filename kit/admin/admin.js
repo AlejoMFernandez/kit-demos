@@ -274,6 +274,7 @@ export async function initAdmin(opts = {}) {
     if (p.pagoEstado === 'cobrado') return `<span class="kad-chip kad-chip--ok">${esc(t('cobrado'))}</span>`;
     if (p.pago === 'mercadopago' && p.pagoEstado === 'pendiente') return `<span class="kad-chip kad-chip--warn">${esc(t('pagoPendMP'))}</span>`;
     if (p.pagoEstado === 'rechazado') return `<span class="kad-chip kad-chip--danger">${esc(t('mpPagoRechazado'))}</span>`;
+    if (p.pago === 'efectivo') return `<span class="kad-chip kad-chip--warn">${esc(t(p.descuentoPct ? 'aCobrarEfectivo' : 'aCobrar', { monto: ctx.money(p.total), pct: p.descuentoPct }))}</span>`;
     return `<span class="kad-chip kad-chip--warn">${esc(t('aCobrar', { monto: ctx.money(p.total) }))}</span>`;
   }
   function tarjetaPedido(p) {

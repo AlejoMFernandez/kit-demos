@@ -74,7 +74,7 @@
     "pedidos": {
       "type": "object",
       "properties": {
-        "salidas": { "type": "array", "items": { "enum": ["whatsapp", "mercadopago"] } },
+        "salidas": { "type": "array", "items": { "enum": ["whatsapp", "efectivo", "mercadopago"] }, "description": "efectivo = como whatsapp, pero pagando en efectivo al retirar con el descuento de pagos.efectivo." },
         "tipos": { "type": "array", "items": { "enum": ["retiro", "delivery"] } },
         "envio": { "type": "number" }, "minimo": { "type": "number" }
       }
@@ -87,6 +87,15 @@
           "properties": {
             "endpoint": { "type": "string", "description": "Demo: la función compartida de kit-demos. Producción: /api/mp-preference del cliente." },
             "modo": { "enum": ["sandbox", "produccion", "simulado"] }
+          }
+        },
+        "efectivo": {
+          "type": "object",
+          "description": "Descuento por pagar en efectivo al retirar. Activa la salida 'efectivo'.",
+          "properties": {
+            "porDia": { "type": "object", "propertyNames": { "enum": ["lun", "mar", "mie", "jue", "vie", "sab", "dom"] }, "additionalProperties": { "type": "number" } },
+            "feriado": { "type": "number", "description": "% en feriados (pisa el del día)" },
+            "feriados": { "type": "array", "items": { "type": "string", "format": "date" } }
           }
         }
       }

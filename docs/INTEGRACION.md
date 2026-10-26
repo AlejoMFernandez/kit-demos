@@ -231,3 +231,7 @@ Para locales que trabajan con turnos fijos (bodegones, parrillas con dos vueltas
 - Al volver del pago aprobado se dispara `kit:giftcards` con `{ pedido, giftcards: [{ codigo, monto, para, de, mensaje, vence }] }`. Con `preventDefault()` la demo dibuja sus propias tarjetas; si no, el kit muestra los códigos.
 - Panel → pestaña **Gift cards**: buscar el código, ver saldo y vencimiento, canjear entera o en partes, activar las cobradas en el local y lista de emitidas con estado (pendiente, vigente, usada en parte, usada, vencida).
 - Producción: correr `supabase/migracion-servicios-giftcards.sql` (tablas `giftcards` y `giftcard_canjes`, trigger que las activa al cobrarse, RPC de canje solo para el dueño).
+
+### Varias cartas en la misma página (1.5)
+
+`data-kit-categorias="especiales,cookies"` en el contenedor muestra solo esas secciones, y `data-kit-pedir="false"` lo deja como vidriera (sin botón Agregar). Para opciones distintas por contenedor: `initKit({ cartas: { 'carta-local': { template, pedir: false } } })` (la clave es el `id` del contenedor). Ej.: la carta del mostrador como vidriera y los encargos con su propio selector.

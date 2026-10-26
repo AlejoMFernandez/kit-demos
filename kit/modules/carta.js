@@ -6,6 +6,10 @@
 //   template(p, ctx) → HTML interno de cada ítem (para conservar el diseño propio de la demo)
 //   etiquetas: { picante: { label: 'Picante', icono: '<svg…>' } }
 //   numerar: true  → "01, 02…" por categoría
+//   pedir: false   → vidriera sin botón Agregar (o data-kit-pedir="false" en el contenedor)
+//   filtro(p)      → true para mostrar el producto
+// data-kit-categorias="a,b" en el contenedor: solo esas secciones (ej. carta del mostrador y encargos en la misma página).
+// Opciones distintas por contenedor: initKit({ cartas: { <id del contenedor>: {…} } }).
 import { esc, $$ } from '../core/util.js';
 import { t } from '../core/i18n.js';
 import { tieneVariantes, precioDesde } from '../core/variantes.js';
@@ -22,6 +26,8 @@ const LABELS = { es: { picante: 'Picante', veggie: 'Sin carne', casa: 'De la cas
 export function mountCarta(el, ctx, opts = {}) {
   let cats = [], prods = [], temporada = null, actual = el.dataset.kitCategoria || null;
   el.classList.add('kit-root', 'kit-carta');
+  const pedir = opts.pedir !== false && el.dataset.kitPedir !== 'false';
+  const soloCats = (el.dataset.kitCategorias || '').split(',').map(x => x.trim()).filter(Boolean);
   el.setAttribute('aria-busy', 'true');
 
   function etiquetaHTML(tag) {
@@ -43,7 +49,7 @@ export function mountCarta(el, ctx, opts = {}) {
       </div>
       <div class="kit-item__side">
         <span class="kit-price">${precio}</span>
-        ${ctx.carrito && ctx.pedible(p) ? `<div class="kit-qty" data-kit-qty="${esc(p.id)}"></div>` : ''}
+        ${ctx.carrito && pedir && ctx.pedible(p) ? `<div class="kit-qty" data-kit-qty="${esc(p.id)}"></div>` : ''}
         ${p.disponible === false ? `<span class="kit-badge kit-badge--off">${esc(t('noDisponible'))}</span>` : ''}
       </div>`;
   }
@@ -85,6 +91,8 @@ export function mountCarta(el, ctx, opts = {}) {
       const [c, p, tmp] = await Promise.all([ctx.store.getCategorias(), ctx.store.getProductos(), ctx.store.getTemporada ? ctx.store.getTemporada() : null]);
       temporada = tmp; ctx.temporada = tmp;
       ({ cats, prods } = filtrarCarta(c, p, tmp));
+      if (soloCats.length) { cats = cats.filter(x => soloCats.includes(x.id)); prods = prods.filter(x => soloCats.includes(x.categoria)); }
+      if (typeof opts.filtro === 'function') prods = prods.filter(opts.filtro);
       render();
     }
     catch (err) { console.error('[kit] carta', err); el.innerHTML = `<p class="kit-error">${esc(t('error'))}</p>`; }

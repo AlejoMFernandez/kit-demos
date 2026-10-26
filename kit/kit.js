@@ -72,7 +72,7 @@ export async function initKit(opts = {}) {
   document.documentElement.classList.add('kit-on', `kit-${ctx.store.modo}`);
 
   if (M.carrito) ctx.carrito = initCarrito(ctx, opts.carrito);
-  if (M.carta) ctx.cartas = Array.from(document.querySelectorAll('[data-kit="carta"]')).map(el => mountCarta(el, ctx, opts.carta));
+  if (M.carta) ctx.cartas = Array.from(document.querySelectorAll('[data-kit="carta"]')).map(el => mountCarta(el, ctx, (opts.cartas && el.id && opts.cartas[el.id]) || opts.carta));
   if (M.reservas) ctx.reservas = initReservas(ctx);
   if (M.carrito && ctx.config.giftcards) ctx.giftcards = initGiftcards(ctx);
 

@@ -1,11 +1,20 @@
 // Armado de pedidos y mensajes de WhatsApp (puro, sin DOM).
 import { t } from './i18n.js';
+import { montoValido } from './giftcards.js';
 
 // Recalcula el pedido con los precios de la carta (nunca confía en el precio que trae el carrito).
-export function armarPedido(productos, lineas, { tipo = 'retiro', pedidos = {}, descuentoPct = 0 } = {}) {
+// Las gift cards (líneas con "gc") se validan contra los montos de cliente.json → giftcards.
+export function armarPedido(productos, lineas, { tipo = 'retiro', pedidos = {}, descuentoPct = 0, giftcards = null } = {}) {
   const porId = new Map(productos.map(p => [p.id, p]));
   const items = [];
   for (const l of lineas) {
+    if (l.gc) {
+      const monto = Number(l.gc.monto);
+      if (!giftcards || !montoValido(giftcards, monto)) continue;
+      const gc = { monto, para: String(l.gc.para || '').trim().slice(0, 60), de: String(l.gc.de || '').trim().slice(0, 60), mensaje: String(l.gc.mensaje || '').trim().slice(0, 200) };
+      items.push({ id: 'giftcard', key: l.key || '', nombre: giftcards.nombre || t('giftcard'), precio: monto, cant: 1, nota: gc.para ? t('gcPara', { para: gc.para }) : '', subtotal: monto, giftcard: gc });
+      continue;
+    }
     const p = porId.get(l.id);
     if (!p || p.disponible === false) continue;
     const cant = Math.max(1, Math.min(99, parseInt(l.cant, 10) || 1));

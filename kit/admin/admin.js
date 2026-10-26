@@ -10,7 +10,8 @@ import { cargarConfig, crearContexto } from '../kit.js';
 import { esc, h, $, $$, slug, soloDigitos } from '../core/util.js';
 import { t } from '../core/i18n.js';
 import { popup, confirmar, toast } from '../core/ui.js';
-import { ahoraEn, horaVisible, aMin, diaSemana, diaNum, fechaDeNum, franjas, generarTurnos, configReservas } from '../core/turnos.js';
+import { ahoraEn, horaVisible, aMin, diaSemana, diaNum, fechaDeNum, franjas, generarTurnos, configReservas, serviciosDe, tandaDe, serviciosDelDia } from '../core/turnos.js';
+import { configGiftcards, estadoGiftcard, canjeable, normalizarCodigo } from '../core/giftcards.js';
 import { linkWhatsApp } from '../core/pedidos.js';
 import { sucursales } from '../core/sucursales.js';
 import { temporadasDe, seVe } from '../core/temporadas.js';
@@ -37,7 +38,9 @@ export async function initAdmin(opts = {}) {
     config.modulos.reservas && { id: 'reservas', icono: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>' },
     config.modulos.carta && { id: 'carta', icono: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/>' },
     config.modulos.carta && (config.modulos.fechas || (config.carta?.categorias || []).some(c => c.especial)) && { id: 'fechas', icono: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m12 12.6.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3Z"/>' },
+    config.modulos.carrito && config.giftcards && { id: 'giftcards', icono: '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 12h18M12 8v12M12 8c-1.5-3.5-6.5-3.5-5 0M12 8c1.5-3.5 6.5-3.5 5 0"/>' },
   ].filter(Boolean);
+  const GC = configGiftcards(config);
   let vista = (location.hash.slice(1) && vistas.some(v => v.id === location.hash.slice(1))) ? location.hash.slice(1) : vistas[0]?.id;
   const KEY = `kit:${config.id}:panel`;
   const pref = (() => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (_) { return {}; } })();
@@ -52,6 +55,8 @@ export async function initAdmin(opts = {}) {
     cat: null,                             // sección abierta en la carta
     fe: null,                              // fecha especial abierta
     q: '',                                 // búsqueda en la carta
+    gc: '',                                // gift card abierta en el canje
+    gcMsg: null,                           // { tipo, texto } del último canje
   };
   let pendientesAntes = null;
   const yaVistos = new Set(); let tableroVisto = false;
@@ -131,6 +136,20 @@ export async function initAdmin(opts = {}) {
   const pagado = (p) => PAGADO.includes(p.pagoEstado);
   const nRes = (o) => o.n === 1 ? t('nReserva1', o) : t('nReservas', o);
   const turnoDe = (hora) => { const m = aMin(hora) % 1440; return m < 720 ? 'turnoManana' : m < 960 ? 'turnoMediodia' : m < 1200 ? 'turnoTarde' : 'turnoNoche'; };
+  const RCFG = configReservas(config.reservas);
+  const conServicios = !!serviciosDe(RCFG);
+  // Grupos de la lista del día: por servicio y tanda ("Cena · Primer tiempo") o por momento del día.
+  function agrupar(rs) {
+    const g = new Map();
+    rs.forEach(r => {
+      const td = conServicios ? tandaDe(RCFG, r.hora) : null;
+      const k = td ? `${td.servicio.id}|${td.indice}` : turnoDe(r.hora);
+      if (!g.has(k)) g.set(k, { k, label: td ? [td.servicio.nombre, td.tanda.nombre].filter(Boolean).join(' · ') : t(k), orden: td ? aMin(td.tanda.turnos[0]) : ['turnoManana', 'turnoMediodia', 'turnoTarde', 'turnoNoche'].indexOf(k), items: [] });
+      g.get(k).items.push(r);
+    });
+    return [...g.values()].sort((a, b) => a.orden - b.orden);
+  }
+  const extraLabel = (id) => (RCFG.extras || []).find(e => e.id === id)?.label || id;
 
   // ---------- clicks
   async function onClick(e) {
@@ -352,36 +371,37 @@ export async function initAdmin(opts = {}) {
     // todos los horarios del día con su ocupación (sin importar si ya pasaron)
     const R = configReservas(config.reservas);
     const ts = generarTurnos({ horarios: config.horarios, reservas: { ...config.reservas, anticipacionMin: -1e6 }, tz: ctx.tz }, fecha, ocupacionDe(reservas, fecha), 1);
-    return ts.map(x => ({ ...x, usados: R.capacidad - x.libres }));
+    return ts.map(x => ({ ...x, usados: (x.capacidad ?? R.capacidad) - x.libres }));
   }
 
   function listaDia(todas, R) {
     const del = todas.filter(r => r.fecha === st.fecha);
     const activas = del.filter(r => !['cancelada', 'no_vino'].includes(r.estado));
-    const grupos = {};
-    del.forEach(r => { const k = turnoDe(r.hora); (grupos[k] = grupos[k] || []).push(r); });
-    const orden = ['turnoManana', 'turnoMediodia', 'turnoTarde', 'turnoNoche'].filter(k => grupos[k]);
+    const grupos = agrupar(del);
     const tsTodos = turnosDia(st.fecha, todas).filter(x => x.usados > 0);
     const pico = Math.max(0, ...tsTodos.map(x => x.usados));
-    const ts = tsTodos.filter(x => x.usados >= pico * .3).slice(-12);
-    const llenos = tsTodos.filter(x => x.libres <= 0);
-    const notas = activas.filter(r => r.comentario);
+    // con servicios: una barra por tanda (comparten cupo); si no, por horario
+    const ts = conServicios
+      ? turnosDia(st.fecha, todas).filter((x, i, a) => a.findIndex(y => y.servicio === x.servicio && y.tandaIndice === x.tandaIndice) === i).map(x => ({ ...x, label: [x.servicioNombre, x.tanda].filter(Boolean).join(' · ') }))
+      : tsTodos.filter(x => x.usados >= pico * .3).slice(-12);
+    const llenos = conServicios ? ts.filter(x => x.libres <= 0) : tsTodos.filter(x => x.libres <= 0);
+    const notas = activas.filter(r => r.comentario || (r.extras || []).length).map(r => ({ ...r, comentario: [...(r.extras || []).map(extraLabel), r.comentario].filter(Boolean).join(' · ') }));
     return `
       <p class="kad-sub kad-sub--grande">${esc(nRes({ n: activas.length, p: activas.reduce((s, r) => s + r.personas, 0) }))}</p>
       <div class="kad-res-layout">
         <div class="kad-tabla">
-          ${del.length ? orden.map(k => {
-            const rs = grupos[k]; const act = rs.filter(r => !['cancelada', 'no_vino'].includes(r.estado));
-            return `<section class="kad-turno"><h2 class="kad-turno__t"><span>${esc(t(k))}</span><small>${esc(nRes({ n: act.length, p: act.reduce((s, r) => s + r.personas, 0) }))}</small></h2>
+          ${del.length ? grupos.map(g => {
+            const rs = g.items; const act = rs.filter(r => !['cancelada', 'no_vino'].includes(r.estado));
+            return `<section class="kad-turno"><h2 class="kad-turno__t"><span>${esc(g.label)}</span><small>${esc(nRes({ n: act.length, p: act.reduce((s, r) => s + r.personas, 0) }))}</small></h2>
               ${rs.map(filaReserva).join('')}</section>`;
           }).join('') : `<div class="kit-empty"><p class="kit-empty__t">${esc(t('sinReservas'))}</p><button type="button" class="kit-btn" data-anotar>+ ${esc(t('anotarReserva'))}</button></div>`}
         </div>
         <aside class="kad-lado">
           <div class="kad-caja">
             <h2 class="kad-caja__t">${esc(t('comoViene'))}</h2>
-            <p class="kad-muted">${esc(t('capacidadN', { n: R.capacidad }))}</p>
-            ${ts.length ? `<div class="kad-barras">${ts.map(x => { const pct = Math.min(100, Math.round(x.usados / R.capacidad * 100)); const c = pct >= 100 ? 'rojo' : pct >= 75 ? 'ambar' : 'verde';
-              return `<span>${esc(x.label)}</span><span class="kad-barra"><i class="kad-barra--${c}" style="width:${pct}%"></i></span><b>${x.usados}</b>`; }).join('')}</div>` : `<p class="kad-muted">—</p>`}
+            <p class="kad-muted">${esc(conServicios ? t('capacidadTanda') : t('capacidadN', { n: R.capacidad }))}</p>
+            ${ts.length ? `<div class="kad-barras${conServicios ? ' kad-barras--tandas' : ''}">${ts.map(x => { const cap = x.capacidad ?? R.capacidad; const pct = Math.min(100, Math.round(x.usados / cap * 100)); const c = pct >= 100 ? 'rojo' : pct >= 75 ? 'ambar' : 'verde';
+              return `<span>${esc(x.label)}</span><span class="kad-barra"><i class="kad-barra--${c}" style="width:${pct}%"></i></span><b>${x.usados}${conServicios ? `<small>/${cap}</small>` : ''}</b>`; }).join('')}</div>` : `<p class="kad-muted">—</p>`}
             ${llenos.length ? `<p class="kad-aviso">${esc(t('llenoAviso', { hora: llenos.map(x => x.label).join(', ') }))}</p>` : ''}
           </div>
           <div class="kad-caja">
@@ -408,7 +428,7 @@ export async function initAdmin(opts = {}) {
       <b class="kad-res__hora">${esc(hora)}</b>
       <span class="kad-res__nombre"><b>${esc(r.nombre)}</b><small>${esc(r.telefono || '')}</small></span>
       <b class="kad-res__pers" title="${esc(t('personas'))}">${r.personas}<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-4 3-6 7-6s7 2 7 6"/></svg></b>
-      <span class="kad-res__nota">${esc(r.comentario || '')}</span>
+      <span class="kad-res__nota">${(r.extras || []).map(x => `<i class="kad-extra">${esc(extraLabel(x))}</i>`).join('')}${esc(r.comentario || '')}</span>
       <span class="kad-est kad-est--${r.estado}">${esc(t(r.estado))}</span>
       <span class="kad-res__acc">${acciones}${menu}</span>
     </div>`;
@@ -426,9 +446,8 @@ export async function initAdmin(opts = {}) {
     for (let d = 1; d <= dias; d++) {
       const f = `${st.mes}-${String(d).padStart(2, '0')}`;
       const rs = todas.filter(r => r.fecha === f && !['cancelada', 'no_vino'].includes(r.estado));
-      const abierto = franjas(config.horarios, f).length > 0 && !(R.cerrados || []).includes(f);
-      const pico = rs.length ? Math.max(0, ...turnosDia(f, todas).map(x => x.usados)) : 0;
-      const pct = Math.min(100, Math.round(pico / R.capacidad * 100));
+      const abierto = conServicios ? serviciosDelDia({ horarios: config.horarios, reservas: config.reservas }, f).length > 0 : franjas(config.horarios, f).length > 0 && !(R.cerrados || []).includes(f);
+      const pct = rs.length ? Math.min(100, Math.max(0, ...turnosDia(f, todas).map(x => Math.round(x.usados / (x.capacidad ?? R.capacidad) * 100)))) : 0;
       const c = pct >= 100 ? 'rojo' : pct >= 75 ? 'ambar' : 'verde';
       const cls = [f === hoy() && 'is-hoy', f === st.fecha && 'is-sel', f < hoy() && 'is-pasado', !abierto && 'is-cerrado'].filter(Boolean).join(' ');
       celdas.push(`<button type="button" class="kad-dia ${cls}" data-dia="${f}" aria-pressed="${f === st.fecha}">
@@ -437,7 +456,7 @@ export async function initAdmin(opts = {}) {
       </button>`);
     }
     const sel = todas.filter(r => r.fecha === st.fecha && !['cancelada', 'no_vino'].includes(r.estado));
-    const grupos = {}; sel.forEach(r => { const k = turnoDe(r.hora); (grupos[k] = grupos[k] || []).push(r); });
+    const grupos = agrupar(sel);
     const llenos = turnosDia(st.fecha, todas).filter(x => x.usados > 0 && x.libres <= 0);
     return `
       <div class="kad-leyenda"><span><i class="kad-barra--verde"></i>${esc(t('tranquilo'))}</span><span><i class="kad-barra--ambar"></i>${esc(t('seLlena'))}</span><span><i class="kad-barra--rojo"></i>${esc(t('completo'))}</span></div>
@@ -450,7 +469,7 @@ export async function initAdmin(opts = {}) {
           <div class="kad-caja">
             <h2 class="kad-caja__t kad-caja__t--grande">${esc(fechaLarga(st.fecha))}</h2>
             <p class="kad-muted">${esc(nRes({ n: sel.length, p: sel.reduce((s, r) => s + r.personas, 0) }))}</p>
-            ${['turnoManana', 'turnoMediodia', 'turnoTarde', 'turnoNoche'].filter(k => grupos[k]).map(k => `<div class="kad-resumen"><b>${esc(t(k))}</b><span>${esc(nRes({ n: grupos[k].length, p: grupos[k].reduce((s, r) => s + r.personas, 0) }))}</span></div>`).join('')}
+            ${grupos.map(g => `<div class="kad-resumen"><b>${esc(g.label)}</b><span>${esc(nRes({ n: g.items.length, p: g.items.reduce((s, r) => s + r.personas, 0) }))}</span></div>`).join('')}
             ${llenos.length ? `<p class="kad-aviso">${esc(t('llenoAviso', { hora: llenos.map(x => x.label).join(', ') }))}</p>` : ''}
             <button type="button" class="kit-btn kit-btn--block" data-ver-lista>${esc(t('verListaDia'))}</button>
             <p class="kad-muted">${esc(t('tocaDia'))}</p>
@@ -462,7 +481,7 @@ export async function initAdmin(opts = {}) {
   function anotarReserva() {
     const R = configReservas(config.reservas);
     const f0 = st.fecha && st.fecha >= hoy() ? st.fecha : hoy();
-    const opcionesHora = (f) => turnosDia(f, []).map(x => `<option value="${x.hora}">${x.label}</option>`).join('');
+    const opcionesHora = (f) => turnosDia(f, []).map(x => `<option value="${x.hora}">${x.label}${x.servicioNombre ? ` · ${esc(x.servicioNombre)}${x.tanda ? ` (${esc(x.tanda)})` : ''}` : ''}</option>`).join('');
     const f = h(`<form class="kit-form kad-anotar-form">
       <p class="kad-muted">${esc(t('anotarSub'))}</p>
       <div class="kit-field-row">
@@ -759,6 +778,91 @@ export async function initAdmin(opts = {}) {
     setTimeout(() => { if (!prod) f.nombre.focus(); }, 80);
   }
 
+  // =====================================================================
+  // GIFT CARDS: canje por código (entera o en partes) + lista de emitidas
+  // =====================================================================
+  async function vistaGiftcards(main) {
+    const todas = await store.getGiftcards();
+    const ahora = Date.now();
+    const sel = st.gc ? todas.find(g => g.codigo === st.gc) || null : null;
+    const vigentes = todas.filter(g => canjeable(g, ahora));
+    const mes = hoy().slice(0, 7);
+    const delMes = todas.filter(g => g.estado !== 'pendiente' && (g.activada || g.creado).slice(0, 7) === mes);
+    const fecha = (iso) => iso ? new Date(iso).toLocaleDateString(ctx.pais.locale, { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+    const chip = (e) => `<span class="kad-est kad-est--gc-${esc(e)}">${esc(t(e))}</span>`;
+    const ej = `${GC.prefijo}-7K2Q`;
+    let caja;
+    if (st.gc && !sel) caja = `<p class="kad-aviso">${esc(t('gcNoExiste'))}</p>`;
+    else if (sel) {
+      const e = sel.estado;
+      caja = `<div class="kad-gc" data-gc-sel="${esc(sel.codigo)}">
+        <div class="kad-gc__top"><b class="kad-gc__cod">${esc(sel.codigo)}</b>${chip(e)}</div>
+        <div class="kad-gc__nums">
+          <div><span>${esc(t('gcSaldo'))}</span><b>${ctx.money(sel.saldo)}</b><small>${esc(t('gcMonto'))}: ${ctx.money(sel.monto)}</small></div>
+          <div><span>${esc(t('gcVenceEl'))}</span><b>${esc(fecha(sel.vence))}</b>${sel.vence && ['vigente', 'parcial'].includes(e) ? `<small>${esc(t('enDias', { n: Math.max(0, Math.ceil((new Date(sel.vence) - ahora) / 864e5)) }))}</small>` : ''}</div>
+        </div>
+        <p class="kad-gc__quien">${sel.para ? `${esc(t('gcPara', { para: sel.para }))}` : ''}${sel.de ? ` · ${esc(t('gcDe', { de: sel.de }))}` : ''}${sel.pedidoCodigo ? ` · ${esc(sel.pedidoCodigo)}` : ''}</p>
+        ${sel.mensaje ? `<p class="kad-gc__msg">“${esc(sel.mensaje)}”</p>` : ''}
+        ${e === 'pendiente' ? `<p class="kad-muted">${esc(t('gcPendienteSub'))}</p><button type="button" class="kit-btn kit-btn--block" data-gc-activar>${esc(t('gcActivar'))}</button>`
+          : canjeable(sel, ahora) ? `<form class="kad-gc__canje" data-gc-canje>
+              <label class="kit-field"><span>${esc(t('gcMontoCuenta'))}</span><span class="kad-precio kad-precio--grande"><span aria-hidden="true">${esc(ctx.pais.simbolo || '$')}</span><input type="text" inputmode="decimal" data-gc-monto value="${esc(formatoNumero(sel.saldo))}" aria-label="${esc(t('gcMontoCuenta'))}"></span></label>
+              <button class="kit-btn kit-btn--big">${esc(t('gcCanjear'))}</button></form>`
+          : `<p class="kad-aviso">${esc(t('gcEstadoNo', { estado: t(e).toLowerCase() }))}</p>`}
+        ${st.gcMsg ? `<p class="kad-gc__ok kad-gc__ok--${esc(st.gcMsg.tipo)}" role="status">${esc(st.gcMsg.texto)}</p>` : ''}
+        ${(sel.canjes || []).length ? `<div class="kad-gc__hist"><b>${esc(t('gcHistorial'))}</b>${sel.canjes.map(c => `<span>${esc(fecha(c.fecha))} · ${ctx.money(c.monto)}${c.nota ? ` · ${esc(c.nota)}` : ''}</span>`).join('')}</div>` : ''}
+      </div>`;
+    } else caja = `<p class="kad-muted">${esc(t('gcElegi'))}</p>`;
+
+    main.innerHTML = `
+      <div class="kad-head kad-head--row">
+        <h1>${esc(t('giftcards'))}</h1>
+        <div class="kad-stats">
+          <span>${esc(t('gcVigentes', { n: vigentes.length, monto: ctx.money(vigentes.reduce((s, g) => s + Number(g.saldo || 0), 0)) || '0' }))}</span>
+          <span>${esc(t('gcVendidasMes', { n: delMes.length, monto: ctx.money(delMes.reduce((s, g) => s + Number(g.monto || 0), 0)) || '0' }))}</span>
+        </div>
+      </div>
+      <div class="kad-gc-layout">
+        <section class="kad-caja kad-gc-canje">
+          <h2 class="kad-caja__t kad-caja__t--grande">${esc(t('gcCanjear'))}</h2>
+          <form class="kad-gc__buscar" data-gc-buscar>
+            <label class="kit-sr" for="kad-gc-in">${esc(t('gcCodigo'))}</label>
+            <input id="kad-gc-in" data-gc-input autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${esc(t('gcCodigoPh', { ej }))}" value="${esc(st.gc)}">
+            <button class="kit-btn">${esc(t('gcBuscar'))}</button>
+          </form>
+          ${caja}
+        </section>
+        <section class="kad-gc-lista">
+          <h2 class="kad-caja__t">${esc(t('gcEmitidas'))}</h2>
+          ${todas.length ? `<div class="kad-gc-tabla" role="table">
+            <div class="kad-gc-fila kad-gc-fila--head" role="row"><span role="columnheader">${esc(t('gcCodigo'))}</span><span role="columnheader">${esc(t('gcParaLabel').split(' (')[0])}</span><span role="columnheader">${esc(t('gcMonto'))}</span><span role="columnheader">${esc(t('gcSaldo'))}</span><span role="columnheader">${esc(t('gcVenceEl'))}</span><span role="columnheader"></span></div>
+            ${todas.map(g => `<button type="button" class="kad-gc-fila${g.codigo === st.gc ? ' is-sel' : ''}" role="row" data-gc-ver="${esc(g.codigo)}">
+              <b role="cell">${esc(g.codigo)}</b><span role="cell">${esc(g.para || '—')}</span><span role="cell">${ctx.money(g.monto)}</span><span role="cell">${ctx.money(g.saldo)}</span><span role="cell">${esc(fecha(g.vence))}</span><span role="cell">${chip(g.estado)}</span></button>`).join('')}
+          </div>` : `<div class="kit-empty"><p class="kit-empty__t">${esc(t('gcSinNada'))}</p><p>${esc(t('gcSinNadaSub'))}</p><a class="kit-btn" href="${esc(sitio)}" target="_blank" rel="noopener">${esc(t('verSitio'))} ↗</a></div>`}
+        </section>
+      </div>`;
+
+    main.onsubmit = async (e) => {
+      e.preventDefault();
+      if (e.target.matches('[data-gc-buscar]')) { st.gc = normalizarCodigo(e.target.querySelector('input').value); st.gcMsg = null; return render(); }
+      if (e.target.matches('[data-gc-canje]')) {
+        const v = parsePrecio(e.target.querySelector('[data-gc-monto]').value);
+        try {
+          const g = await store.canjearGiftcard(st.gc, v);
+          st.gcMsg = { tipo: 'ok', texto: g.saldo > 0 ? t('gcCanjeada', { saldo: ctx.money(g.saldo) }) : t('gcUsadaToda') };
+          toast(t('guardado'));
+        } catch (err) {
+          st.gcMsg = { tipo: 'error', texto: err.code === 'gc_monto' ? t('gcMontoMal') : err.code === 'gc_no_canjeable' ? t('gcEstadoNo', { estado: t(estadoGiftcard(sel) || 'usada').toLowerCase() }) : t('error') };
+        }
+        render();
+      }
+    };
+    main.onclick = async (e) => {
+      const ver = e.target.closest('[data-gc-ver]');
+      if (ver) { st.gc = ver.dataset.gcVer; st.gcMsg = null; render(); if (matchMedia('(max-width: 900px)').matches) $('.kad-gc-canje', root)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+      if (e.target.closest('[data-gc-activar]')) { await store.activarGiftcard(st.gc); st.gcMsg = null; toast(t('vigente')); render(); }
+    };
+  }
+
   // ---------- contadores + aviso de pedido nuevo
   async function contadores() {
     const [peds, ress] = await Promise.all([
@@ -778,11 +882,13 @@ export async function initAdmin(opts = {}) {
     $$('[data-vista]', root).forEach(a => { const on = a.dataset.vista === vista; a.classList.toggle('is-on', on); a.setAttribute('aria-current', on ? 'page' : 'false'); });
     main.dataset.pantalla = vista;
     const y = scrollY;
+    main.onclick = null; main.onsubmit = null;
     try {
       if (vista === 'pedidos') await vistaPedidos(main);
       else if (vista === 'reservas') await vistaReservas(main);
       else if (vista === 'carta') await vistaCarta(main);
       else if (vista === 'fechas') await vistaFechas(main);
+      else if (vista === 'giftcards') await vistaGiftcards(main);
     } catch (err) { console.error('[kit] panel', err); main.innerHTML = `<p class="kit-error">${esc(t('error'))}</p>`; }
     if (Math.abs(scrollY - y) > 2) scrollTo({ top: y });
     contadores();
@@ -794,7 +900,7 @@ export async function initAdmin(opts = {}) {
     clearTimeout(rt);
     rt = setTimeout(() => {
       // no repintar con un popup abierto ni mientras se escribe un precio
-      if (document.querySelector('.kit-pop') || document.activeElement?.matches?.('[data-precio], [data-buscar]')) { contadores(); return; }
+      if (document.querySelector('.kit-pop') || document.activeElement?.matches?.('[data-precio], [data-buscar], [data-gc-input], [data-gc-monto]')) { contadores(); return; }
       if (ev?.origen === 'local' && vista === 'carta') { contadores(); return; }   // la carta ya se actualizó en el lugar
       render();
       if (ev?.origen !== 'local' && vista !== 'carta') toast(`${t('nuevo')} ✓`);

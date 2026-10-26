@@ -18,7 +18,7 @@ Resumen: **Supabase** (datos + login + fotos) · **`modo: "produccion"`** en `cl
 Un proyecto de Supabase atiende a varios clientes: todo se separa por `negocio` y cada dueño solo ve lo suyo (Row Level Security).
 
 1. Crear el proyecto en supabase.com (región São Paulo, la más cercana a AR/BR).
-2. SQL Editor → pegar y correr **`supabase/schema.sql`** (se puede volver a correr sin romper nada).
+2. SQL Editor → pegar y correr **`supabase/schema.sql`** y después **`supabase/migracion-servicios-giftcards.sql`** (reservas por tanda y gift cards). Los dos se pueden volver a correr sin romper nada.
 3. Project Settings → API: anotar **Project URL**, **anon key** (va en el front) y **service_role key** (solo en variables de entorno de Vercel, nunca en el código del sitio).
 4. Authentication → Providers → Email: dejar activado; desactivar “Allow new users to sign up” (los usuarios los creás vos).
 

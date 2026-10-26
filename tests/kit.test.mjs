@@ -117,3 +117,54 @@ test('temporadas: filtra secciones y valida la activa', () => {
   assert.deepEqual(r.cats.map(c => c.id), ['b', 'c']);
   assert.deepEqual(r.prods.map(p => p.id), [2, 3, 4]);
 });
+
+// ---------- 1.2: servicios / tandas y gift cards ----------
+import { serviciosDelDia, tandaDe, usadosEn } from '../kit/core/turnos.js';
+import { configGiftcards, montoValido, codigoGiftcard, estadoGiftcard, canjeable } from '../kit/core/giftcards.js';
+
+const envServ = {
+  horarios: { mar: [['09:00', '23:30']], vie: [['09:00', '23:30']] }, tz: 'America/Argentina/Buenos_Aires',
+  reservas: { capacidad: 10, maxPersonas: 8, anticipacionMin: 0, servicios: [
+    { id: 'almuerzo', nombre: 'Almuerzo', dias: ['vie'], tandas: [{ nombre: 'Primer tiempo', turnos: ['12:00', '12:15'] }] },
+    { id: 'cena', nombre: 'Cena', tandas: [{ nombre: 'Primer tiempo', turnos: ['20:00', '20:15', '20:30'] }, { nombre: 'Segundo tiempo', turnos: ['22:15', '22:30'], capacidad: 4 }] },
+  ] },
+};
+
+test('servicios: qué servicios hay cada día', () => {
+  assert.deepEqual(serviciosDelDia(envServ, VIERNES).map(s => s.id), ['almuerzo', 'cena']);
+  assert.deepEqual(serviciosDelDia(envServ, '2030-01-01').map(s => s.id), ['cena']);      // martes: el almuerzo no va
+  assert.deepEqual(serviciosDelDia(envServ, '2030-01-07').map(s => s.id), []);             // lunes cerrado
+});
+
+test('tandas: los turnos de una tanda comparten el cupo', () => {
+  const t = generarTurnos(envServ, VIERNES, { '20:00': 7 }, 4, 'cena');
+  assert.deepEqual(t.map(x => x.hora), ['20:00', '20:15', '20:30', '22:15', '22:30']);
+  assert.equal(t.find(x => x.hora === '20:30').disponible, false);   // 7 + 4 > 10 en toda la tanda
+  assert.equal(t.find(x => x.hora === '22:15').disponible, true);    // otra tanda, cupo propio de 4
+  assert.equal(t.find(x => x.hora === '22:15').tanda, 'Segundo tiempo');
+  assert.equal(usadosEn(envServ.reservas, '20:30', { '20:00': 7, '22:15': 3 }), 7);
+  assert.equal(tandaDe(envServ.reservas, '22:30').capacidad, 4);
+  assert.equal(tandaDe(envServ.reservas, '21:00'), null);
+  assert.equal(generarTurnos(envServ, VIERNES, {}, 1).length, 7);     // sin servicio: todos los del día
+});
+
+test('gift cards: montos, códigos y vencimiento', () => {
+  const gc = configGiftcards({ prefijoPedido: 'LC', giftcards: { montos: [50000, 75000], validezDias: 60 } });
+  assert.equal(gc.prefijo, 'LC');
+  assert.ok(montoValido(gc, 50000)); assert.ok(!montoValido(gc, 60000));
+  assert.ok(montoValido({ ...gc, min: 10000, max: 300000 }, 60000));
+  assert.match(codigoGiftcard('LCD'), /^LCD-[A-Z2-9]{4}$/);
+  const g = { estado: 'vigente', saldo: 100, vence: '2020-01-01T00:00:00Z' };
+  assert.equal(estadoGiftcard(g), 'vencida'); assert.equal(canjeable(g), false);
+  assert.equal(canjeable({ ...g, vence: '2099-01-01T00:00:00Z' }), true);
+});
+
+test('gift cards: el pedido toma el monto de la config, no del carrito', () => {
+  const gc = configGiftcards({ giftcards: { montos: [50000] } });
+  const prods = [{ id: 'mate', nombre: 'Mate', precio: 20000 }];
+  const ped = armarPedido(prods, [{ id: 'giftcard', key: 'a', gc: { monto: 50000, para: 'Martín' } }, { id: 'giftcard', key: 'b', gc: { monto: 1 } }, { id: 'mate', cant: 1 }], { giftcards: gc });
+  assert.equal(ped.items.length, 2);
+  assert.equal(ped.total, 70000);
+  assert.equal(ped.items[0].giftcard.para, 'Martín');
+  assert.equal(armarPedido(prods, [{ id: 'giftcard', gc: { monto: 50000 } }], {}).items.length, 0); // sin config de gift cards
+});

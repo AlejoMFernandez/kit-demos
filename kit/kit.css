@@ -321,3 +321,27 @@ html.kit-lock .kit-demo-pill { opacity: 0; pointer-events: none; transform: tran
 
 /* botón de carrito propio de la demo ([data-kit-target]) */
 .kit-bump { animation: kit-bump .45s var(--kit-ease); }
+
+/* ---------- reservas por servicio y tanda (1.4) ---------- */
+.kit-seg--serv { min-height: 52px; }
+.kit-seg--serv span { flex-direction: column; gap: 1px; min-height: 46px; }
+.kit-seg--serv small { font-weight: 600; font-size: .7rem; opacity: .75; }
+.kit-seg--serv input:disabled + span { opacity: .45; cursor: not-allowed; }
+.kit-tandas { display: grid; gap: .9rem; min-height: 120px; align-content: start; }
+.kit-tanda { display: grid; gap: .45rem; }
+.kit-tanda__t { font: 700 .74rem/1.2 var(--kit-font-body); letter-spacing: .14em; text-transform: uppercase; color: var(--kit-muted); }
+.kit-tanda.is-full .kit-tanda__t { text-decoration: none; }
+.kit-extras { display: grid; gap: .55rem; }
+.kit-extras .kit-check { font-weight: 600; min-height: 32px; }
+
+/* ---------- gift cards (1.4) ---------- */
+.kit-line__img--gc { display: grid; place-items: center; color: var(--kit-primary); }
+.kit-line__img--gc svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.kit-gc-x { appearance: none; border: var(--kit-border-w) solid var(--kit-border); background: var(--kit-surface); color: var(--kit-text); font: 700 .8rem/1 var(--kit-font-body); min-height: 40px; padding: 0 .85em; border-radius: var(--kit-radius-btn); cursor: pointer; }
+.kit-gc-x:hover { border-color: var(--kit-danger); color: var(--kit-danger); }
+.kit-gcs { list-style: none; margin: 0 0 .6rem; padding: 0; display: grid; gap: .5rem; width: 100%; }
+.kit-gcs li { display: grid; gap: 2px; padding: .75rem .9rem; border: var(--kit-border-w) dashed var(--kit-border); border-radius: calc(var(--kit-radius) * .6); text-align: left; }
+.kit-gcs b { font: 400 1.5rem/1 var(--kit-font-head); letter-spacing: .06em; }
+.kit-gcs span, .kit-gcs small { color: var(--kit-muted); font-size: .88rem; }
+.kit-gcform { display: grid; gap: 1.1rem; }
+[data-kit="giftcard"] .kit-gcform { padding: clamp(16px, 4vw, 28px); background: var(--kit-bg); border: var(--kit-border-w) solid var(--kit-text); border-radius: var(--kit-radius); box-shadow: var(--kit-shadow); }

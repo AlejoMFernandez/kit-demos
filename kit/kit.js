@@ -9,7 +9,8 @@
 // Monta según "modulos" de cliente.json:
 //   carta    → cada [data-kit="carta"]
 //   carrito  → botón flotante + checkout (WhatsApp / Mercado Pago) y [data-kit-add], [data-kit-qty]
-//   reservas → cada [data-kit="reservas"] y [data-kit-open="reservas"]
+//   reservas → cada [data-kit="reservas"] y [data-kit-open="reservas"] (con "servicios": almuerzo / cena por tandas)
+//   giftcards → [data-kit="giftcard"] o kit.giftcards.agregar({ monto, para, de, mensaje }) (necesita carrito)
 //   admin    → el panel vive en /admin (ver kit/admin)
 import { createStore } from './store/index.js';
 import { applyTheme } from './core/theme.js';
@@ -22,8 +23,9 @@ import { h, esc } from './core/util.js';
 import { mountCarta } from './modules/carta.js';
 import { initCarrito } from './modules/carrito.js';
 import { initReservas } from './modules/reservas.js';
+import { initGiftcards } from './modules/giftcards.js';
 
-export const VERSION = '1.3.0';
+export const VERSION = '1.4.0';
 
 export async function cargarConfig(src = 'cliente.json') {
   const url = new URL(src, location.href);
@@ -71,6 +73,7 @@ export async function initKit(opts = {}) {
   if (M.carrito) ctx.carrito = initCarrito(ctx, opts.carrito);
   if (M.carta) ctx.cartas = Array.from(document.querySelectorAll('[data-kit="carta"]')).map(el => mountCarta(el, ctx, opts.carta));
   if (M.reservas) ctx.reservas = initReservas(ctx);
+  if (M.carrito && ctx.config.giftcards) ctx.giftcards = initGiftcards(ctx);
 
   // Píldora "Probá el panel": en la demo invita al dueño a entrar a /admin.
   if (ctx.store.modo === 'demo' && M.admin && opts.badge !== false) {

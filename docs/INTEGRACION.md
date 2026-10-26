@@ -174,3 +174,39 @@ Para locales que cobran distinto en efectivo (ej. Bien être: 20% de martes a vi
 - **Fechas especiales**: categorías con `especial: true`. En la web se ven desde `desde − avisoDias` hasta `hasta` (pestaña punteada en la carta) y sus productos solo se retiran dentro de la ventana. El panel suma la pestaña **Fechas especiales** para crear la fecha, poner la ventana y cargar sus productos. Para mostrar una fecha fuera de temporada en un pitch: `initKit({ fechaEspecial: 'pascuas' })` (las demos lo leen de `?sala=pascuas`).
 - Desde la web: `kit.especiales(categorias)` devuelve las fechas visibles hoy y `kit.estadoEspecial(cat)` su estado (`aviso`, `en_curso`…); el evento `kit:carta` trae `detail.especiales`.
 - Producción: correr `supabase/migracion-encargos.sql`.
+
+## Reservas por servicio y tanda (1.4)
+
+Para locales que trabajan con turnos fijos (bodegones, parrillas con dos vueltas de cena) en vez de “cada 30 minutos dentro del horario”:
+
+```json
+"reservas": {
+  "capacidad": 150, "maxPersonas": 12, "anticipacionMin": 60, "diasAdelante": 30,
+  "servicios": [
+    { "id": "almuerzo", "nombre": "Almuerzo", "dias": ["mar","mie","jue","vie","sab","dom"],
+      "tandas": [ { "nombre": "Primer tiempo", "turnos": ["12:00","12:15","12:30"] } ] },
+    { "id": "cena", "nombre": "Cena",
+      "tandas": [ { "nombre": "Primer tiempo", "turnos": ["20:00","20:15","20:30"] },
+                  { "nombre": "Segundo tiempo", "turnos": ["22:15","22:30","22:45"], "capacidad": 120 } ] }
+  ],
+  "extras": [ { "id": "socio", "label": "Soy socio/a" }, { "id": "cumple", "label": "Venimos a festejar un cumple" } ]
+}
+```
+
+- El formulario suma un selector **Servicio** (siempre dibujado: los que no van ese día quedan apagados, nada salta de lugar) y los horarios agrupados por tanda.
+- Todos los turnos de una tanda **comparten el cupo** (`tanda.capacidad ?? servicio.capacidad ?? capacidad`).
+- La reserva guarda `servicio` y `extras`; el panel agrupa la lista del día por “Cena · Primer tiempo” y muestra una barra de ocupación por tanda.
+- Confirmación propia: `document.addEventListener('kit:reserva-lista', e => { e.preventDefault(); /* e.detail.resumen, e.detail.el */ })`.
+
+## Gift cards (1.4)
+
+```json
+"giftcards": { "nombre": "Gift card", "prefijo": "LCD", "validezDias": 60, "montos": [50000, 75000, 100000] }
+```
+
+- Necesita `"carrito": true`. Formulario listo con `<div data-kit="giftcard"></div>`, o diseño propio llamando a `kit.giftcards.agregar({ monto, para, de, mensaje }, { origen: boton })`.
+- El monto se valida contra la config (en demo y en la función `crear_pedido` de producción): un monto que no está en `montos` (o fuera de `min`/`max`) no entra.
+- Al crearse el pedido, cada gift card queda **pendiente**. Pasa a **vigente** con vencimiento cuando el pago se aprueba (Mercado Pago) o cuando el local la marca cobrada en el panel.
+- Al volver del pago aprobado se dispara `kit:giftcards` con `{ pedido, giftcards: [{ codigo, monto, para, de, mensaje, vence }] }`. Con `preventDefault()` la demo dibuja sus propias tarjetas; si no, el kit muestra los códigos.
+- Panel → pestaña **Gift cards**: buscar el código, ver saldo y vencimiento, canjear entera o en partes, activar las cobradas en el local y lista de emitidas con estado (pendiente, vigente, usada en parte, usada, vencida).
+- Producción: correr `supabase/migracion-servicios-giftcards.sql` (tablas `giftcards` y `giftcard_canjes`, trigger que las activa al cobrarse, RPC de canje solo para el dueño).

@@ -68,7 +68,31 @@
         "intervaloMin": { "type": "integer" }, "duracionMin": { "type": "integer" }, "capacidad": { "type": "integer", "description": "Personas simultáneas" },
         "maxPersonas": { "type": "integer" }, "anticipacionMin": { "type": "integer" }, "diasAdelante": { "type": "integer" },
         "ultimoTurnoMin": { "type": "integer", "description": "Minutos antes del cierre del último turno" },
-        "cerrados": { "type": "array", "items": { "type": "string", "format": "date" } }
+        "cerrados": { "type": "array", "items": { "type": "string", "format": "date" } },
+        "servicios": {
+          "type": "array",
+          "description": "Turnos fijos por servicio (almuerzo / cena) en vez de 'cada intervaloMin dentro del horario'. Todos los turnos de una tanda comparten el cupo.",
+          "items": {
+            "type": "object", "required": ["id", "tandas"],
+            "properties": {
+              "id": { "type": "string" }, "nombre": { "type": "string" },
+              "dias": { "type": "array", "items": { "enum": ["lun", "mar", "mie", "jue", "vie", "sab", "dom"] }, "description": "Sin dias = todos los días que abre el local." },
+              "capacidad": { "type": "integer" },
+              "tandas": { "type": "array", "items": { "type": "object", "required": ["turnos"], "properties": { "nombre": { "type": "string" }, "turnos": { "type": "array", "items": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" } }, "capacidad": { "type": "integer" } } } }
+            }
+          }
+        },
+        "extras": { "type": "array", "description": "Casillas opcionales en la reserva (socio, cumpleaños…). Se ven en el panel.", "items": { "type": "object", "required": ["id", "label"], "properties": { "id": { "type": "string" }, "label": { "type": "string" } } } }
+      }
+    },
+    "giftcards": {
+      "type": "object",
+      "description": "Gift cards: se compran por el carrito y el local las canjea desde /admin. Necesita el módulo carrito.",
+      "properties": {
+        "nombre": { "type": "string" }, "prefijo": { "type": "string", "maxLength": 4, "description": "Prefijo del código (LCD-7K2Q). Por defecto prefijoPedido." },
+        "validezDias": { "type": "integer", "description": "Días de vigencia desde que se cobra. Por defecto 60." },
+        "montos": { "type": "array", "items": { "type": "number" } },
+        "min": { "type": ["number", "null"] }, "max": { "type": ["number", "null"], "description": "Con min o max se permite monto libre." }
       }
     },
     "pedidos": {

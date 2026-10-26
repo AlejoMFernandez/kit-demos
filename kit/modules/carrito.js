@@ -10,13 +10,15 @@
 // data-kit-open="carrito" abre el carrito.
 // data-kit-sucursal="<id>" deja elegida esa sede (cadenas con "sucursales" en cliente.json).
 // kit.carrito.agregar(id, n, { nota }) suma con una aclaración propia (ej. "salchicha alemana").
-import { esc, h, $$, telValido } from '../core/util.js';
+// kit.carrito.agregarGiftcard({ monto, para, de, mensaje }) suma una gift card (cliente.json → giftcards).
+import { esc, h, $$, telValido, uid } from '../core/util.js';
 import { t } from '../core/i18n.js';
 import { popup, toast, copiar } from '../core/ui.js';
 import { armarPedido, mensajePedido, linkWhatsApp, totalTexto } from '../core/pedidos.js';
 import { configEncargo, opcionesRetiro, textoRetiro } from '../core/encargos.js';
 import { sucursales, sucursalPorId, pideSucursal, resumenSucursal } from '../core/sucursales.js';
 import { descuentoEfectivo } from '../core/descuentos.js';
+import { configGiftcards, montoValido } from '../core/giftcards.js';
 
 export function initCarrito(ctx, opts = {}) {
   const { config, store } = ctx;
@@ -46,7 +48,8 @@ export function initCarrito(ctx, opts = {}) {
   function guardar() { try { localStorage.setItem(KEY, JSON.stringify(lineas)); } catch (_) { /* sin storage: queda en memoria */ } }
   const cantDe = (id) => lineas.filter(l => l.id === id).reduce((s, l) => s + l.cant, 0);
   const pctPago = (pago) => pago === 'efectivo' ? descuentoEfectivo(config) : 0;
-  const calc = () => armarPedido(productos, lineas, { tipo: datos.tipo, pedidos: P, descuentoPct: pctPago(datos.pago) });
+  const GC = configGiftcards(config);
+  const calc = () => armarPedido(productos, lineas, { tipo: datos.tipo, pedidos: P, descuentoPct: pctPago(datos.pago), giftcards: GC });
 
   // ---------- botón flotante
   const fab = h(`<button type="button" class="kit-root kit-fab" aria-label="${esc(t('verPedido'))}" hidden>
@@ -83,7 +86,7 @@ export function initCarrito(ctx, opts = {}) {
   }
   function sync(root = document) { $$('[data-kit-qty]', root).forEach(el => { el.innerHTML = qtyHTML(el.dataset.kitQty); }); }
 
-  const claveLinea = (l) => `${l.id}|${l.nota || ''}`;
+  const claveLinea = (l) => l.gc ? `gc|${l.key}` : `${l.id}|${l.nota || ''}`;
   function cambiar(id, delta, origen, nota = '') {
     const p = productos.find(x => x.id === id);
     if (!p || !ctx.pedible(p)) return;
@@ -98,6 +101,24 @@ export function initCarrito(ctx, opts = {}) {
     if (pop) pintarDrawer();
     if (delta > 0 && desde && desde.width) volar(desde, p);
     document.dispatchEvent(new CustomEvent('kit:carrito', { detail: { lineas: lineas.slice(), producto: p, delta } }));
+  }
+
+  // ---------- gift cards
+  function agregarGiftcard(gc = {}, origen = null) {
+    if (!GC || !montoValido(GC, gc.monto)) return null;
+    const desde = origen && origen.isConnected ? origen.getBoundingClientRect() : null;
+    const key = uid('gc').replace(/[^a-z0-9]/gi, '').slice(0, 12);
+    lineas.push({ id: 'giftcard', key, cant: 1, gc: { monto: Number(gc.monto), para: String(gc.para || '').trim().slice(0, 60), de: String(gc.de || '').trim().slice(0, 60), mensaje: String(gc.mensaje || '').trim().slice(0, 200) } });
+    guardar(); pintarFab(true);
+    if (pop) pintarDrawer();
+    if (desde && desde.width) volar(desde, { foto: opts.giftcardFoto || '' });
+    document.dispatchEvent(new CustomEvent('kit:carrito', { detail: { lineas: lineas.slice(), giftcard: gc, delta: 1 } }));
+    return key;
+  }
+  function quitarGiftcard(key) {
+    lineas = lineas.filter(l => !(l.gc && l.key === key));
+    guardar(); pintarFab(); if (pop) pintarDrawer();
+    document.dispatchEvent(new CustomEvent('kit:carrito', { detail: { lineas: lineas.slice(), delta: -1 } }));
   }
 
   // pequeño "vuelo" del botón al carrito
@@ -124,6 +145,7 @@ export function initCarrito(ctx, opts = {}) {
   document.addEventListener('click', (e) => {
     const add = e.target.closest('[data-kit-add]'); if (add) { e.preventDefault(); cambiar(add.dataset.kitAdd, 1, add); return; }
     const dec = e.target.closest('[data-kit-dec]'); if (dec) { e.preventDefault(); cambiar(dec.dataset.kitDec, -1); return; }
+    const gq = e.target.closest('[data-kit-gc-quitar]'); if (gq) { e.preventDefault(); quitarGiftcard(gq.dataset.kitGcQuitar); return; }
     const li = e.target.closest('[data-kit-linea]');
     if (li) { e.preventDefault(); const [id, ...n] = li.dataset.kitLinea.split('|'); cambiar(id, Number(li.dataset.delta) || 0, li, n.join('|')); return; }
     const suc = e.target.closest('[data-kit-sucursal]'); if (suc) setSucursal(suc.dataset.kitSucursal);
@@ -150,6 +172,11 @@ export function initCarrito(ctx, opts = {}) {
     body.innerHTML = `
       <div class="kit-cart__scroll">
         <ul class="kit-lines">${c.items.map(i => {
+          if (i.giftcard) return `<li class="kit-line kit-line--gc">
+            ${opts.giftcardFoto ? `<img src="${esc(ctx.asset(opts.giftcardFoto))}" alt="" class="kit-line__img">` : '<span class="kit-line__img kit-line__img--gc" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M12 7v13M12 7c-1.5-3-6-3-5 0M12 7c1.5-3 6-3 5 0"/></svg></span>'}
+            <div class="kit-line__body"><b>${esc(i.nombre)}</b>${i.nota ? `<em class="kit-line__nota">${esc(i.nota)}${i.giftcard.de ? ` · ${esc(t('gcDe', { de: i.giftcard.de }))}` : ''}</em>` : ''}<span>${ctx.money(i.precio)}</span></div>
+            <div class="kit-qty"><button type="button" class="kit-gc-x" data-kit-gc-quitar="${esc(i.key)}" aria-label="${esc(t('quitar'))} ${esc(i.nombre)}">${esc(t('quitar'))}</button></div>
+          </li>`;
           const p = productos.find(x => x.id === i.id) || {};
           return `<li class="kit-line">
             ${p.foto ? `<img src="${esc(ctx.asset(p.foto))}" alt="" class="kit-line__img">` : '<span class="kit-line__img kit-line__img--na"></span>'}
@@ -256,7 +283,7 @@ export function initCarrito(ctx, opts = {}) {
     const btn = pop.body.querySelector('[data-enviar]'); btn.disabled = true; btn.classList.add('is-loading');
     try {
       const pedido = await store.createPedido({
-        items: lineas.map(l => ({ id: l.id, cant: l.cant, nota: l.nota })), tipo: datos.tipo,
+        items: lineas.map(l => l.gc ? { id: 'giftcard', cant: 1, gc: l.gc } : { id: l.id, cant: l.cant, nota: l.nota }), tipo: datos.tipo,
         cliente: { nombre: datos.nombre.trim(), telefono: datos.telefono.trim(), direccion: datos.tipo === 'delivery' ? datos.direccion.trim() : '' },
         nota: datos.nota.trim(), pago: datos.pago, ...(retiro ? { retiro } : {}),
         ...(sedes.length ? { sucursal: resumenSucursal(sucursalPorId(config, datos.sucursal)) } : {}),
@@ -291,6 +318,16 @@ export function initCarrito(ctx, opts = {}) {
       <div class="kit-row kit-row--center">${waUrl ? `<a class="kit-btn" href="${esc(waUrl)}" target="_blank" rel="noopener">${esc(t('abrirWA'))}</a>` : ''}
       <button type="button" class="kit-btn kit-btn--ghost" data-close>${esc(t('seguir'))}</button></div></div>`);
     popup({ titulo, contenido: box, clase: 'kit-pop--sm' });
+  }
+
+  function exitoGiftcards(gcs, codigo) {
+    if (pop) pop.close();
+    const box = h(`<div class="kit-done">
+      <div class="kit-done__ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h3>${esc(t('gcListas'))}</h3><p>${esc(t('gcListasSub', { codigo }))}</p>
+      <ul class="kit-gcs">${gcs.map(g => `<li><b>${esc(g.codigo)}</b><span>${ctx.money(g.monto)}${g.para ? ` · ${esc(t('gcPara', { para: g.para }))}` : ''}</span>${g.vence ? `<small>${esc(t('gcVence', { fecha: new Date(g.vence).toLocaleDateString(ctx.pais.locale) }))}</small>` : ''}</li>`).join('')}</ul>
+      <div class="kit-row kit-row--center"><button type="button" class="kit-btn" data-close>${esc(t('seguir'))}</button></div></div>`);
+    popup({ titulo: t('gcListas'), contenido: box, clase: 'kit-pop--sm' });
   }
 
   // ---------- Mercado Pago
@@ -346,7 +383,17 @@ export function initCarrito(ctx, opts = {}) {
     await store.marcarPago(id, estado, paymentId);
     const ped = await store.getPedidoPublico(id);
     const codigo = ped?.codigo || '';
-    if (estado === 'aprobado') { vaciar(); exito(t('pedidoPagado'), t('pedidoPagadoSub', { codigo })); }
+    if (estado === 'aprobado') {
+      vaciar();
+      const gcs = store.getGiftcardsDePedido ? await store.getGiftcardsDePedido(id).catch(() => []) : [];
+      if (gcs.length) {
+        // la demo puede mostrar sus propias tarjetas: escucha kit:giftcards y hace preventDefault()
+        const ev = new CustomEvent('kit:giftcards', { detail: { pedido: ped, giftcards: gcs }, cancelable: true });
+        if (document.dispatchEvent(ev)) exitoGiftcards(gcs, codigo);
+        return;
+      }
+      exito(t('pedidoPagado'), t('pedidoPagadoSub', { codigo }));
+    }
     else if (estado === 'pendiente') exito(t('pagoPendiente'), t('pagoPendienteSub', { codigo }), null, 'warn');
     else exito(t('pagoRechazado'), t('pagoRechazadoSub'), null, 'warn');
   }
@@ -363,7 +410,7 @@ export function initCarrito(ctx, opts = {}) {
 
   async function cargar() {
     [productos, categorias] = await Promise.all([store.getProductos(), store.getCategorias()]);
-    lineas = lineas.filter(l => ctx.pedible(productos.find(p => p.id === l.id)));
+    lineas = lineas.filter(l => l.gc ? (GC && montoValido(GC, l.gc.monto)) : ctx.pedible(productos.find(p => p.id === l.id)));
     guardar(); sync(); pintarFab();
     if (pop) pintarDrawer();
   }
@@ -373,6 +420,7 @@ export function initCarrito(ctx, opts = {}) {
   return {
     abrir, sync, listo,
     agregar: (id, n = 1, o = {}) => cambiar(id, n, o.origen || null, o.nota || ''),
+    agregarGiftcard: (gc, o = {}) => agregarGiftcard(gc, o.origen || null), quitarGiftcard,
     setSucursal, get sucursal() { return sucursalPorId(config, datos.sucursal); },
     vaciar, get lineas() { return lineas.slice(); }, calc, retiroOpciones,
   };

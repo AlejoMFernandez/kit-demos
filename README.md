@@ -1,6 +1,6 @@
 # kit-demos
 
-Funcionalidades reutilizables para las webs demo de negocios locales: **carta con ABM, reservas, carrito con salida a WhatsApp o Mercado Pago, y panel `/admin`** con la identidad de cada cliente.
+Funcionalidades reutilizables para las webs demo de negocios locales: **carta con ABM, reservas (por horario o por servicio y tanda), carrito con salida a WhatsApp o Mercado Pago, gift cards con canje en el panel, y panel `/admin`** con la identidad de cada cliente.
 
 HTML + CSS + JS puros (módulos ES), sin frameworks y sin build. Se enchufa a la carpeta `web/` de cualquier demo hecha con la skill *demo-web-negocio-local*.
 
@@ -18,11 +18,11 @@ kit/
   kit.js  kit.css                                 ← entrada del sitio público
   core/   theme · i18n (es / pt-BR) · pais · turnos · pedidos · sucursales · ui (popups) · util
   store/  index (elige adaptador) · local (demo) · supabase (producción)
-  modules/ carta · carrito · reservas
+  modules/ carta · carrito · reservas · giftcards
   admin/  admin.js · admin.css                    ← panel
 api/mp-preference.js                              ← Mercado Pago SANDBOX compartido (Vercel)
 produccion/api/  mp-preference.js · mp-webhook.js ← pagos reales, se copian al web/ del cliente
-supabase/  schema.sql · alta-cliente.sql
+supabase/  schema.sql · migracion-servicios-giftcards.sql · alta-cliente.sql
 plantillas/ admin/index.html · cliente.json
 scripts/instalar.mjs                              ← copia el kit a una demo
 tests/  kit.test.mjs (Node) · e2e.py (Playwright)
@@ -78,7 +78,7 @@ python tests/e2e.py http://localhost:5173/ capturas
 
 ## Eventos
 
-`kit:listo` (ctx) · `kit:carta` (render de carta) · `kit:carrito` (cambio) · `kit:pedido` (pedido creado) · `kit:reserva` (reserva creada). Se escuchan en `document`.
+`kit:listo` (ctx) · `kit:carta` (render de carta) · `kit:carrito` (cambio) · `kit:pedido` (pedido creado) · `kit:reserva` (reserva creada) · `kit:reserva-lista` (cancelable: confirmación propia) · `kit:giftcards` (cancelable: códigos al volver del pago). Se escuchan en `document`.
 
 ---
 

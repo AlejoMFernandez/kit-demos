@@ -94,7 +94,9 @@
     "carta": {
       "type": "object",
       "properties": {
-        "categorias": { "type": "array", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" }, "orden": { "type": "integer" } } } },
+        "temporadas": { "type": "array", "description": "Temporadas de la carta (invierno, primavera…). El dueño elige la activa desde /admin.", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" } } } },
+        "temporadaActiva": { "type": "string", "description": "Temporada que se ve al sembrar la demo (o hasta que el dueño la cambie)." },
+        "categorias": { "type": "array", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" }, "orden": { "type": "integer" }, "temporada": { "type": ["string", "null"], "description": "Sin temporada = se ve siempre (ej. bebidas)." } } } },
         "productos": {
           "type": "array",
           "items": {

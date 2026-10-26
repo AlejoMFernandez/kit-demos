@@ -13,6 +13,7 @@ import { popup, confirmar, toast } from '../core/ui.js';
 import { ahoraEn, horaVisible, aMin, diaSemana, diaNum, fechaDeNum, franjas, generarTurnos, configReservas } from '../core/turnos.js';
 import { linkWhatsApp } from '../core/pedidos.js';
 import { sucursales } from '../core/sucursales.js';
+import { temporadasDe, seVe } from '../core/temporadas.js';
 
 const ACTIVOS = ['pendiente', 'confirmado', 'listo'];
 const PAGADO = ['aprobado', 'cobrado'];
@@ -482,13 +483,15 @@ export async function initAdmin(opts = {}) {
   // =====================================================================
   let cartaCache = { cats: [], prods: [] };
   async function vistaCarta(main) {
-    let [cats, prods] = await Promise.all([store.getCategorias(), store.getProductos()]);
+    let [cats, prods, tempActiva] = await Promise.all([store.getCategorias(), store.getProductos(), store.getTemporada ? store.getTemporada() : null]);
     cartaCache = { cats, prods };
+    const temps = temporadasDe(config);
+    const nombreTemp = (id) => temps.find(x => x.id === id)?.nombre || id;
     if (!st.cat || (st.cat !== '_sin' && !cats.some(c => c.id === st.cat))) st.cat = cats[0]?.id || '_sin';
     const sueltos = prods.filter(p => !cats.some(c => c.id === p.categoria));
     const grupos = Array.isArray(config.carta?.grupos) && config.carta.grupos.length ? config.carta.grupos : null;
     const n = (id) => prods.filter(p => p.categoria === id).length;
-    const li = (c) => `<li data-cat="${esc(c.id)}"><button type="button" data-sec="${esc(c.id)}" aria-current="${st.cat === c.id}"><span>${esc(c.nombre)}</span><small>${n(c.id)}</small></button></li>`;
+    const li = (c) => `<li data-cat="${esc(c.id)}"${seVe(c, tempActiva) ? '' : ' class="is-guardada"'}><button type="button" data-sec="${esc(c.id)}" aria-current="${st.cat === c.id}"><span>${esc(c.nombre)}${temps.length && c.temporada && !seVe(c, tempActiva) ? ` <em class="kad-temp">${esc(t('guardadaTemp'))}</em>` : ''}</span><small>${n(c.id)}</small></button></li>`;
     let listaSecs;
     if (grupos) {
       const usados = new Set();
@@ -504,6 +507,9 @@ export async function initAdmin(opts = {}) {
       <div class="kad-carta">
         <aside class="kad-cats">
           <label class="kad-buscar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" data-buscar placeholder="${esc(t('buscarPlato'))}" value="${esc(st.q)}" aria-label="${esc(t('buscarPlato'))}"></label>
+          ${temps.length ? `<div class="kad-tempbox"><h2 class="kad-cats__t">${esc(t('temporadaWeb'))}</h2>
+            <div class="kad-seg kad-seg--temp" role="group" aria-label="${esc(t('temporadaWeb'))}">${temps.map(x => `<button type="button" data-temp="${esc(x.id)}" aria-pressed="${x.id === tempActiva}">${esc(x.nombre)}</button>`).join('')}</div>
+            <p class="kad-muted">${esc(t('temporadaHint'))}</p></div>` : ''}
           <h2 class="kad-cats__t">${esc(t('secciones'))}</h2>
           <ul class="kad-catlist">${listaSecs}<li class="kad-catlist__add"><button type="button" class="kad-nueva" data-cat-nueva>+ ${esc(t('nuevaCategoria'))}</button></li></ul>
         </aside>
@@ -519,6 +525,11 @@ export async function initAdmin(opts = {}) {
       const ed = e.target.closest('[data-editar]');
       if (ed) return editorProducto(prods.find(p => p.id === ed.closest('[data-prod]').dataset.prod), cats, prods);
       if (e.target.closest('[data-importar]')) { await store.importarCarta(); toast(t('guardado')); return render(); }
+      const tb = e.target.closest('[data-temp]');
+      if (tb && store.setTemporada) {
+        if (tb.getAttribute('aria-pressed') === 'true') return;
+        await store.setTemporada(tb.dataset.temp); toast(t('temporadaOk', { nombre: nombreTemp(tb.dataset.temp) })); return render();
+      }
       if (e.target.closest('[data-cat-nueva]')) return editorCategoria(null, cats);
       const cat = cats.find(c => c.id === st.cat);
       if (e.target.closest('[data-cat-editar]') && cat) return editorCategoria(cat, cats);
@@ -584,14 +595,17 @@ export async function initAdmin(opts = {}) {
   }
 
   function editorCategoria(cat, cats) {
+    const temps = temporadasDe(config);
     const f = h(`<form class="kit-form"><label class="kit-field"><span>${esc(t('nombreCategoria'))}</span><input name="nombre" required maxlength="40" value="${esc(cat?.nombre || '')}"></label>
+      ${temps.length ? `<label class="kit-field"><span>${esc(t('seMuestra'))}</span><select name="temporada"><option value="">${esc(t('siempre'))}</option>${temps.map(x => `<option value="${esc(x.id)}" ${cat?.temporada === x.id ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('')}</select></label>` : ''}
       <div class="kit-row kit-row--end"><button type="button" class="kit-btn kit-btn--ghost" data-close>${esc(t('cancelar'))}</button><button class="kit-btn">${esc(t('guardar'))}</button></div></form>`);
     const p = popup({ titulo: cat ? t('cambiarNombre') : t('nuevaCategoria'), contenido: f, clase: 'kit-pop--sm' });
     setTimeout(() => f.nombre.focus(), 80);
     f.addEventListener('submit', async (e) => {
       e.preventDefault(); const nombre = f.nombre.value.trim(); if (!nombre) return;
       let id = cat?.id || slug(nombre); while (!cat && cats.some(c => c.id === id)) id += '-2';
-      await store.saveCategoria({ ...(cat || { orden: cats.length + 1 }), id, nombre });
+      const extra = f.temporada ? { temporada: f.temporada.value || null } : {};
+      await store.saveCategoria({ ...(cat || { orden: cats.length + 1 }), id, nombre, ...extra });
       st.cat = id; p.close(); toast(t('guardado')); render();
     });
   }

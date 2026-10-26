@@ -16,6 +16,8 @@ const aProducto = (r) => r && ({
   foto: r.foto, etiquetas: r.etiquetas || [], disponible: r.disponible, orden: r.orden,
 });
 
+import { temporadaValida, temporadasDe } from '../core/temporadas.js';
+
 export async function createSupabaseStore(config) {
   const { createClient } = await import(SUPABASE_ESM);
   const sb = createClient(config.supabase.url, config.supabase.anonKey, { auth: { persistSession: true } });
@@ -30,16 +32,31 @@ export async function createSupabaseStore(config) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos', filter: `negocio=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservas', filter: `negocio=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'productos', filter: `negocio=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'negocios', filter: `id=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
       .subscribe();
   }
   const emitir = () => subs.forEach(f => f({ origen: 'local' }));
+  // la columna categorias.temporada solo existe en clientes con temporadas (supabase/migracion-temporadas.sql)
+  const conTemporadas = temporadasDe(config).length > 0;
+  const filaCat = (c, i) => ({ negocio: N, id: c.id, nombre: c.nombre, orden: c.orden ?? i ?? 0, ...(conTemporadas ? { temporada: c.temporada || null } : {}) });
 
   return {
     modo: 'produccion',
     client: sb,
 
     async getCategorias() { return ok(await sb.from('categorias').select('*').eq('negocio', N).order('orden')); },
-    async saveCategoria(c) { const r = ok(await sb.from('categorias').upsert({ negocio: N, id: c.id, nombre: c.nombre, orden: c.orden ?? 0 }).select().single()); emitir(); return r; },
+    async saveCategoria(c) { const r = ok(await sb.from('categorias').upsert(filaCat(c, 0)).select().single()); emitir(); return r; },
+    async getTemporada() {
+      if (!conTemporadas) return null;
+      const r = ok(await sb.from('negocios').select('config').eq('id', N).maybeSingle());
+      return temporadaValida(config, r?.config?.temporadaActiva);
+    },
+    async setTemporada(id) {
+      const r = ok(await sb.from('negocios').select('config').eq('id', N).single());
+      const activa = temporadaValida(config, id);
+      ok(await sb.from('negocios').update({ config: { ...(r.config || {}), temporadaActiva: activa } }).eq('id', N));
+      emitir(); return activa;
+    },
     async deleteCategoria(id) {
       ok(await sb.from('productos').update({ categoria: null }).eq('negocio', N).eq('categoria', id));
       ok(await sb.from('categorias').delete().eq('negocio', N).eq('id', id)); emitir();
@@ -91,7 +108,7 @@ export async function createSupabaseStore(config) {
     async reset() { throw new Error('reset solo existe en demo'); },
     async importarCarta() {
       const c = config.carta || {};
-      if (c.categorias?.length) ok(await sb.from('categorias').upsert(c.categorias.map((x, i) => ({ negocio: N, id: x.id, nombre: x.nombre, orden: x.orden ?? i + 1 }))));
+      if (c.categorias?.length) ok(await sb.from('categorias').upsert(c.categorias.map((x, i) => filaCat(x, i + 1))));
       if (c.productos?.length) ok(await sb.from('productos').upsert(c.productos.map((p, i) => ({ negocio: N, id: p.id, categoria: p.categoria, nombre: p.nombre, descripcion: p.descripcion || '', precio: p.precio ?? null, foto: p.foto || null, etiquetas: p.etiquetas || [], disponible: p.disponible !== false, orden: p.orden ?? i + 1 }))));
       emitir();
     },

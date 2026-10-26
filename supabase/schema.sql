@@ -24,8 +24,10 @@ create table if not exists categorias (
   id text not null,
   nombre text not null,
   orden int not null default 0,
+  temporada text,                              -- null = se ve siempre; si no, solo con esa temporada activa (negocios.config.temporadaActiva)
   primary key (negocio, id)
 );
+alter table categorias add column if not exists temporada text;
 
 create table if not exists productos (
   negocio text not null references negocios on delete cascade,

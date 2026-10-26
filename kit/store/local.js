@@ -4,6 +4,7 @@
 import { uid, clone, codigoCorto } from '../core/util.js';
 import { armarPedido } from '../core/pedidos.js';
 import { configReservas } from '../core/turnos.js';
+import { temporadaValida } from '../core/temporadas.js';
 
 const VERSION = 1;
 
@@ -17,7 +18,7 @@ export function createLocalStore(config) {
     return {
       categorias: (c.categorias || []).map((x, i) => ({ orden: i + 1, ...x })),
       productos: (c.productos || []).map((x, i) => ({ disponible: true, etiquetas: [], descripcion: '', orden: i + 1, ...x })),
-      reservas: [], pedidos: [], sembrado: new Date().toISOString(),
+      temporada: temporadaValida(config, null), reservas: [], pedidos: [], sembrado: new Date().toISOString(),
     };
   }
   function leer() {
@@ -52,6 +53,9 @@ export function createLocalStore(config) {
     },
     async deleteCategoria(id) { return mut(db => { db.categorias = db.categorias.filter(c => c.id !== id); db.productos.forEach(p => { if (p.categoria === id) p.categoria = null; }); }); },
     async getProductos() { return ordenar(leer().productos); },
+    // temporada de la carta que se ve en la web (null si el negocio no usa temporadas)
+    async getTemporada() { return temporadaValida(config, leer().temporada); },
+    async setTemporada(id) { return mut(db => { db.temporada = temporadaValida(config, id); return db.temporada; }); },
     async saveProducto(p) {
       return mut(db => {
         const i = db.productos.findIndex(x => x.id === p.id);

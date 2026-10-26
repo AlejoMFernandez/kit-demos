@@ -21,7 +21,7 @@ import { mountCarta } from './modules/carta.js';
 import { initCarrito } from './modules/carrito.js';
 import { initReservas } from './modules/reservas.js';
 
-export const VERSION = '1.1.0';
+export const VERSION = '1.2.0';
 
 export async function cargarConfig(src = 'cliente.json') {
   const url = new URL(src, location.href);

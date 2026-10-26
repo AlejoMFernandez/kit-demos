@@ -104,3 +104,37 @@ Agregá `"sucursales"` a `cliente.json` (ver `docs/cliente.schema.json`):
 - Desde la web: `data-kit-sucursal="beiro"` en cualquier botón deja esa sede elegida (sumale `data-kit-open="carrito"` para abrir el carrito), o `kit.carrito.setSucursal('beiro')`. Estado abierto/cerrado de una sede: `kit.abierto(sede.horarios)`.
 - Aclaraciones por plato desde la web: `kit.carrito.agregar('chocludo', 1, { nota: 'salchicha alemana' })` crea una línea aparte con esa nota (va al panel y al WhatsApp).
 - Producción: correr `supabase/migracion-sucursales.sql` y cargar las sedes en la config del negocio.
+
+
+## Carta por temporadas
+
+Para locales que cambian la carta con la estación (invierno, primavera…). En `cliente.json`:
+
+```json
+"carta": {
+  "temporadas": [{ "id": "primavera", "nombre": "Primavera" }, { "id": "invierno", "nombre": "Invierno" }],
+  "temporadaActiva": "primavera",
+  "categorias": [
+    { "id": "tortillas", "nombre": "La tortilla", "temporada": "primavera" },
+    { "id": "tortillas-inv", "nombre": "Tortillas cremosas", "temporada": "invierno" },
+    { "id": "vermut", "nombre": "Vermut" }
+  ]
+}
+```
+
+- Las secciones sin `temporada` se ven siempre (bebidas, postres fijos).
+- En `/admin` → Carta aparece “Carta que se ve en la web” con un botón por temporada: un clic y la web cambia (las otras quedan guardadas, editables, marcadas como “guardada”). Al crear o renombrar una sección se elige en qué temporada se muestra.
+- En la web, `kit:carta` trae `detail.temporada` (y `ctx.temporada`) para titular “Carta de primavera”.
+- Producción: correr `supabase/migracion-temporadas.sql` (la activa se guarda en `negocios.config.temporadaActiva`).
+
+## Reserva con el turno ya elegido
+
+Para dibujar la disponibilidad con la identidad de la demo (un pizarrón de turnos, una agenda…):
+
+```js
+const dias = kit.reservas.dias();                       // [{ fecha, abierto, offset, dow }]
+const turnos = await kit.reservas.turnos(fecha, 2);     // [{ hora, label, libres, capacidad, disponible, pasado }]
+kit.reservas.abrir({ fecha, hora: '19:00', personas: 2 });  // popup del kit con ese turno marcado
+```
+
+O sin JS: `<button data-kit-open="reservas" data-kit-fecha="2026-10-27" data-kit-hora="19:00">`.

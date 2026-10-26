@@ -9,12 +9,13 @@ import { popup } from '../core/ui.js';
 import { generarTurnos, diasReservables, configReservas } from '../core/turnos.js';
 import { linkWhatsApp } from '../core/pedidos.js';
 
-export function crearFormReserva(ctx, { onDone } = {}) {
+export function crearFormReserva(ctx, { onDone, inicial = {} } = {}) {
   const { config, store } = ctx;
   const R = configReservas(config.reservas);
   const env = { horarios: config.horarios, reservas: config.reservas, tz: ctx.tz };
   const dias = diasReservables(env);
-  const st = { personas: Math.min(2, R.maxPersonas), fecha: (dias.find(d => d.abierto) || {}).fecha, hora: null, nombre: '', telefono: '', email: '', comentario: '' };
+  const fechaIni = inicial.fecha && dias.some(d => d.abierto && d.fecha === inicial.fecha) ? inicial.fecha : (dias.find(d => d.abierto) || {}).fecha;
+  const st = { personas: Math.max(1, Math.min(Number(inicial.personas) || 2, R.maxPersonas)), fecha: fechaIni, hora: inicial.hora || null, nombre: '', telefono: '', email: '', comentario: '' };
 
   const el = h(`<form class="kit-root kit-resv" novalidate>
     <div class="kit-resv__row">
@@ -36,7 +37,7 @@ export function crearFormReserva(ctx, { onDone } = {}) {
     <button type="submit" class="kit-btn kit-btn--block kit-btn--big">${esc(t('confirmarReserva'))}</button>
   </form>`);
 
-  let autoDia = true;
+  let autoDia = !inicial.fecha;
   const fmtDia = (d) => {
     const [, m, dd] = d.fecha.split('-').map(Number);
     const nombre = d.offset === 0 ? t('hoy') : d.offset === 1 ? t('manana') : t('diasCortos')[d.dow];
@@ -131,11 +132,23 @@ export function crearFormReserva(ctx, { onDone } = {}) {
 
 export function initReservas(ctx) {
   document.querySelectorAll('[data-kit="reservas"]').forEach(box => { box.innerHTML = ''; box.appendChild(crearFormReserva(ctx)); });
-  const abrir = () => {
-    const form = crearFormReserva(ctx);
-    popup({ titulo: t('reservarMesa'), contenido: form, clase: 'kit-pop--resv' });
+  // abrir({ fecha: '2026-10-27', hora: '19:00', personas: 4 }) → popup con el turno ya elegido
+  const abrir = (inicial = {}) => {
+    const form = crearFormReserva(ctx, { inicial });
+    return popup({ titulo: t('reservarMesa'), contenido: form, clase: 'kit-pop--resv' });
   };
-  document.addEventListener('click', (e) => { const b = e.target.closest('[data-kit-open="reservas"]'); if (b) { e.preventDefault(); abrir(); } });
-  return { abrir };
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-kit-open="reservas"]'); if (!b) return;
+    e.preventDefault(); abrir({ fecha: b.dataset.kitFecha, hora: b.dataset.kitHora, personas: b.dataset.kitPersonas });
+  });
+  const env = { horarios: ctx.config.horarios, reservas: ctx.config.reservas, tz: ctx.tz };
+  // Para dibujar la disponibilidad con el diseño de la demo (ej. un pizarrón de turnos).
+  const dias = () => diasReservables(env);
+  async function turnos(fecha, personas = 1) {
+    let ocup = {};
+    try { ocup = await ctx.store.getOcupacion(fecha); } catch (e) { console.error('[kit] ocupación', e); }
+    return generarTurnos(env, fecha, ocup, personas).map(x => ({ ...x, capacidad: configReservas(ctx.config.reservas).capacidad }));
+  }
+  return { abrir, dias, turnos };
 }
 

@@ -309,3 +309,14 @@ body { margin: 0; background: var(--kit-bg); color: var(--kit-text); font-family
 .kad-editor__foot { margin-top: .4rem; padding-top: .8rem; border-top: var(--kit-border-w) solid var(--kit-border); }
 @media (max-width: 420px) { .kit-field-row { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .kad-pulso, .kad-ok.is-on { animation: none; } .kad-ok.is-on { opacity: 1; transform: none; } }
+
+/* temporadas de la carta */
+.kad-tempbox { display: grid; gap: 8px; padding: 12px; border: 1.5px solid var(--kad-linea); border-radius: min(14px, var(--kit-radius)); background: var(--kad-caja); }
+.kad-tempbox .kad-cats__t { margin: 0; }
+.kad-seg--temp { display: flex; flex-wrap: wrap; }
+.kad-seg--temp button { flex: 1 1 auto; min-height: 44px; }
+.kad-tempbox .kad-muted { margin: 0; font-size: .8rem; line-height: 1.4; }
+.kad-temp { font-style: normal; font: 800 .64rem/1 var(--kit-font-body); text-transform: uppercase; letter-spacing: .06em; padding: 3px 6px; border-radius: 4px; background: var(--kad-ok-bg); color: var(--kad-ok); vertical-align: 1px; }
+.kad-catlist .is-guardada [data-sec] { color: var(--kit-muted); }
+.kad-catlist .is-guardada .kad-temp { background: transparent; border: 1px dashed var(--kad-linea); color: var(--kit-muted); }
+.kad-catlist .is-guardada [data-sec][aria-current="true"] { color: var(--kit-surface); }

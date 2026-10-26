@@ -8,6 +8,7 @@
 //   numerar: true  → "01, 02…" por categoría
 import { esc, $$ } from '../core/util.js';
 import { t } from '../core/i18n.js';
+import { filtrarCarta } from '../core/temporadas.js';
 
 const ICONOS = {
   picante: '<svg viewBox="0 0 24 24"><path d="M14 6c3 0 6 2 6 6 0 6-8 10-15 10 6-3 7-7 8-11 .4-2 1-5 1-5Z" fill="currentColor"/><path d="M14 6c0-2 1-3 3-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
@@ -18,7 +19,7 @@ const ICONOS = {
 const LABELS = { es: { picante: 'Picante', veggie: 'Sin carne', casa: 'De la casa', nuevo: 'Nuevo' }, 'pt-BR': { picante: 'Apimentado', veggie: 'Vegetariano', casa: 'Da casa', nuevo: 'Novo' } };
 
 export function mountCarta(el, ctx, opts = {}) {
-  let cats = [], prods = [], actual = el.dataset.kitCategoria || null;
+  let cats = [], prods = [], temporada = null, actual = el.dataset.kitCategoria || null;
   el.classList.add('kit-root', 'kit-carta');
   el.setAttribute('aria-busy', 'true');
 
@@ -62,7 +63,7 @@ export function mountCarta(el, ctx, opts = {}) {
       </div>`).join('')}`;
     el.removeAttribute('aria-busy');
     ctx.carrito?.sync(el);
-    document.dispatchEvent(new CustomEvent('kit:carta', { detail: { el, productos: prods, categorias: cats } }));
+    document.dispatchEvent(new CustomEvent('kit:carta', { detail: { el, productos: prods, categorias: cats, temporada } }));
   }
 
   el.addEventListener('click', (e) => {
@@ -78,7 +79,12 @@ export function mountCarta(el, ctx, opts = {}) {
   });
 
   async function cargar() {
-    try { [cats, prods] = await Promise.all([ctx.store.getCategorias(), ctx.store.getProductos()]); render(); }
+    try {
+      const [c, p, tmp] = await Promise.all([ctx.store.getCategorias(), ctx.store.getProductos(), ctx.store.getTemporada ? ctx.store.getTemporada() : null]);
+      temporada = tmp; ctx.temporada = tmp;
+      ({ cats, prods } = filtrarCarta(c, p, tmp));
+      render();
+    }
     catch (err) { console.error('[kit] carta', err); el.innerHTML = `<p class="kit-error">${esc(t('error'))}</p>`; }
   }
   ctx.store.onChange(cargar);

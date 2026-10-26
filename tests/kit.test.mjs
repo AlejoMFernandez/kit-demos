@@ -5,6 +5,7 @@ import { generarTurnos, franjas, aMin, horaVisible, diasReservables } from '../k
 import { armarPedido, linkWhatsApp, mensajePedido } from '../kit/core/pedidos.js';
 import { setLang } from '../kit/core/i18n.js';
 import { crearFormatoMoneda } from '../kit/core/pais.js';
+import { filtrarCarta, temporadaValida } from '../kit/core/temporadas.js';
 import { armarPreferencia, origenPermitido } from '../api/mp-preference.js';
 import { firmaValida } from '../produccion/api/mp-webhook.js';
 import crypto from 'node:crypto';
@@ -102,4 +103,17 @@ test('cadenas: el mensaje lleva la sede y se valida contra cliente.json', async 
   assert.match(txt, /Sede: Devoto — Av\. Beiró 3425/);
   assert.match(txt, /salchicha alemana/);
   assert.deepEqual(resumenSucursal(cfg.sucursales[0]), { id: 'beiro', nombre: 'Devoto', direccion: 'Av. Beiró 3425' });
+});
+
+test('temporadas: filtra secciones y valida la activa', () => {
+  const config = { carta: { temporadas: [{ id: 'pri', nombre: 'Primavera' }, { id: 'inv', nombre: 'Invierno' }], temporadaActiva: 'pri' } };
+  assert.equal(temporadaValida(config, null), 'pri');
+  assert.equal(temporadaValida(config, 'inv'), 'inv');
+  assert.equal(temporadaValida(config, 'otono'), 'pri');
+  assert.equal(temporadaValida({ carta: {} }, 'inv'), null);
+  const cats = [{ id: 'a', temporada: 'pri' }, { id: 'b', temporada: 'inv' }, { id: 'c' }];
+  const prods = [{ id: 1, categoria: 'a' }, { id: 2, categoria: 'b' }, { id: 3, categoria: 'c' }, { id: 4, categoria: null }];
+  const r = filtrarCarta(cats, prods, 'inv');
+  assert.deepEqual(r.cats.map(c => c.id), ['b', 'c']);
+  assert.deepEqual(r.prods.map(p => p.id), [2, 3, 4]);
 });

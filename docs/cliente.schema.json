@@ -3,122 +3,540 @@
   "title": "cliente.json · Kit Demos",
   "description": "Configuración de un negocio: marca, carta, horarios, módulos y pagos.",
   "type": "object",
-  "required": ["id", "nombre", "pais", "marca", "modulos"],
+  "required": [
+    "id",
+    "nombre",
+    "pais",
+    "marca",
+    "modulos"
+  ],
   "properties": {
-    "id": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Slug único. Se usa como clave en localStorage y como 'negocio' en Supabase." },
-    "nombre": { "type": "string" },
-    "pais": { "enum": ["AR", "BR"], "description": "Define moneda (ARS/BRL), formato, zona horaria y credenciales de Mercado Pago." },
-    "idioma": { "enum": ["es", "pt-BR"] },
-    "zonaHoraria": { "type": "string", "description": "IANA. Por defecto la del país." },
-    "modo": { "enum": ["demo", "produccion"], "description": "demo = localStorage; produccion = Supabase." },
-    "instagram": { "type": "string", "description": "Usuario de Instagram (sin @). Aparece en la carta del QR y en el pie de las tarjetas." },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Slug único. Se usa como clave en localStorage y como 'negocio' en Supabase."
+    },
+    "nombre": {
+      "type": "string"
+    },
+    "pais": {
+      "enum": [
+        "AR",
+        "BR"
+      ],
+      "description": "Define moneda (ARS/BRL), formato, zona horaria y credenciales de Mercado Pago."
+    },
+    "idioma": {
+      "enum": [
+        "es",
+        "pt-BR"
+      ]
+    },
+    "zonaHoraria": {
+      "type": "string",
+      "description": "IANA. Por defecto la del país."
+    },
+    "modo": {
+      "enum": [
+        "demo",
+        "produccion"
+      ],
+      "description": "demo = localStorage; produccion = Supabase."
+    },
+    "instagram": {
+      "type": "string",
+      "description": "Usuario de Instagram (sin @). Aparece en la carta del QR y en el pie de las tarjetas."
+    },
     "cartaQR": {
       "type": "object",
       "description": "Carta pública /carta (la del QR de las mesas) y tarjetas imprimibles del panel.",
       "properties": {
-        "url": { "type": "string", "description": "Link fijo del QR si no es <dominio>/carta/ (ej. dominio propio)." },
-        "pedir": { "type": "boolean", "description": "La carta del QR también deja pedir (necesita el módulo carrito). Por defecto solo muestra." },
-        "formato": { "enum": ["mesa", "tent", "sticker"] }, "estilo": { "enum": ["clasico", "marca", "minimal"] },
-        "textos": { "type": "object", "properties": { "kicker": { "type": "string" }, "titulo": { "type": "string" }, "sub": { "type": "string" }, "pie": { "type": "string" } } }
+        "url": {
+          "type": "string",
+          "description": "Link fijo del QR si no es <dominio>/carta/ (ej. dominio propio)."
+        },
+        "pedir": {
+          "type": "boolean",
+          "description": "La carta del QR también deja pedir (necesita el módulo carrito). Por defecto solo muestra."
+        },
+        "formato": {
+          "enum": [
+            "mesa",
+            "tent",
+            "sticker"
+          ]
+        },
+        "estilo": {
+          "enum": [
+            "clasico",
+            "marca",
+            "minimal"
+          ]
+        },
+        "textos": {
+          "type": "object",
+          "properties": {
+            "kicker": {
+              "type": "string"
+            },
+            "titulo": {
+              "type": "string"
+            },
+            "sub": {
+              "type": "string"
+            },
+            "pie": {
+              "type": "string"
+            }
+          }
+        }
       }
     },
-    "whatsapp": { "type": "string", "description": "Número con código de país (5491112345678) o un link. Si es un link corto sin texto, el pedido se copia al portapapeles." },
-    "prefijoPedido": { "type": "string", "maxLength": 4 },
-    "supabase": { "type": "object", "properties": { "url": { "type": "string" }, "anonKey": { "type": "string" } } },
+    "whatsapp": {
+      "type": "string",
+      "description": "Número con código de país (5491112345678) o un link. Si es un link corto sin texto, el pedido se copia al portapapeles."
+    },
+    "prefijoPedido": {
+      "type": "string",
+      "maxLength": 4
+    },
+    "supabase": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "anonKey": {
+          "type": "string"
+        }
+      }
+    },
     "marca": {
       "type": "object",
       "properties": {
-        "logo": { "type": "string" }, "logoPanel": { "type": "string" }, "logoClaro": { "type": "string", "description": "Logo para fondos oscuros / de color (tarjetas QR estilo Color de marca). Sin él, el logo va sobre una placa clara." }, "isotipo": { "type": "string", "description": "Ícono cuadrado opcional: va en el centro del QR de las tarjetas (el QR pasa a corrección alta)." }, "favicon": { "type": "string" },
+        "logo": {
+          "type": "string"
+        },
+        "logoPanel": {
+          "type": "string"
+        },
+        "logoClaro": {
+          "type": "string",
+          "description": "Logo para fondos oscuros / de color (tarjetas QR estilo Color de marca). Sin él, el logo va sobre una placa clara."
+        },
+        "isotipo": {
+          "type": "string",
+          "description": "Ícono cuadrado opcional: va en el centro del QR de las tarjetas (el QR pasa a corrección alta)."
+        },
+        "favicon": {
+          "type": "string"
+        },
         "colores": {
           "type": "object",
           "properties": {
-            "fondo": { "type": "string" }, "superficie": { "type": "string" }, "texto": { "type": "string" },
-            "primario": { "type": "string" }, "sobrePrimario": { "type": "string" }, "acento": { "type": "string" },
-            "sobreAcento": { "type": "string" }, "borde": { "type": "string" }, "suave": { "type": "string" },
-            "ok": { "type": "string" }, "alerta": { "type": "string" }, "error": { "type": "string" }
+            "fondo": {
+              "type": "string"
+            },
+            "superficie": {
+              "type": "string"
+            },
+            "texto": {
+              "type": "string"
+            },
+            "primario": {
+              "type": "string"
+            },
+            "sobrePrimario": {
+              "type": "string"
+            },
+            "acento": {
+              "type": "string"
+            },
+            "sobreAcento": {
+              "type": "string"
+            },
+            "borde": {
+              "type": "string"
+            },
+            "suave": {
+              "type": "string"
+            },
+            "ok": {
+              "type": "string"
+            },
+            "alerta": {
+              "type": "string"
+            },
+            "error": {
+              "type": "string"
+            }
           }
         },
-        "fuentes": { "type": "object", "properties": { "titulos": { "type": "string" }, "texto": { "type": "string" }, "googleFonts": { "type": "string", "description": "Lo que va después de family= en la URL de Google Fonts. Vacío si la web ya las carga." } } },
+        "fuentes": {
+          "type": "object",
+          "properties": {
+            "titulos": {
+              "type": "string"
+            },
+            "texto": {
+              "type": "string"
+            },
+            "googleFonts": {
+              "type": "string",
+              "description": "Lo que va después de family= en la URL de Google Fonts. Vacío si la web ya las carga."
+            }
+          }
+        },
         "estilo": {
           "type": "object",
           "properties": {
-            "forma": { "enum": ["recta", "redondeada", "pildora"] },
-            "radio": { "type": "string" },
-            "sombra": { "description": "suave | dura | ninguna | valor CSS", "type": "string" },
-            "borde": { "type": "string" },
-            "mayusculas": { "type": "boolean" }
+            "forma": {
+              "enum": [
+                "recta",
+                "redondeada",
+                "pildora"
+              ]
+            },
+            "radio": {
+              "type": "string"
+            },
+            "sombra": {
+              "description": "suave | dura | ninguna | valor CSS",
+              "type": "string"
+            },
+            "borde": {
+              "type": "string"
+            },
+            "mayusculas": {
+              "type": "boolean"
+            }
           }
         }
       }
     },
     "modulos": {
       "type": "object",
-      "properties": { "carta": { "type": "boolean" }, "cartaQR": { "type": "boolean", "description": "Sección QR de la carta en el panel (por defecto activa si hay carta). La página pública vive en /carta." }, "carrito": { "type": "boolean" }, "reservas": { "type": "boolean" }, "admin": { "type": "boolean" }, "fechas": { "type": "boolean", "description": "Pestaña Fechas especiales en el panel (se activa sola si alguna categoría tiene especial: true)." } }
+      "properties": {
+        "carta": {
+          "type": "boolean"
+        },
+        "cartaQR": {
+          "type": "boolean",
+          "description": "Sección QR de la carta en el panel (por defecto activa si hay carta). La página pública vive en /carta."
+        },
+        "carrito": {
+          "type": "boolean"
+        },
+        "reservas": {
+          "type": "boolean"
+        },
+        "admin": {
+          "type": "boolean"
+        },
+        "fechas": {
+          "type": "boolean",
+          "description": "Pestaña Fechas especiales en el panel (se activa sola si alguna categoría tiene especial: true)."
+        },
+        "estadias": {
+          "type": "boolean",
+          "description": "Alojamientos: reservas por noche con habitaciones y tarifas por temporada"
+        }
+      }
     },
     "horarios": {
       "type": "object",
       "description": "Franjas por día. Un cierre menor que la apertura cruza la medianoche.",
-      "propertyNames": { "enum": ["lun", "mar", "mie", "jue", "vie", "sab", "dom"] },
-      "additionalProperties": { "type": "array", "items": { "type": "array", "items": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" }, "minItems": 2, "maxItems": 2 } }
+      "propertyNames": {
+        "enum": [
+          "lun",
+          "mar",
+          "mie",
+          "jue",
+          "vie",
+          "sab",
+          "dom"
+        ]
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[0-2][0-9]:[0-5][0-9]$"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
     },
     "sucursales": {
       "type": "array",
       "description": "Cadenas con varios locales. Con 2 o más, el checkout pide la sede, el pedido la guarda, el WhatsApp va al número de la sede (si tiene) y el panel filtra por sede.",
       "items": {
-        "type": "object", "required": ["id", "nombre"],
+        "type": "object",
+        "required": [
+          "id",
+          "nombre"
+        ],
         "properties": {
-          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" }, "nombre": { "type": "string" }, "direccion": { "type": "string" },
-          "barrio": { "type": "string" }, "whatsapp": { "type": "string" }, "mapa": { "type": "string" },
-          "horarios": { "type": "object", "description": "Mismo formato que horarios. Sin horarios = se muestra sin estado abierto/cerrado." }
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "direccion": {
+            "type": "string"
+          },
+          "barrio": {
+            "type": "string"
+          },
+          "whatsapp": {
+            "type": "string"
+          },
+          "mapa": {
+            "type": "string"
+          },
+          "horarios": {
+            "type": "object",
+            "description": "Mismo formato que horarios. Sin horarios = se muestra sin estado abierto/cerrado."
+          }
         }
       }
     },
     "reservas": {
       "type": "object",
       "properties": {
-        "intervaloMin": { "type": "integer" }, "duracionMin": { "type": "integer" }, "capacidad": { "type": "integer", "description": "Personas simultáneas" },
-        "maxPersonas": { "type": "integer" }, "anticipacionMin": { "type": "integer" }, "diasAdelante": { "type": "integer" },
-        "ultimoTurnoMin": { "type": "integer", "description": "Minutos antes del cierre del último turno" },
-        "cerrados": { "type": "array", "items": { "type": "string", "format": "date" } },
+        "intervaloMin": {
+          "type": "integer"
+        },
+        "duracionMin": {
+          "type": "integer"
+        },
+        "capacidad": {
+          "type": "integer",
+          "description": "Personas simultáneas"
+        },
+        "maxPersonas": {
+          "type": "integer"
+        },
+        "anticipacionMin": {
+          "type": "integer"
+        },
+        "diasAdelante": {
+          "type": "integer"
+        },
+        "ultimoTurnoMin": {
+          "type": "integer",
+          "description": "Minutos antes del cierre del último turno"
+        },
+        "cerrados": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "date"
+          }
+        },
         "servicios": {
           "type": "array",
           "description": "Turnos fijos por servicio (almuerzo / cena) en vez de 'cada intervaloMin dentro del horario'. Todos los turnos de una tanda comparten el cupo.",
           "items": {
-            "type": "object", "required": ["id", "tandas"],
+            "type": "object",
+            "required": [
+              "id",
+              "tandas"
+            ],
             "properties": {
-              "id": { "type": "string" }, "nombre": { "type": "string" },
-              "dias": { "type": "array", "items": { "enum": ["lun", "mar", "mie", "jue", "vie", "sab", "dom"] }, "description": "Sin dias = todos los días que abre el local." },
-              "capacidad": { "type": "integer" },
-              "tandas": { "type": "array", "items": { "type": "object", "required": ["turnos"], "properties": { "nombre": { "type": "string" }, "turnos": { "type": "array", "items": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" } }, "capacidad": { "type": "integer" } } } }
+              "id": {
+                "type": "string"
+              },
+              "nombre": {
+                "type": "string"
+              },
+              "dias": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "lun",
+                    "mar",
+                    "mie",
+                    "jue",
+                    "vie",
+                    "sab",
+                    "dom"
+                  ]
+                },
+                "description": "Sin dias = todos los días que abre el local."
+              },
+              "capacidad": {
+                "type": "integer"
+              },
+              "tandas": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "turnos"
+                  ],
+                  "properties": {
+                    "nombre": {
+                      "type": "string"
+                    },
+                    "turnos": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[0-2][0-9]:[0-5][0-9]$"
+                      }
+                    },
+                    "capacidad": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
             }
           }
         },
-        "extras": { "type": "array", "description": "Casillas opcionales en la reserva (socio, cumpleaños…). Se ven en el panel.", "items": { "type": "object", "required": ["id", "label"], "properties": { "id": { "type": "string" }, "label": { "type": "string" } } } }
+        "extras": {
+          "type": "array",
+          "description": "Casillas opcionales en la reserva (socio, cumpleaños…). Se ven en el panel.",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            }
+          }
+        }
       }
     },
     "giftcards": {
       "type": "object",
       "description": "Gift cards: se compran por el carrito y el local las canjea desde /admin. Necesita el módulo carrito.",
       "properties": {
-        "nombre": { "type": "string" }, "prefijo": { "type": "string", "maxLength": 4, "description": "Prefijo del código (LCD-7K2Q). Por defecto prefijoPedido." },
-        "validezDias": { "type": "integer", "description": "Días de vigencia desde que se cobra. Por defecto 60." },
-        "montos": { "type": "array", "items": { "type": "number" } },
-        "min": { "type": ["number", "null"] }, "max": { "type": ["number", "null"], "description": "Con min o max se permite monto libre." }
+        "nombre": {
+          "type": "string"
+        },
+        "prefijo": {
+          "type": "string",
+          "maxLength": 4,
+          "description": "Prefijo del código (LCD-7K2Q). Por defecto prefijoPedido."
+        },
+        "validezDias": {
+          "type": "integer",
+          "description": "Días de vigencia desde que se cobra. Por defecto 60."
+        },
+        "montos": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "min": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "max": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Con min o max se permite monto libre."
+        }
       }
     },
     "pedidos": {
       "type": "object",
       "properties": {
-        "salidas": { "type": "array", "items": { "enum": ["whatsapp", "efectivo", "mercadopago"] }, "description": "efectivo = como whatsapp, pero pagando en efectivo al retirar con el descuento de pagos.efectivo." },
-        "tipos": { "type": "array", "items": { "enum": ["retiro", "delivery"] } },
-        "envio": { "type": "number" }, "minimo": { "type": "number" },
-        "sinPrecio": { "enum": ["consultar", "a_confirmar"], "description": "a_confirmar = los productos con precio null se pueden encargar; el total dice 'a confirmar' y Mercado Pago se habilita cuando todos tienen precio." },
+        "salidas": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "whatsapp",
+              "efectivo",
+              "mercadopago"
+            ]
+          },
+          "description": "efectivo = como whatsapp, pero pagando en efectivo al retirar con el descuento de pagos.efectivo."
+        },
+        "tipos": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "retiro",
+              "delivery"
+            ]
+          }
+        },
+        "envio": {
+          "type": "number"
+        },
+        "minimo": {
+          "type": "number"
+        },
+        "sinPrecio": {
+          "enum": [
+            "consultar",
+            "a_confirmar"
+          ],
+          "description": "a_confirmar = los productos con precio null se pueden encargar; el total dice 'a confirmar' y Mercado Pago se habilita cuando todos tienen precio."
+        },
         "encargo": {
-          "type": "object", "description": "Encargos con día y franja de retiro.",
+          "type": "object",
+          "description": "Encargos con día y franja de retiro.",
           "properties": {
-            "anticipacionHoras": { "type": "integer" }, "diasAdelante": { "type": "integer" },
-            "cerrados": { "type": "array", "items": { "type": "string", "format": "date" } },
-            "franjas": { "type": "array", "items": { "type": "object", "required": ["id", "nombre", "desde", "hasta"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" }, "desde": { "type": "string" }, "hasta": { "type": "string" } } } }
+            "anticipacionHoras": {
+              "type": "integer"
+            },
+            "diasAdelante": {
+              "type": "integer"
+            },
+            "cerrados": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            "franjas": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "nombre",
+                  "desde",
+                  "hasta"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "desde": {
+                    "type": "string"
+                  },
+                  "hasta": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -129,17 +547,51 @@
         "mercadopago": {
           "type": "object",
           "properties": {
-            "endpoint": { "type": "string", "description": "Demo: la función compartida de kit-demos. Producción: /api/mp-preference del cliente." },
-            "modo": { "enum": ["sandbox", "produccion", "simulado"] }
+            "endpoint": {
+              "type": "string",
+              "description": "Demo: la función compartida de kit-demos. Producción: /api/mp-preference del cliente."
+            },
+            "modo": {
+              "enum": [
+                "sandbox",
+                "produccion",
+                "simulado"
+              ]
+            }
           }
         },
         "efectivo": {
           "type": "object",
           "description": "Descuento por pagar en efectivo al retirar. Activa la salida 'efectivo'.",
           "properties": {
-            "porDia": { "type": "object", "propertyNames": { "enum": ["lun", "mar", "mie", "jue", "vie", "sab", "dom"] }, "additionalProperties": { "type": "number" } },
-            "feriado": { "type": "number", "description": "% en feriados (pisa el del día)" },
-            "feriados": { "type": "array", "items": { "type": "string", "format": "date" } }
+            "porDia": {
+              "type": "object",
+              "propertyNames": {
+                "enum": [
+                  "lun",
+                  "mar",
+                  "mie",
+                  "jue",
+                  "vie",
+                  "sab",
+                  "dom"
+                ]
+              },
+              "additionalProperties": {
+                "type": "number"
+              }
+            },
+            "feriado": {
+              "type": "number",
+              "description": "% en feriados (pisa el del día)"
+            },
+            "feriados": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "date"
+              }
+            }
           }
         }
       }
@@ -147,29 +599,285 @@
     "carta": {
       "type": "object",
       "properties": {
-        "temporadas": { "type": "array", "description": "Temporadas de la carta (invierno, primavera…). El dueño elige la activa desde /admin.", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" } } } },
-        "temporadaActiva": { "type": "string", "description": "Temporada que se ve al sembrar la demo (o hasta que el dueño la cambie)." },
-        "categorias": { "type": "array", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" }, "orden": { "type": "integer" }, "temporada": { "type": ["string", "null"], "description": "Sin temporada = se ve siempre (ej. bebidas)." },
-          "anticipacionHoras": { "type": "integer", "description": "Encargos: horas mínimas para esta sección (ej. tortas 48)." },
-          "sena": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1, "description": "Seña (1.5): porcentaje que se cobra al encargar los productos de esta sección (0.5 = 50%); el resto, al retirar." },
-          "especial": { "type": "boolean", "description": "Fecha especial (Navidad, Pascuas…): solo se ve en la web desde desde−avisoDias hasta hasta." },
-          "desde": { "type": "string", "format": "date" }, "hasta": { "type": "string", "format": "date" }, "avisoDias": { "type": "integer" }, "bajada": { "type": "string" } } } },
+        "temporadas": {
+          "type": "array",
+          "description": "Temporadas de la carta (invierno, primavera…). El dueño elige la activa desde /admin.",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "nombre"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "nombre": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "temporadaActiva": {
+          "type": "string",
+          "description": "Temporada que se ve al sembrar la demo (o hasta que el dueño la cambie)."
+        },
+        "categorias": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "nombre"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "nombre": {
+                "type": "string"
+              },
+              "orden": {
+                "type": "integer"
+              },
+              "temporada": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Sin temporada = se ve siempre (ej. bebidas)."
+              },
+              "anticipacionHoras": {
+                "type": "integer",
+                "description": "Encargos: horas mínimas para esta sección (ej. tortas 48)."
+              },
+              "sena": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "exclusiveMaximum": 1,
+                "description": "Seña (1.5): porcentaje que se cobra al encargar los productos de esta sección (0.5 = 50%); el resto, al retirar."
+              },
+              "especial": {
+                "type": "boolean",
+                "description": "Fecha especial (Navidad, Pascuas…): solo se ve en la web desde desde−avisoDias hasta hasta."
+              },
+              "desde": {
+                "type": "string",
+                "format": "date"
+              },
+              "hasta": {
+                "type": "string",
+                "format": "date"
+              },
+              "avisoDias": {
+                "type": "integer"
+              },
+              "bajada": {
+                "type": "string"
+              }
+            }
+          }
+        },
         "productos": {
           "type": "array",
           "items": {
-            "type": "object", "required": ["id", "nombre"],
+            "type": "object",
+            "required": [
+              "id",
+              "nombre"
+            ],
             "properties": {
-              "id": { "type": "string" }, "categoria": { "type": ["string", "null"] }, "nombre": { "type": "string" }, "descripcion": { "type": "string" },
-              "precio": { "type": ["number", "null"], "description": "null = sin precio confirmado: se muestra 'Consultar' y no se puede pedir." },
-              "foto": { "type": "string" }, "etiquetas": { "type": "array", "items": { "type": "string" } },
-              "disponible": { "type": "boolean" }, "orden": { "type": "integer" },
-              "variantes": { "type": "array", "description": "Tamaños con precio propio (1.5). El precio del producto sale de la variante elegida.", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" }, "precio": { "type": ["number", "null"] } } } },
-              "adicionales": { "type": "array", "description": "Extras que se suman al precio (1.5): precio fijo o precios por id de variante.", "items": { "type": "object", "required": ["id", "nombre"], "properties": { "id": { "type": "string" }, "nombre": { "type": "string" }, "precio": { "type": "number" }, "precios": { "type": "object" } } } }
+              "id": {
+                "type": "string"
+              },
+              "categoria": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "nombre": {
+                "type": "string"
+              },
+              "descripcion": {
+                "type": "string"
+              },
+              "precio": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "null = sin precio confirmado: se muestra 'Consultar' y no se puede pedir."
+              },
+              "foto": {
+                "type": "string"
+              },
+              "etiquetas": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "disponible": {
+                "type": "boolean"
+              },
+              "orden": {
+                "type": "integer"
+              },
+              "variantes": {
+                "type": "array",
+                "description": "Tamaños con precio propio (1.5). El precio del producto sale de la variante elegida.",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "nombre"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "nombre": {
+                      "type": "string"
+                    },
+                    "precio": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              },
+              "adicionales": {
+                "type": "array",
+                "description": "Extras que se suman al precio (1.5): precio fijo o precios por id de variante.",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "nombre"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "nombre": {
+                      "type": "string"
+                    },
+                    "precio": {
+                      "type": "number"
+                    },
+                    "precios": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
             }
           }
         }
       }
     },
-    "textos": { "type": "object", "description": "Pisa cualquier texto del kit (ver kit/core/i18n.js).", "additionalProperties": { "type": "string" } }
+    "textos": {
+      "type": "object",
+      "description": "Pisa cualquier texto del kit (ver kit/core/i18n.js).",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "estadias": {
+      "type": "object",
+      "description": "Ver docs/INTEGRACION.md → Alojamientos",
+      "properties": {
+        "habitaciones": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "nombre"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "nombre": {
+                "type": "string"
+              },
+              "descripcion": {
+                "type": "string"
+              },
+              "capacidad": {
+                "type": "integer"
+              },
+              "foto": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tarifas": {
+          "type": "object",
+          "properties": {
+            "base": {
+              "type": "object"
+            },
+            "temporadas": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "desde": {
+                    "type": "string",
+                    "pattern": "^\\d{2}-\\d{2}$"
+                  },
+                  "hasta": {
+                    "type": "string",
+                    "pattern": "^\\d{2}-\\d{2}$"
+                  },
+                  "precios": {
+                    "type": "object"
+                  },
+                  "minNoches": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "sena": {
+          "type": "number"
+        },
+        "minNoches": {
+          "type": "integer"
+        },
+        "maxNoches": {
+          "type": "integer"
+        },
+        "diasAdelante": {
+          "type": "integer"
+        },
+        "checkin": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "checkout": {
+          "type": "string"
+        },
+        "demoOcupacion": {
+          "type": "boolean"
+        }
+      }
+    }
   }
 }

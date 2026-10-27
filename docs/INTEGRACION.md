@@ -278,3 +278,28 @@ Opcional en `cliente.json`:
 **En el pitch**: abrir `/admin` → Imprimir, descargar el PDF con su marca y mostrarlo; después cambiar un precio en Carta y abrir `/carta/` en otra pestaña: se actualiza al instante. En demo los cambios viven en el navegador del dueño (el panel lo avisa); en producción, con Supabase, cada cambio llega a todos los celulares.
 
 **Generar el QR desde la web publicada**, nunca desde XAMPP: el link sale del dominio donde está abierto el panel (el panel avisa si es una dirección local).
+
+## Alojamientos: estadías por noche (kit 1.9)
+
+Para B&B, cabañas y posadas (primer uso: B&B Como en Casa, Villa La Angostura). En `cliente.json`:
+
+```json
+"modulos": { "carta": false, "carrito": false, "estadias": true, "admin": true },
+"estadias": {
+  "habitaciones": [{ "id": "deluxe", "nombre": "Doble Deluxe", "descripcion": "Cama queen · 20 m²", "capacidad": 2, "foto": "img/hab.webp" }],
+  "tarifas": {
+    "base": { "deluxe": 104481 },
+    "temporadas": [{ "id": "verano", "nombre": "Verano", "desde": "12-15", "hasta": "03-15", "precios": { "deluxe": null }, "minNoches": 2 }]
+  },
+  "sena": 30, "minNoches": 1, "maxNoches": 30, "diasAdelante": 365,
+  "checkin": ["14:30", "20:00"], "checkout": "10:30"
+}
+```
+
+- Web: `<div data-kit="estadias">` (calendario de 2 meses en desktop / 1 en celu, habitaciones, resumen con seña, datos y hora estimada de llegada) o `<button data-kit-open="estadias" data-kit-hab="deluxe">` (popup: modal ancho en desktop, hoja desde abajo en el celu).
+- Una estadía ocupa las noches `[llegada, salida)`: el día de salida queda libre para otra llegada.
+- Salidas: **Señar con Mercado Pago** (la seña = `sena` % del total, usa la misma función compartida) o **Consultar por WhatsApp** (mensaje armado). Las dos entran al panel como “pendiente”.
+- La demo puede dibujar su propia confirmación: `document.addEventListener('kit:estadia-lista', e => { e.preventDefault(); … e.detail.resumen … })`.
+- JS: `kit.estadias.abrir({ habitacion, llegada, salida })`, `kit.estadias.cotizar(hab, a, b)`, `kit.estadias.ocupadas(hab)`.
+- Panel → **Estadías**: ocupación por habitación (14 días, navegable), solicitudes (confirmar / WhatsApp / cancelar), próximas llegadas, tarifas por temporada editables (+ % de seña y mínimo de noches), reserva manual (WhatsApp, teléfono, Booking) y bloqueo de fechas. En demo arranca con ocupación de ejemplo (`"demoOcupacion": false` la apaga).
+- Producción: correr `supabase/migracion-estadias.sql` (tabla con restricción anti-solapamiento, RPC públicas `ocupacion_estadias` y `crear_estadia`). Pendiente: sincronizar con el iCal de Booking para evitar doble reserva.

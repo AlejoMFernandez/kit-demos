@@ -7,6 +7,8 @@ import { tieneVariantes } from '../core/variantes.js';
 import { configReservas, serviciosDe, tandaDe, usadosEn, capacidadEn } from '../core/turnos.js';
 import { temporadaValida } from '../core/temporadas.js';
 import { descuentoEfectivo } from '../core/descuentos.js';
+import { configEstadias, ocupacionDemo, libre, nochesEntre, cotizar, ACTIVA } from '../core/estadias.js';
+import { ahoraEn } from '../core/turnos.js';
 import { configGiftcards, codigoGiftcard, normalizarCodigo, estadoGiftcard, canjeable, venceDesde } from '../core/giftcards.js';
 
 const VERSION = 1;
@@ -22,7 +24,13 @@ export function createLocalStore(config) {
       categorias: (c.categorias || []).map((x, i) => ({ orden: i + 1, ...x })),
       productos: (c.productos || []).map((x, i) => ({ disponible: true, etiquetas: [], descripcion: '', orden: i + 1, ...x })),
       temporada: temporadaValida(config, null), reservas: [], pedidos: [], giftcards: [], sembrado: new Date().toISOString(),
+      ...(config.modulos?.estadias ? semillaEstadias() : {}),
     };
+  }
+  function semillaEstadias() {
+    const E = configEstadias(config);
+    return { estadias: config.estadias?.demoOcupacion === false ? [] : ocupacionDemo(E, ahoraEn(config.zonaHoraria || 'America/Argentina/Buenos_Aires').fecha),
+      tarifas: clone({ ...E.tarifas, sena: E.sena, minNoches: E.minNoches }) };
   }
   function leer() {
     try { const raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (_) { /* dato roto → resembrar */ }
@@ -38,7 +46,8 @@ export function createLocalStore(config) {
   if (canal) canal.onmessage = () => emitir('otra-pestaña');
   self.addEventListener('storage', (e) => { if (e.key === KEY) emitir('otra-pestaña'); });
 
-  const mut = (fn) => { const db = leer(); db.giftcards = db.giftcards || []; const r = fn(db); escribir(db); return r; };
+  const leerE = () => { const db = leer(); if (config.modulos?.estadias && !db.estadias) { Object.assign(db, semillaEstadias()); escribir(db, false); } return db; };
+  const mut = (fn) => { const db = leerE(); db.giftcards = db.giftcards || []; const r = fn(db); escribir(db); return r; };
   const GC = configGiftcards(config);
   const conEstado = (g) => g && ({ ...g, estado: estadoGiftcard(g) });
   function activar(db, pedidoId) {
@@ -103,6 +112,40 @@ export function createLocalStore(config) {
     },
     async getReservas() { return leer().reservas.slice().sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora)); },
     async updateReserva(id, patch) { return mut(db => { const r = db.reservas.find(x => x.id === id); if (r) Object.assign(r, patch); return r; }); },
+
+    // ---- estadías (alojamientos)
+    async getEstadias() { return (leerE().estadias || []).slice().sort((a, b) => a.llegada.localeCompare(b.llegada)); },
+    async getOcupacionEstadias() { return (leerE().estadias || []).filter(ACTIVA).map(e => ({ habitacion: e.habitacion, llegada: e.llegada, salida: e.salida })); },
+    async getTarifas() { const E = configEstadias(config); return { ...clone(E.tarifas), sena: E.sena, minNoches: E.minNoches, ...(leerE().tarifas || {}) }; },
+    async saveTarifas(tf) { return mut(db => { db.tarifas = clone(tf); return db.tarifas; }); },
+    async createEstadia(data) {
+      const E = configEstadias(config);
+      return mut(db => {
+        db.estadias = db.estadias || [];
+        if (!E.habitaciones.some(h => h.id === data.habitacion)) throw Object.assign(new Error('habitacion'), { code: 'habitacion' });
+        if (!(data.llegada < data.salida)) throw Object.assign(new Error('fechas'), { code: 'fechas' });
+        if (!libre(db.estadias, data.habitacion, data.llegada, data.salida)) throw Object.assign(new Error('sin_lugar'), { code: 'sin_lugar' });
+        const bloqueo = data.origen === 'bloqueo';
+        const q = bloqueo ? { total: null, sena: null } : cotizar(E, db.tarifas || E.tarifas, data.habitacion, data.llegada, data.salida);
+        const e = { id: uid('e-'), codigo: bloqueo ? '' : codigoCorto(config.prefijoPedido || 'CC'), habitacion: data.habitacion, llegada: data.llegada, salida: data.salida,
+          noches: nochesEntre(data.llegada, data.salida).length, huespedes: Number(data.huespedes) || 2, nombre: data.nombre || '', telefono: data.telefono || '', email: data.email || '',
+          horaLlegada: data.horaLlegada || '', comentario: data.comentario || '', total: q.total, sena: data.pago === 'mercadopago' ? q.sena : null,
+          origen: data.origen || 'web', pago: data.pago || 'whatsapp', pagoEstado: data.pago === 'mercadopago' ? 'pendiente' : 'a_coordinar',
+          estado: data.estado || (bloqueo || data.origen === 'manual' ? 'confirmada' : 'pendiente'), creado: new Date().toISOString() };
+        db.estadias.push(e); return e;
+      });
+    },
+    async updateEstadia(id, patch) {
+      return mut(db => {
+        const e = (db.estadias || []).find(x => x.id === id); if (!e) return null;
+        const prox = { ...e, ...patch };
+        if ((patch.llegada || patch.salida || patch.habitacion || (patch.estado && patch.estado !== 'cancelada')) && ACTIVA(prox) && !libre(db.estadias, prox.habitacion, prox.llegada, prox.salida, id)) throw Object.assign(new Error('sin_lugar'), { code: 'sin_lugar' });
+        Object.assign(e, patch, patch.llegada || patch.salida ? { noches: nochesEntre(prox.llegada, prox.salida).length } : {});
+        return e;
+      });
+    },
+    async deleteEstadia(id) { return mut(db => { db.estadias = (db.estadias || []).filter(x => x.id !== id); }); },
+    async getEstadiaPublica(id) { const e = (leerE().estadias || []).find(x => x.id === id); return e ? { id: e.id, codigo: e.codigo, estado: e.estado, pagoEstado: e.pagoEstado, sena: e.sena, total: e.total, llegada: e.llegada, salida: e.salida, habitacion: e.habitacion, nombre: e.nombre } : null; },
 
     // ---- pedidos
     async createPedido(data) {

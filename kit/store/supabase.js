@@ -1,3 +1,4 @@
+import { configEstadias } from '../core/estadias.js';
 // Adaptador PRODUCCIÓN: Supabase (base de datos + login del dueño + fotos).
 // Se activa con "modo": "produccion" y "supabase": { "url", "anonKey" } en cliente.json.
 // Esquema y permisos: supabase/schema.sql. Las altas públicas (pedidos y reservas) pasan
@@ -33,6 +34,10 @@ const aProducto = (r) => r && ({
 
 import { temporadaValida, temporadasDe } from '../core/temporadas.js';
 
+const aEstadia = (e) => e && ({ id: e.id, codigo: e.codigo, habitacion: e.habitacion, llegada: e.llegada, salida: e.salida, noches: Math.round((Date.parse(e.salida) - Date.parse(e.llegada)) / 864e5),
+  huespedes: e.huespedes, nombre: e.nombre, telefono: e.telefono, email: e.email, horaLlegada: e.hora_llegada, comentario: e.comentario, total: e.total == null ? null : Number(e.total),
+  sena: e.sena == null ? null : Number(e.sena), origen: e.origen, pago: e.pago, pagoEstado: e.pago_estado, estado: e.estado, creado: e.creado });
+
 export async function createSupabaseStore(config) {
   const { createClient } = await import(SUPABASE_ESM);
   const sb = createClient(config.supabase.url, config.supabase.anonKey, { auth: { persistSession: true } });
@@ -48,6 +53,7 @@ export async function createSupabaseStore(config) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservas', filter: `negocio=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'productos', filter: `negocio=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'negocios', filter: `id=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'estadias', filter: `negocio=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'giftcards', filter: `negocio=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
       .subscribe();
   }
@@ -101,6 +107,36 @@ export async function createSupabaseStore(config) {
       if (d.servicio || d.extras?.length) Object.assign(args, { p_servicio: d.servicio || null, p_extras: d.extras || null });
       return aReserva(ok(await sb.rpc('crear_reserva', args)));
     },
+    // ---- estadías (supabase/migracion-estadias.sql)
+    async getOcupacionEstadias() { return ok(await sb.rpc('ocupacion_estadias', { p_negocio: N })); },
+    async getEstadias() { return ok(await sb.from('estadias').select('*').eq('negocio', N).order('llegada')).map(aEstadia); },
+    async getTarifas() {
+      const E = configEstadias(config);
+      const r = ok(await sb.from('negocios').select('config').eq('id', N).maybeSingle());
+      return { ...E.tarifas, sena: E.sena, minNoches: E.minNoches, ...(r?.config?.tarifasEstadias || {}) };
+    },
+    async saveTarifas(tf) {
+      const r = ok(await sb.from('negocios').select('config').eq('id', N).maybeSingle());
+      ok(await sb.from('negocios').update({ config: { ...(r?.config || {}), tarifasEstadias: tf } }).eq('id', N)); emitir(); return tf;
+    },
+    async createEstadia(data) {
+      if (data.origen && data.origen !== 'web') {     // desde el panel (manual / bloqueo): inserta directo
+        const fila = { negocio: N, habitacion: data.habitacion, llegada: data.llegada, salida: data.salida, huespedes: data.huespedes || 2, nombre: data.nombre || '', telefono: data.telefono || '',
+          comentario: data.comentario || '', origen: data.origen, pago: 'externo', estado: 'confirmada' };
+        try { const r = aEstadia(ok(await sb.from('estadias').insert(fila).select().single())); emitir(); return r; }
+        catch (e) { if (/sin_solape|exclusion/.test(e.message)) e.code = 'sin_lugar'; throw e; }
+      }
+      try { const r = aEstadia(ok(await sb.rpc('crear_estadia', { p_negocio: N, p_data: data }))); emitir(); return r; }
+      catch (e) { if (/sin_lugar/.test(e.message)) e.code = 'sin_lugar'; throw e; }
+    },
+    async updateEstadia(id, patch) {
+      const m = { estado: 'estado', pagoEstado: 'pago_estado', llegada: 'llegada', salida: 'salida', habitacion: 'habitacion', nombre: 'nombre', telefono: 'telefono', comentario: 'comentario' };
+      const fila = {}; Object.entries(patch).forEach(([k, v]) => { if (m[k]) fila[m[k]] = v; });
+      try { const r = aEstadia(ok(await sb.from('estadias').update(fila).eq('negocio', N).eq('id', id).select().single())); emitir(); return r; }
+      catch (e) { if (/sin_solape|exclusion/.test(e.message)) e.code = 'sin_lugar'; throw e; }
+    },
+    async deleteEstadia(id) { ok(await sb.from('estadias').delete().eq('negocio', N).eq('id', id)); emitir(); },
+    async getEstadiaPublica() { return null; },   // en producción el estado del pago lo actualiza el webhook
     async getReservas() { return ok(await sb.from('reservas').select('*').eq('negocio', N).order('fecha').order('hora')).map(aReserva); },
     async updateReserva(id, patch) { const r = ok(await sb.from('reservas').update({ estado: patch.estado }).eq('id', id).select().single()); emitir(); return r; },
 

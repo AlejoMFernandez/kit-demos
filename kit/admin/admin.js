@@ -23,6 +23,7 @@ import { crearQR, qrSVG } from '../core/qr.js';
 import { FORMATOS, ESTILOS, PX_MM_IMPRESION, dibujarTarjeta, paletaTarjeta, jpgDe, pdfHoja, pdfPaginas, descargar } from '../core/tarjeta-qr.js';
 import { paginasCarta, HOJA } from '../core/carta-impresa.js';
 import { filtrarCarta } from '../core/temporadas.js';
+import { panelEstadias } from './estadias.js';
 
 const ACTIVOS = ['pendiente', 'confirmado', 'listo'];
 const PAGADO = ['aprobado', 'cobrado'];
@@ -41,6 +42,7 @@ export async function initAdmin(opts = {}) {
 
   const vistas = [
     config.modulos.carrito && { id: 'pedidos', icono: '<path d="M5 8h14l-1.3 11.1a2 2 0 0 1-2 1.9H8.3a2 2 0 0 1-2-1.9L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>' },
+    config.modulos.estadias && { id: 'estadias', icono: '<path d="M3 18V8M3 14h18v4M21 18v-6a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="2"/>' },
     config.modulos.reservas && { id: 'reservas', icono: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>' },
     config.modulos.carta && { id: 'carta', icono: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/>' },
     config.modulos.carta && (config.modulos.fechas || (config.carta?.categorias || []).some(c => c.especial)) && { id: 'fechas', icono: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m12 12.6.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3Z"/>' },
@@ -66,6 +68,7 @@ export async function initAdmin(opts = {}) {
     gcMsg: null,                           // { tipo, texto } del último canje
   };
   let pendientesAntes = null;
+  let PE = null;   // panel de estadías (se crea al entrar)
   const yaVistos = new Set(); let tableroVisto = false;
 
   // ---------- login
@@ -1191,16 +1194,17 @@ export async function initAdmin(opts = {}) {
 
   // ---------- contadores + aviso de pedido nuevo
   async function contadores() {
-    const [peds, ress] = await Promise.all([
-      config.modulos.carrito ? store.getPedidos() : [], config.modulos.reservas ? store.getReservas() : [],
+    const [peds, ress, ests] = await Promise.all([
+      config.modulos.carrito ? store.getPedidos() : [], config.modulos.reservas ? store.getReservas() : [], config.modulos.estadias ? store.getEstadias() : [],
     ]);
     const np = peds.filter(p => p.estado === 'pendiente').length;
     const nr = ress.filter(r => r.estado === 'pendiente' && r.fecha >= hoy()).length;
     const set = (k, n) => { const el = $(`[data-count="${k}"]`, root); if (el) { el.textContent = n; el.hidden = !n; } };
-    set('pedidos', np); set('reservas', nr);
+    const ne = ests.filter(e => e.estado === 'pendiente' && e.salida >= hoy() && e.origen !== 'bloqueo').length;
+    set('pedidos', np); set('reservas', nr); set('estadias', ne);
     if (pendientesAntes != null && np > pendientesAntes && pref.sonido) beep();
     pendientesAntes = np;
-    document.title = `${np + nr ? `(${np + nr}) ` : ''}${t('panel')} · ${config.nombre}`;
+    document.title = `${np + nr + ne ? `(${np + nr + ne}) ` : ''}${t('panel')} · ${config.nombre}`;
   }
 
   async function render() {
@@ -1211,6 +1215,7 @@ export async function initAdmin(opts = {}) {
     main.onclick = null; main.onsubmit = null; main.oninput = null; main.onchange = null;
     try {
       if (vista === 'pedidos') await vistaPedidos(main);
+      else if (vista === 'estadias') { PE = PE || panelEstadias(ctx, { hoy, render }); await PE.vista(main); }
       else if (vista === 'reservas') await vistaReservas(main);
       else if (vista === 'carta') await vistaCarta(main);
       else if (vista === 'fechas') await vistaFechas(main);
@@ -1227,7 +1232,7 @@ export async function initAdmin(opts = {}) {
     clearTimeout(rt);
     rt = setTimeout(() => {
       // no repintar con un popup abierto ni mientras se escribe un precio
-      if (document.querySelector('.kit-pop') || document.activeElement?.matches?.('[data-precio], [data-buscar], [data-gc-input], [data-gc-monto]')) { contadores(); return; }
+      if (document.querySelector('.kit-pop') || document.activeElement?.matches?.('[data-precio], [data-buscar], [data-gc-input], [data-gc-monto], .kad-tf')) { contadores(); return; }
       if ((ev?.origen === 'local' && vista === 'carta') || vista === 'qr') { contadores(); return; }   // la carta ya se actualizó en el lugar · el QR no depende de los datos   // la carta ya se actualizó en el lugar
       render();
       if (ev?.origen !== 'local' && vista !== 'carta') toast(`${t('nuevo')} ✓`);

@@ -10,6 +10,7 @@
 //   carta    → cada [data-kit="carta"]
 //   carrito  → botón flotante + checkout (WhatsApp / Mercado Pago) y [data-kit-add], [data-kit-qty]
 //   reservas → cada [data-kit="reservas"] y [data-kit-open="reservas"] (con "servicios": almuerzo / cena por tandas)
+//   estadias → alojamientos: [data-kit="estadias"] y [data-kit-open="estadias"] (noches, habitaciones, tarifas por temporada, seña)
 //   giftcards → [data-kit="giftcard"] o kit.giftcards.agregar({ monto, para, de, mensaje }) (necesita carrito)
 //   admin    → el panel vive en /admin (ver kit/admin)
 import { createStore } from './store/index.js';
@@ -26,8 +27,9 @@ import { tieneVariantes } from './core/variantes.js';
 import { initCarrito } from './modules/carrito.js';
 import { initReservas } from './modules/reservas.js';
 import { initGiftcards } from './modules/giftcards.js';
+import { initEstadias } from './modules/estadias.js';
 
-export const VERSION = '1.8.1';
+export const VERSION = '1.9.0';
 
 export async function cargarConfig(src = 'cliente.json') {
   const url = new URL(src, location.href);
@@ -37,7 +39,7 @@ export async function cargarConfig(src = 'cliente.json') {
   const P = pais(config.pais);
   config.idioma = config.idioma || P.idioma;
   config.zonaHoraria = config.zonaHoraria || P.tz;
-  config.modulos = { carta: true, carrito: false, reservas: false, admin: true, ...(config.modulos || {}) };
+  config.modulos = { carta: true, carrito: false, reservas: false, estadias: false, admin: true, ...(config.modulos || {}) };
   config.prefijoPedido = config.prefijoPedido || String(config.nombre || 'PD').replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || 'PD';
   return { config, base: url };
 }
@@ -78,6 +80,7 @@ export async function initKit(opts = {}) {
   if (M.carrito) ctx.carrito = initCarrito(ctx, opts.carrito);
   if (M.carta) ctx.cartas = Array.from(document.querySelectorAll('[data-kit="carta"]')).map(el => mountCarta(el, ctx, (opts.cartas && el.id && opts.cartas[el.id]) || opts.carta));
   if (M.reservas) ctx.reservas = initReservas(ctx);
+  if (M.estadias) ctx.estadias = initEstadias(ctx, opts.estadias);
   if (M.carrito && ctx.config.giftcards) ctx.giftcards = initGiftcards(ctx);
 
   // Píldora "Probá el panel": en la demo invita al dueño a entrar a /admin.

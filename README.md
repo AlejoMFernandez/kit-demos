@@ -18,7 +18,7 @@ carta/index.html                                  ← carta pública (la del QR)
 kit/
   kit.js  kit.css                                 ← entrada del sitio público
   menu.css                                        ← carta pública /carta
-  core/   theme · i18n (es / pt-BR) · pais · turnos · pedidos · sucursales · ui (popups) · util · qr · tarjeta-qr
+  core/   theme · i18n (es / pt-BR) · pais · turnos · pedidos · sucursales · ui (popups) · util · qr · tarjeta-qr · carta-impresa
   store/  index (elige adaptador) · local (demo) · supabase (producción)
   modules/ carta · carrito · reservas · giftcards · menu (carta del QR)
   admin/  admin.js · admin.css                    ← panel
@@ -56,7 +56,7 @@ Paso a paso, plantillas propias de ítems y eventos: [docs/INTEGRACION.md](docs/
 
 ### Carta del QR
 
-`/carta/` es la carta pública a la que lleva el QR de las mesas y se actualiza sola con lo que se edite en el panel. En `/admin` → **QR** se arma la tarjeta con la marca del cliente (mesa, cartel que se dobla o sticker) y se descarga en PDF A4 con marcas de corte, JPG a 300 dpi o solo el QR en SVG. Ver [docs/INTEGRACION.md](docs/INTEGRACION.md#carta-del-qr-y-tarjetas-para-imprimir-kit-17).
+`/carta/` es la carta pública a la que lleva el QR de las mesas y se actualiza sola con lo que se edite en el panel. En `/admin` → **QR** se arma la tarjeta con la marca del cliente (mesa, cartel que se dobla o sticker) y se descarga en PDF A4 con marcas de corte, JPG a 300 dpi o solo el QR en SVG. En la pestaña **Carta completa** se exporta la carta entera en hojas A4 (PDF de varias hojas o un JPG por hoja). Ver [docs/INTEGRACION.md](docs/INTEGRACION.md#carta-del-qr-y-tarjetas-para-imprimir-kit-17).
 
 ## Capa de datos
 

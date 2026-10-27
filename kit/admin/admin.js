@@ -20,7 +20,9 @@ import { estadoEspecial, textoRetiro, diasPara } from '../core/encargos.js';
 import { totalTexto } from '../core/pedidos.js';
 import { debounce } from '../core/util.js';
 import { crearQR, qrSVG } from '../core/qr.js';
-import { FORMATOS, ESTILOS, PX_MM_IMPRESION, dibujarTarjeta, paletaTarjeta, jpgDe, pdfHoja, descargar } from '../core/tarjeta-qr.js';
+import { FORMATOS, ESTILOS, PX_MM_IMPRESION, dibujarTarjeta, paletaTarjeta, jpgDe, pdfHoja, pdfPaginas, descargar } from '../core/tarjeta-qr.js';
+import { paginasCarta, HOJA } from '../core/carta-impresa.js';
+import { filtrarCarta } from '../core/temporadas.js';
 
 const ACTIVOS = ['pendiente', 'confirmado', 'listo'];
 const PAGADO = ['aprobado', 'cobrado'];
@@ -898,8 +900,21 @@ export async function initAdmin(opts = {}) {
     return q;
   }
 
+  // pestañas de la sección: tarjeta con QR | carta completa
+  const tabsImprimir = (Q) => `<div class="kad-seg kad-seg--grande kad-qr__tabs" role="group" aria-label="${esc(t('qrNav'))}">
+    <button type="button" data-qr-modo="tarjeta" aria-pressed="${Q.modo !== 'carta'}">${esc(t('tabTarjeta'))}</button>
+    <button type="button" data-qr-modo="carta" aria-pressed="${Q.modo === 'carta'}">${esc(t('tabCarta'))}</button></div>`;
+  const ocupadoBtn = async (btn, fn) => {
+    if (btn.classList.contains('is-loading')) return;
+    btn.classList.add('is-loading'); btn.disabled = true;
+    try { await fn(); } catch (err) { console.error('[kit] imprimir', err); toast(t('error')); }
+    finally { btn.classList.remove('is-loading'); btn.disabled = false; }
+  };
+  const muestraEstilo = (e) => { const P = paletaTarjeta(config.marca, e); return `<span class="kad-qr__muestra" style="--m-f:${esc(P.fondo)};--m-t:${esc(P.texto)};--m-a:${esc(P.acento)};--m-b:${esc(P.banda || P.fondo)}"><i></i><b></b><u></u></span>`; };
+
   async function vistaQR(main) {
     const Q = prefQR();
+    if (Q.modo === 'carta') return vistaCartaImpresa(main, Q);
     const sedes = sucursales(config);
     const host = location.hostname;
     const local = /^(localhost|127\.|192\.168\.|10\.|0\.0\.0\.0|\[::1\])/.test(host) || location.protocol === 'file:';
@@ -914,7 +929,8 @@ export async function initAdmin(opts = {}) {
     const campo = (k, lbl) => `<label class="kit-field"><span>${esc(t(lbl))}</span><input data-qr-campo="${k}" value="${esc(Q.textos[k] || '')}" maxlength="${k === 'titulo' ? 40 : 70}" autocomplete="off"></label>`;
 
     main.innerHTML = `
-      <div class="kad-head"><h1>${esc(t('qr'))}</h1><p class="kad-sub kad-qr__intro">${esc(t('qrIntro'))}</p></div>
+      <div class="kad-head kad-head--row"><h1>${esc(t('qr'))}</h1>${tabsImprimir(Q)}</div>
+      <p class="kad-sub kad-qr__intro">${esc(t('qrIntro'))}</p>
       ${store.modo === 'demo' ? `<p class="kad-qr__nota">${esc(t('qrDemoNota'))}</p>` : ''}
       ${local ? `<p class="kad-aviso">${esc(t('qrLocalNota', { host }))}</p>` : ''}
       <div class="kad-qr">
@@ -1006,6 +1022,8 @@ export async function initAdmin(opts = {}) {
       dibujar();
     };
     main.onclick = async (e) => {
+      const md = e.target.closest('[data-qr-modo]');
+      if (md) { if (Q.modo !== md.dataset.qrModo) { Q.modo = md.dataset.qrModo; guardar(); entrar(); render(); } return; }
       const fm = e.target.closest('[data-qr-formato]');
       if (fm) { Q.formato = fm.dataset.qrFormato; guardar(); $$('[data-qr-formato]', main).forEach(b => b.setAttribute('aria-pressed', b === fm)); return dibujar(); }
       const es = e.target.closest('[data-qr-estilo]');
@@ -1038,6 +1056,135 @@ export async function initAdmin(opts = {}) {
         const P = paletaTarjeta(config.marca, Q.estilo);
         const svg = qrSVG(crearQR(urlCarta(Q.sede), { nivel: 'Q' }), { color: P.qrColor, fondo: '#ffffff', margen: 4, lado: 1024 });
         descargar(new Blob([svg], { type: 'image/svg+xml' }), nombreArchivo('svg'));
+      }
+    };
+  }
+
+  // ---------- CARTA COMPLETA para imprimir / mandar (PDF de varias páginas o JPG por página)
+  async function vistaCartaImpresa(main, Q) {
+    const C = Q.carta = { estilo: 'clasico', columnas: 'auto', descripciones: true, qr: true, sinStock: false, fuera: [], textos: {}, ...(Q.carta || {}) };
+    if (!ESTILOS.includes(C.estilo)) C.estilo = 'clasico';
+    const guardar = () => { pref.qr = Q; guardarPref(); };
+    const [todasCats, todosProds, tmp] = await Promise.all([store.getCategorias(), store.getProductos(), store.getTemporada ? store.getTemporada() : null]);
+    const { cats, prods } = filtrarCarta(todasCats, todosProds, tmp);
+    const visibles = ctx.visibles(cats).filter(c => prods.some(p => p.categoria === c.id));
+    const ig = String(config.instagram || '').replace(/^@/, '').trim();
+    const host = (() => { try { const u = new URL(urlCarta()); return (u.host + u.pathname).replace(/^www\./, '').replace(/\/$/, ''); } catch (_) { return ''; } })();
+    const fecha = new Date().toLocaleDateString(ctx.pais.locale, { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: ctx.tz });
+    const base = () => ({ titulo: t('carta'), sub: t('preciosAl', { fecha }), pie: [ig && `@${ig}`, host].filter(Boolean).join('  ·  '), qr: t('qrPieCarta') });
+    const T = () => ({ ...base(), ...C.textos });
+    const grupos = () => visibles.filter(c => !C.fuera.includes(c.id)).map(c => ({ nombre: c.nombre, items: prods.filter(p => p.categoria === c.id && (C.sinStock || p.disponible !== false)) })).filter(g => g.items.length);
+    const opcs = () => ({ columnas: C.columnas === 'auto' ? 'auto' : Number(C.columnas), descripciones: C.descripciones, qr: C.qr });
+    const armar = (pxPorMm) => paginasCarta({ config, grupos: grupos(), estilo: C.estilo, url: urlCarta(Q.sede), textos: { ...T(), consultar: t('sinPrecio'), pagina: '{n} / {total}' }, opciones: opcs(), money: ctx.money, asset: ctx.asset, pxPorMm });
+    const estTxt = { clasico: 'estClasico', marca: 'estMarca', minimal: 'estMinimal' };
+    const campo = (k, lbl) => `<label class="kit-field"><span>${esc(t(lbl))}</span><input data-ci-campo="${k}" value="${esc(T()[k] || '')}" maxlength="${k === 'titulo' ? 40 : 90}" autocomplete="off"></label>`;
+    const chk = (k, lbl) => `<label class="kit-check"><input type="checkbox" data-ci-opt="${k}"${C[k] ? ' checked' : ''}><span>${esc(t(lbl))}</span></label>`;
+
+    main.innerHTML = `
+      <div class="kad-head kad-head--row"><h1>${esc(t('cartaImpTitulo'))}</h1>${tabsImprimir(Q)}</div>
+      <p class="kad-sub kad-qr__intro">${esc(t('cartaImpIntro'))}</p>
+      <div class="kad-qr kad-ci">
+        <div class="kad-qr__prev">
+          <div class="kad-qr__mesa kad-ci__hojas" data-ci-hojas><p class="kad-muted">${esc(t('generando'))}</p></div>
+          <div class="kad-qr__acc">
+            <button type="button" class="kit-btn kit-btn--big kit-btn--block kad-qr__pdf" data-ci-pdf><span>${esc(t('descPDF'))}</span><small data-ci-n> </small></button>
+            <div class="kad-qr__acc2">
+              <button type="button" class="kit-btn kit-btn--ghost" data-ci-jpg>${esc(t('descJPG'))}</button>
+              <button type="button" class="kit-btn kit-btn--ghost" data-ci-imprimir>${esc(t('imprimir'))}</button>
+            </div>
+            <p class="kad-muted kad-qr__consejo">${esc(t('cartaImpConsejo'))}</p>
+          </div>
+        </div>
+        <div class="kad-qr__ctrl">
+          <section class="kad-caja">
+            <h2 class="kad-caja__t">${esc(t('qrEstilo'))}</h2>
+            <div class="kad-qr__ests">${ESTILOS.map(e => `<button type="button" class="kad-qr__est" data-ci-estilo="${e}" aria-pressed="${e === C.estilo}">${muestraEstilo(e)}<b>${esc(t(estTxt[e]))}</b></button>`).join('')}</div>
+          </section>
+          <section class="kad-caja">
+            <h2 class="kad-caja__t">${esc(t('ciArmado'))}</h2>
+            <div class="kad-ci__fila"><span class="kad-ci__lbl">${esc(t('ciColumnas'))}</span>
+              <div class="kad-seg" role="group">${['auto', '1', '2'].map(v => `<button type="button" data-ci-cols="${v}" aria-pressed="${String(C.columnas) === v}">${esc(v === 'auto' ? t('ciAuto') : v)}</button>`).join('')}</div></div>
+            <div class="kad-ci__checks">${chk('descripciones', 'ciDescripciones')}${chk('qr', 'ciQR')}${chk('sinStock', 'ciSinStock')}</div>
+          </section>
+          <section class="kad-caja">
+            <h2 class="kad-caja__t">${esc(t('secciones'))}</h2>
+            <div class="kad-ci__secs">${visibles.map(c => `<label class="kad-ci__sec"><input type="checkbox" data-ci-sec="${esc(c.id)}"${C.fuera.includes(c.id) ? '' : ' checked'}><span>${esc(c.nombre)}</span></label>`).join('') || `<p class="kad-muted">${esc(t('ciVacia'))}</p>`}</div>
+          </section>
+          <section class="kad-caja">
+            <h2 class="kad-caja__t">${esc(t('qrTextos'))}</h2>
+            <div class="kad-qr__campos">${campo('titulo', 'qrTituloLbl')}${campo('sub', 'ciSubLbl')}${campo('pie', 'qrPieLbl')}${campo('qr', 'ciQRLbl')}</div>
+            <button type="button" class="kad-link" data-ci-restaurar>${esc(t('qrRestaurar'))}</button>
+          </section>
+        </div>
+      </div>`;
+
+    const hojasEl = $('[data-ci-hojas]', main);
+    let turno = 0;
+    async function dibujar() {
+      const yo = ++turno;
+      if (!grupos().length) { hojasEl.innerHTML = `<p class="kad-muted">${esc(t('ciVacia'))}</p>`; $('[data-ci-n]', main).textContent = ''; return; }
+      const ancho = Math.min(hojasEl.clientWidth - 48, 460);
+      const hojas = await armar(Math.max(1.6, ancho * Math.min(devicePixelRatio || 1, 2) / HOJA[0]));
+      if (yo !== turno || !hojasEl.isConnected) return;
+      hojasEl.replaceChildren(...hojas.map((cv, i) => { cv.style.width = `${Math.round(ancho)}px`; cv.className = 'is-cambiando'; cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', `${t('qrVistaPrevia')} ${i + 1}`); return cv; }));
+      $('[data-ci-n]', main).textContent = hojas.length === 1 ? t('ciUnaHoja') : t('ciNHojas', { n: hojas.length });
+    }
+    const redibujar = debounce(dibujar, 180);
+    dibujar();
+    if (window.ResizeObserver) { let w0 = hojasEl.clientWidth; new ResizeObserver(() => { if (Math.abs(hojasEl.clientWidth - w0) > 8) { w0 = hojasEl.clientWidth; redibujar(); } }).observe(hojasEl); }
+
+    const nombre = (ext, i) => `${config.id}-${slug(t('carta'))}${i ? `-${i}` : ''}.${ext}`;
+    async function enAlta() {
+      const hojas = await armar(PX_MM_IMPRESION);
+      const jpgs = [];
+      for (const cv of hojas) jpgs.push({ bytes: await jpgDe(cv, .92), w: cv.width, h: cv.height });
+      return jpgs;
+    }
+    const hacerPDF = async () => pdfPaginas(await enAlta(), HOJA, { titulo: `${t('carta')} · ${config.nombre}` });
+
+    main.oninput = (e) => {
+      const f = e.target.closest('[data-ci-campo]'); if (!f) return;
+      C.textos[f.dataset.ciCampo] = f.value; guardar(); redibujar();
+    };
+    main.onchange = (e) => {
+      const o = e.target.closest('[data-ci-opt]');
+      if (o) { C[o.dataset.ciOpt] = o.checked; guardar(); return dibujar(); }
+      const sc = e.target.closest('[data-ci-sec]');
+      if (sc) { const id = sc.dataset.ciSec; C.fuera = sc.checked ? C.fuera.filter(x => x !== id) : [...C.fuera, id]; guardar(); return dibujar(); }
+    };
+    main.onclick = async (e) => {
+      const md = e.target.closest('[data-qr-modo]');
+      if (md) { if (Q.modo !== md.dataset.qrModo) { Q.modo = md.dataset.qrModo; guardar(); entrar(); render(); } return; }
+      const es = e.target.closest('[data-ci-estilo]');
+      if (es) { C.estilo = es.dataset.ciEstilo; guardar(); $$('[data-ci-estilo]', main).forEach(b => b.setAttribute('aria-pressed', b === es)); return dibujar(); }
+      const co = e.target.closest('[data-ci-cols]');
+      if (co) { C.columnas = co.dataset.ciCols; guardar(); $$('[data-ci-cols]', main).forEach(b => b.setAttribute('aria-pressed', b === co)); return dibujar(); }
+      if (e.target.closest('[data-ci-restaurar]')) {
+        C.textos = {}; guardar();
+        $$('[data-ci-campo]', main).forEach(i => { i.value = T()[i.dataset.ciCampo] || ''; });
+        return dibujar();
+      }
+      const sinNada = () => { if (grupos().length) return false; toast(t('ciVacia')); return true; };
+      const pdf = e.target.closest('[data-ci-pdf]');
+      if (pdf) { if (sinNada()) return; return ocupadoBtn(pdf, async () => descargar(await hacerPDF(), nombre('pdf'), 'application/pdf')); }
+      const jpg = e.target.closest('[data-ci-jpg]');
+      if (jpg) {
+        if (sinNada()) return;
+        return ocupadoBtn(jpg, async () => {
+          const jpgs = await enAlta();
+          for (let i = 0; i < jpgs.length; i++) { descargar(jpgs[i].bytes, nombre('jpg', jpgs.length > 1 ? i + 1 : 0), 'image/jpeg'); if (i < jpgs.length - 1) await new Promise(r => setTimeout(r, 450)); }
+        });
+      }
+      const imp = e.target.closest('[data-ci-imprimir]');
+      if (imp) {
+        if (sinNada()) return;
+        const w = window.open('', '_blank');
+        return ocupadoBtn(imp, async () => {
+          const bytes = await hacerPDF();
+          const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+          if (w) w.location.href = url; else descargar(bytes, nombre('pdf'), 'application/pdf');
+          setTimeout(() => URL.revokeObjectURL(url), 120_000);
+        });
       }
     };
   }

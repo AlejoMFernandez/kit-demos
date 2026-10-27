@@ -232,6 +232,18 @@ async def carta_qr(b, nombre, w, h):
     async with adm.expect_download() as d: await adm.click('[data-qr-jpg]')
     jpg = await (await d.value).path()
     check(open(jpg, 'rb').read(3) == b'\xff\xd8\xff', 'panel QR: descarga el JPG')
+    # carta completa para imprimir
+    await adm.click('[data-qr-modo="carta"]'); await adm.wait_for_selector('[data-ci-hojas] canvas'); await adm.wait_for_timeout(500)
+    await sin_overflow(adm, 'panel carta impresa')
+    check(await adm.locator('[data-ci-hojas] canvas').count() >= 1, 'carta impresa: vista previa de las hojas')
+    await adm.click('[data-ci-cols="1"]'); await adm.click('[data-ci-estilo="marca"]'); await adm.wait_for_timeout(600)
+    await adm.screenshot(path=f'{SHOTS}/{nombre}-22-carta-impresa.png', full_page=True)
+    async with adm.expect_download() as d: await adm.click('[data-ci-pdf]')
+    cab = open(await (await d.value).path(), 'rb').read()
+    check(cab.startswith(b'%PDF') and b'/Type /Page ' in cab, 'carta impresa: descarga el PDF')
+    async with adm.expect_download() as d: await adm.click('[data-ci-jpg]')
+    check(open(await (await d.value).path(), 'rb').read(3) == b'\xff\xd8\xff', 'carta impresa: descarga el JPG')
+    await adm.click('[data-qr-modo="tarjeta"]'); await adm.wait_for_selector('[data-qr-canvas]')
     # cambio de precio en el panel → la carta del QR se actualiza sola
     await adm.click('[data-vista="carta"]'); await adm.wait_for_selector('[data-precio]')
     await adm.locator('[data-sec]').first.click(); await adm.wait_for_timeout(300)

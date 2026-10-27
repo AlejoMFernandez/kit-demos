@@ -46,14 +46,14 @@ export function cargarImagen(url) {
   return p;
 }
 
-async function cargarFuentes(f) {
+export async function cargarFuentes(f) {
   if (!document.fonts?.load) return;
   const pedidos = [];
   for (const fam of [f.titulos, f.texto].filter(Boolean)) for (const w of [400, 600, 700, 800]) pedidos.push(document.fonts.load(`${w} 40px ${fam}`).catch(() => {}));
   await Promise.all(pedidos);
 }
 
-function partir(c, texto, ancho) {
+export function partir(c, texto, ancho) {
   const palabras = String(texto || '').split(/\s+/).filter(Boolean);
   const lineas = []; let l = '';
   for (const p of palabras) {
@@ -84,7 +84,7 @@ function escribir(c, b, x, y, { color, alinear = 'center', interlineado = 1.08 }
   c.fillStyle = color; c.textAlign = alinear; c.textBaseline = 'top';
   b.lineas.forEach((l, i) => c.fillText(l, x, y + i * b.tam * interlineado));
 }
-function caja(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, Math.min(r, w / 2, h / 2)); else c.rect(x, y, w, h); }
+export function caja(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, Math.min(r, w / 2, h / 2)); else c.rect(x, y, w, h); }
 
 // ---------- paleta para la tarjeta
 export function paletaTarjeta(marca = {}, estilo = 'clasico') {
@@ -304,6 +304,13 @@ export function pdfHoja(jpg, pxW, pxH, formato, { nota = '', titulo = 'Carta QR'
   const txt = latin1(nota).replace(/[()\\]/g, '\\$&');
   if (txt) cs += `BT /F1 7 Tf 0.35 0.35 0.35 rg ${n(X(L.piezas[0].x + 6))} ${n(3.6 * PT)} Td (${txt}) Tj ET\n`;
 
+  return armarPDF([{ mm: A4, contenido: cs, imagen: { bytes: jpg, w: pxW, h: pxH } }], { titulo });
+}
+
+// PDF mínimo de varias páginas. paginas: [{ mm: [w, h], contenido: 'operadores PDF', imagen: { bytes, w, h } }]
+// Cada página tiene su imagen JPEG como /Im0 y la fuente Helvetica como /F1.
+export function armarPDF(paginas, { titulo = 'Carta' } = {}) {
+  const n = (v) => (Math.round(v * 100) / 100).toString();
   const partes = []; const offs = []; let largo = 0;
   const agregar = (x) => { const b = typeof x === 'string' ? latin1Bytes(x) : x; partes.push(b); largo += b.length; };
   const obj = (i, cuerpo, stream) => {
@@ -313,20 +320,32 @@ export function pdfHoja(jpg, pxW, pxH, formato, { nota = '', titulo = 'Carta QR'
     agregar('endobj\n');
   };
   agregar('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
-  const contenido = latin1Bytes(cs);
+  // 1 catálogo · 2 páginas · 3 fuente · 4 info · después, por página: página, contenido, imagen
+  const kids = paginas.map((_, i) => `${5 + i * 3} 0 R`).join(' ');
   obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
-  obj(2, '<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
-  obj(3, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${n(A4[0] * PT)} ${n(A4[1] * PT)}] /Resources << /XObject << /Im0 5 0 R >> /Font << /F1 6 0 R >> >> /Contents 4 0 R >>`);
-  obj(4, `<< /Length ${contenido.length} >>`, contenido);
-  obj(5, `<< /Type /XObject /Subtype /Image /Width ${pxW} /Height ${pxH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>`, jpg);
-  obj(6, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
-  obj(7, `<< /Title (${latin1(titulo).replace(/[()\\]/g, '\\$&')}) /Producer (kit-demos) >>`);
+  obj(2, `<< /Type /Pages /Kids [${kids}] /Count ${paginas.length} >>`);
+  obj(3, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  obj(4, `<< /Title (${latin1(titulo).replace(/[()\\]/g, '\\$&')}) /Producer (kit-demos) >>`);
+  paginas.forEach((pg, i) => {
+    const id = 5 + i * 3; const cont = latin1Bytes(pg.contenido);
+    obj(id, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${n(pg.mm[0] * PT)} ${n(pg.mm[1] * PT)}] /Resources << /XObject << /Im0 ${id + 2} 0 R >> /Font << /F1 3 0 R >> >> /Contents ${id + 1} 0 R >>`);
+    obj(id + 1, `<< /Length ${cont.length} >>`, cont);
+    const im = pg.imagen;
+    obj(id + 2, `<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.bytes.length} >>`, im.bytes);
+  });
+  const total = 5 + paginas.length * 3;
   const xref = largo;
-  let x = `xref\n0 8\n0000000000 65535 f \n`;
-  for (let i = 1; i <= 7; i++) x += `${String(offs[i]).padStart(10, '0')} 00000 n \n`;
-  agregar(x + `trailer\n<< /Size 8 /Root 1 0 R /Info 7 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  let x = `xref\n0 ${total}\n0000000000 65535 f \n`;
+  for (let i = 1; i < total; i++) x += `${String(offs[i]).padStart(10, '0')} 00000 n \n`;
+  agregar(x + `trailer\n<< /Size ${total} /Root 1 0 R /Info 4 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
   const out = new Uint8Array(largo); let k = 0; partes.forEach(p => { out.set(p, k); k += p.length; });
   return out;
+}
+
+// Una imagen por página, a sangre (la carta completa).
+export function pdfPaginas(imagenes, mm = A4, { titulo } = {}) {
+  const n = (v) => (Math.round(v * 100) / 100).toString();
+  return armarPDF(imagenes.map(im => ({ mm, imagen: im, contenido: `q ${n(mm[0] * PT)} 0 0 ${n(mm[1] * PT)} 0 0 cm /Im0 Do Q\n` })), { titulo });
 }
 function latin1Bytes(s) { const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i) & 255; return b; }
 

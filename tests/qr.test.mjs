@@ -47,3 +47,14 @@ test('PDF: estructura válida con la imagen y la tabla xref correcta', () => {
   const offs = [...txt.slice(xref).matchAll(/^(\d{10}) 00000 n $/gm)].map(m => Number(m[1]));
   offs.forEach((o, i) => assert.ok(txt.slice(o).startsWith(`${i + 1} 0 obj`), `objeto ${i + 1}`));
 });
+
+test('PDF de varias páginas: una página por imagen y xref coherente', async () => {
+  const { pdfPaginas } = await import('../kit/core/tarjeta-qr.js');
+  const jpg = { bytes: new Uint8Array([0xFF, 0xD8, 9, 0xFF, 0xD9]), w: 10, h: 14 };
+  const txt = Buffer.from(pdfPaginas([jpg, jpg, jpg], [210, 297], { titulo: 'Carta · Pãozito' })).toString('latin1');
+  assert.match(txt, /\/Count 3/);
+  assert.equal((txt.match(/\/Type \/Page /g) || []).length, 3);
+  const xref = Number(txt.match(/startxref\n(\d+)/)[1]);
+  const offs = [...txt.slice(xref).matchAll(/^(\d{10}) 00000 n $/gm)].map(m => Number(m[1]));
+  offs.forEach((o, i) => assert.ok(txt.slice(o).startsWith(`${i + 1} 0 obj`), `objeto ${i + 1}`));
+});

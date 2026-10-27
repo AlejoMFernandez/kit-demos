@@ -273,6 +273,8 @@ Opcional en `cliente.json`:
 - `cartaQR.url`: si el cliente usa dominio propio, para que el QR impreso no dependa del `.vercel.app`.
 - `cartaQR.pedir: true`: la carta del QR también deja pedir (con el módulo carrito).
 
-**En el pitch**: abrir `/admin` → QR, descargar el PDF con su marca y mostrarlo; después cambiar un precio en Carta y abrir `/carta/` en otra pestaña: se actualiza al instante. En demo los cambios viven en el navegador del dueño (el panel lo avisa); en producción, con Supabase, cada cambio llega a todos los celulares.
+**Carta completa para imprimir (kit 1.8)**: en la misma sección (pestaña *Carta completa*) se arma la carta entera en hojas A4 con la marca del cliente: estilo clásico / color de marca / minimal, 1 o 2 columnas (o automático, con columnas parejas), descripciones sí/no, QR al pie que lleva a la carta online, qué secciones incluir y textos editables (por defecto "Precios vigentes al <fecha>"). Se descarga en **PDF** (todas las hojas), **JPG** (una imagen por hoja, para WhatsApp o Instagram) o se manda a imprimir. Sale siempre de la carta del panel (respeta temporada, fechas especiales y lo pausado).
+
+**En el pitch**: abrir `/admin` → Imprimir, descargar el PDF con su marca y mostrarlo; después cambiar un precio en Carta y abrir `/carta/` en otra pestaña: se actualiza al instante. En demo los cambios viven en el navegador del dueño (el panel lo avisa); en producción, con Supabase, cada cambio llega a todos los celulares.
 
 **Generar el QR desde la web publicada**, nunca desde XAMPP: el link sale del dominio donde está abierto el panel (el panel avisa si es una dirección local).

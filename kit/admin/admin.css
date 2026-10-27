@@ -445,3 +445,25 @@ body { margin: 0; background: var(--kit-bg); color: var(--kit-text); font-family
   .kad-qr__fmts, .kad-qr__ests { gap: 8px; }
   .kad-qr__fmt small { display: none; }
 }
+
+/* ---------- Imprimir: pestañas + carta completa ---------- */
+@media (min-width: 900px) { .kad-head--row .kad-qr__tabs { margin-left: auto; } }
+.kad-qr__tabs { max-width: 100%; }
+.kad-qr__tabs button { white-space: nowrap; }
+@media (max-width: 560px) { .kad-qr__tabs { display: flex; width: 100%; } .kad-qr__tabs button { flex: 1; padding-inline: 8px; } }
+.kad-ci__hojas { display: grid; justify-items: center; align-content: start; gap: 22px; }
+@media (min-width: 1000px) { .kad-ci__hojas { max-height: calc(100vh - 340px); min-height: 420px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; } }
+.kad-ci__hojas canvas { display: block; max-width: 100%; height: auto; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,.12), 0 22px 40px -18px rgba(0,0,0,.45); }
+.kad-ci__hojas canvas.is-cambiando { animation: kad-qr-in .35s var(--kit-ease); }
+.kad-ci__fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.kad-ci__lbl { font-weight: 700; font-size: .92rem; }
+.kad-ci__checks { display: grid; gap: 12px; padding-top: 4px; }
+.kad-ci__checks .kit-check { font-size: .93rem; line-height: 1.3; }
+.kad-ci__secs { display: flex; flex-wrap: wrap; gap: 8px; }
+.kad-ci__sec { position: relative; cursor: pointer; }
+.kad-ci__sec input { position: absolute; opacity: 0; pointer-events: none; }
+.kad-ci__sec span { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1.5px solid var(--kad-linea); border-radius: 999px; font: 700 .86rem/1 var(--kit-font-body); color: var(--kit-muted); background: var(--kad-caja); transition: background .2s, color .2s, border-color .2s; }
+.kad-ci__sec input:checked + span { background: var(--kit-text); border-color: var(--kit-text); color: var(--kit-surface); }
+.kad-ci__sec input:checked + span::before { content: "✓"; }
+.kad-ci__sec input:focus-visible + span { outline: 3px solid var(--kit-accent); outline-offset: 2px; }
+.kad-qr__intro + .kad-qr { margin-top: 18px; }

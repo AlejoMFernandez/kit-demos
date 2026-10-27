@@ -25,7 +25,19 @@ function paleta(marca = {}, estilo) {
   };
 }
 
-export async function paginasCarta({ config, grupos = [], estilo = 'clasico', url = '', textos = {}, opciones = {}, money = (v) => String(v), asset = (p) => p, pxPorMm = 4 }) {
+export async function paginasCarta(args) {
+  const o = args.opciones || {};
+  // automático: una columna solo si la carta entra en una hoja; si no, dos (con columnas parejas)
+  if (o.columnas !== 1 && o.columnas !== 2) {
+    const nItems = (args.grupos || []).reduce((a, g) => a + g.items.length, 0);
+    if (nItems > 10) return armarHojas({ ...args, opciones: { ...o, columnas: 2 } });
+    const una = await armarHojas({ ...args, opciones: { ...o, columnas: 1 }, soloContar: true });
+    return armarHojas({ ...args, opciones: { ...o, columnas: una > 1 ? 2 : 1 } });
+  }
+  return armarHojas(args);
+}
+
+async function armarHojas({ config, grupos = [], estilo = 'clasico', url = '', textos = {}, opciones = {}, money = (v) => String(v), asset = (p) => p, pxPorMm = 4, soloContar = false }) {
   const marca = config.marca || {};
   const fu = { titulos: marca.fuentes?.titulos || 'Georgia, serif', texto: marca.fuentes?.texto || 'system-ui, sans-serif' };
   const mayus = marca.estilo?.mayusculas !== false;
@@ -109,6 +121,8 @@ export async function paginasCarta({ config, grupos = [], estilo = 'clasico', ur
     for (let k = 0; k < 18; k++) { const mid = (lo + hi) / 2; if (paginar(mid).length === 1) hi = mid; else lo = mid; }
     paginas = paginar(hi);
   }
+
+  if (soloContar) return paginas.length;
 
   // ---------- dibujar
   const q = conQR ? crearQR(url, { nivel: 'M' }) : null;

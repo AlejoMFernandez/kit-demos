@@ -90,7 +90,8 @@ export async function initMenu(opts = {}) {
   // ---------- estado abierto / cerrado (se refresca cada minuto)
   function pintarEstado() {
     const el = $('[data-estado]', root);
-    if (!horarios || !Object.keys(horarios).length) { el.hidden = true; return; }
+    // sin horarios cargados (o todos los días vacíos) no se muestra nada: mejor eso que un "Cerrado" falso
+    if (!horarios || !Object.values(horarios).some(f => Array.isArray(f) && f.length)) { el.hidden = true; return; }
     const e = estadoAbierto(horarios, ctx.tz);
     el.hidden = false;
     el.classList.toggle('is-abierto', e.abierto);

@@ -20,7 +20,7 @@
   import { initAdmin } from '../kit/admin/admin.js?v=1';
   // página de prueba: ?cliente=br abre el panel del cliente de Brasil
   const c = new URLSearchParams(location.search).get('cliente');
-  initAdmin({ config: c ? `../cliente-${c}.json` : '../cliente.json', sitio: c ? `../?cliente=${c}` : '../' });
+  initAdmin({ config: c ? `../cliente-${c}.json` : '../cliente.json', sitio: c ? `../?cliente=${c}` : '../', cartaUrl: c ? `../carta/?cliente=${c}` : undefined });
 </script>
 </body>
 </html>

@@ -248,3 +248,31 @@ initKit({ imagenes: { lqip: 'img/lqip.json' } }); // imagenes: false lo apaga; [
 El mapa de vistas previas se genera con `python3 scripts/lqip.py web` (≈200 bytes por foto). Volver a correrlo cada vez que se agregan fotos.
 
 Optimizar siempre: webp q≈72, ancho máximo = 2× el tamaño en pantalla, `srcset`/`sizes` en hero y galerías, miniaturas (≈240 px) para las fotos chicas de la carta, `fetchpriority="high"` solo en la foto del hero y `loading="lazy"` en el resto.
+
+## Carta del QR y tarjetas para imprimir (kit 1.7)
+
+Cada demo trae una **carta pública aparte** en `/carta/` (la copia `scripts/instalar.mjs` desde `plantillas/carta/index.html`). Es la página a la que lleva el QR de las mesas: liviana, una sección por vez con pestañas, buscador en toda la carta, estado abierto/cerrado, WhatsApp e Instagram al pie. Lee la misma carta que edita el panel, así que **se actualiza sola**: el QR se imprime una vez y no hay que pisar ningún PDF en Drive.
+
+En el panel aparece la sección **QR** (`modulos.cartaQR: false` la apaga):
+
+- Link fijo de la carta con Copiar / Abrir. Cadenas: un QR por sede (`/carta/?sede=<id>` muestra esa sede y su horario).
+- Tarjeta con la identidad del cliente (colores, tipografías, logo, forma y sombra de `cliente.json → marca`) en 3 formatos: **tarjeta de mesa** 9,5 × 13,5 cm (4 por A4), **cartel de mesa** que se dobla al medio (A4) y **sticker** 8,5 × 8,5 cm (6 por A4); y 3 estilos: clásico, color de marca, minimal. Textos editables.
+- **PDF** A4 listo para imprimir con marcas de corte, **JPG** a 300 dpi, **Imprimir** directo y **solo el QR en SVG** para una imprenta.
+- Todo se genera en el navegador (QR propio en `kit/core/qr.js`, PDF propio en `kit/core/tarjeta-qr.js`): sin servicios externos ni librerías.
+
+Opcional en `cliente.json`:
+
+```json
+"instagram": "usuario",
+"marca": { "logoClaro": "img/logo-blanco.svg", "isotipo": "img/isotipo.svg" },
+"cartaQR": { "url": "https://dominio-del-cliente.com/carta/", "pedir": false, "estilo": "marca", "textos": { "titulo": "Nuestra carta" } }
+```
+
+- `logoClaro`: logo para el estilo Color de marca (sin él, el logo va sobre una placa clara).
+- `isotipo`: ícono cuadrado en el centro del QR (pasa a corrección de errores alta).
+- `cartaQR.url`: si el cliente usa dominio propio, para que el QR impreso no dependa del `.vercel.app`.
+- `cartaQR.pedir: true`: la carta del QR también deja pedir (con el módulo carrito).
+
+**En el pitch**: abrir `/admin` → QR, descargar el PDF con su marca y mostrarlo; después cambiar un precio en Carta y abrir `/carta/` en otra pestaña: se actualiza al instante. En demo los cambios viven en el navegador del dueño (el panel lo avisa); en producción, con Supabase, cada cambio llega a todos los celulares.
+
+**Generar el QR desde la web publicada**, nunca desde XAMPP: el link sale del dominio donde está abierto el panel (el panel avisa si es una dirección local).

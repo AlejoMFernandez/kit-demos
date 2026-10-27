@@ -11,13 +11,24 @@
     "idioma": { "enum": ["es", "pt-BR"] },
     "zonaHoraria": { "type": "string", "description": "IANA. Por defecto la del país." },
     "modo": { "enum": ["demo", "produccion"], "description": "demo = localStorage; produccion = Supabase." },
+    "instagram": { "type": "string", "description": "Usuario de Instagram (sin @). Aparece en la carta del QR y en el pie de las tarjetas." },
+    "cartaQR": {
+      "type": "object",
+      "description": "Carta pública /carta (la del QR de las mesas) y tarjetas imprimibles del panel.",
+      "properties": {
+        "url": { "type": "string", "description": "Link fijo del QR si no es <dominio>/carta/ (ej. dominio propio)." },
+        "pedir": { "type": "boolean", "description": "La carta del QR también deja pedir (necesita el módulo carrito). Por defecto solo muestra." },
+        "formato": { "enum": ["mesa", "tent", "sticker"] }, "estilo": { "enum": ["clasico", "marca", "minimal"] },
+        "textos": { "type": "object", "properties": { "kicker": { "type": "string" }, "titulo": { "type": "string" }, "sub": { "type": "string" }, "pie": { "type": "string" } } }
+      }
+    },
     "whatsapp": { "type": "string", "description": "Número con código de país (5491112345678) o un link. Si es un link corto sin texto, el pedido se copia al portapapeles." },
     "prefijoPedido": { "type": "string", "maxLength": 4 },
     "supabase": { "type": "object", "properties": { "url": { "type": "string" }, "anonKey": { "type": "string" } } },
     "marca": {
       "type": "object",
       "properties": {
-        "logo": { "type": "string" }, "logoPanel": { "type": "string" }, "favicon": { "type": "string" },
+        "logo": { "type": "string" }, "logoPanel": { "type": "string" }, "logoClaro": { "type": "string", "description": "Logo para fondos oscuros / de color (tarjetas QR estilo Color de marca). Sin él, el logo va sobre una placa clara." }, "isotipo": { "type": "string", "description": "Ícono cuadrado opcional: va en el centro del QR de las tarjetas (el QR pasa a corrección alta)." }, "favicon": { "type": "string" },
         "colores": {
           "type": "object",
           "properties": {
@@ -42,7 +53,7 @@
     },
     "modulos": {
       "type": "object",
-      "properties": { "carta": { "type": "boolean" }, "carrito": { "type": "boolean" }, "reservas": { "type": "boolean" }, "admin": { "type": "boolean" }, "fechas": { "type": "boolean", "description": "Pestaña Fechas especiales en el panel (se activa sola si alguna categoría tiene especial: true)." } }
+      "properties": { "carta": { "type": "boolean" }, "cartaQR": { "type": "boolean", "description": "Sección QR de la carta en el panel (por defecto activa si hay carta). La página pública vive en /carta." }, "carrito": { "type": "boolean" }, "reservas": { "type": "boolean" }, "admin": { "type": "boolean" }, "fechas": { "type": "boolean", "description": "Pestaña Fechas especiales en el panel (se activa sola si alguna categoría tiene especial: true)." } }
     },
     "horarios": {
       "type": "object",

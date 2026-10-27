@@ -18,6 +18,9 @@ import { sucursales } from '../core/sucursales.js';
 import { temporadasDe, seVe } from '../core/temporadas.js';
 import { estadoEspecial, textoRetiro, diasPara } from '../core/encargos.js';
 import { totalTexto } from '../core/pedidos.js';
+import { debounce } from '../core/util.js';
+import { crearQR, qrSVG } from '../core/qr.js';
+import { FORMATOS, ESTILOS, PX_MM_IMPRESION, dibujarTarjeta, paletaTarjeta, jpgDe, pdfHoja, descargar } from '../core/tarjeta-qr.js';
 
 const ACTIVOS = ['pendiente', 'confirmado', 'listo'];
 const PAGADO = ['aprobado', 'cobrado'];
@@ -39,6 +42,7 @@ export async function initAdmin(opts = {}) {
     config.modulos.reservas && { id: 'reservas', icono: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>' },
     config.modulos.carta && { id: 'carta', icono: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/>' },
     config.modulos.carta && (config.modulos.fechas || (config.carta?.categorias || []).some(c => c.especial)) && { id: 'fechas', icono: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m12 12.6.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3Z"/>' },
+    config.modulos.carta && config.modulos.cartaQR !== false && { id: 'qr', nav: 'qrNav', icono: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><path d="M14 14h2.5v2.5H14zM18 18h2.5v2.5H18zM18 14h2.5M14 18v2.5"/>' },
     config.modulos.carrito && config.giftcards && { id: 'giftcards', icono: '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 12h18M12 8v12M12 8c-1.5-3.5-6.5-3.5-5 0M12 8c1.5-3.5 6.5-3.5 5 0"/>' },
   ].filter(Boolean);
   const GC = configGiftcards(config);
@@ -96,7 +100,7 @@ export async function initAdmin(opts = {}) {
           ${config.marca?.logo ? `<img src="${esc(ctx.asset(config.marca.logoPanel || config.marca.logo))}" alt="${esc(config.nombre)}">` : `<b>${esc(config.nombre)}</b>`}
         </a>
         <nav class="kad-nav" aria-label="${esc(t('panel'))}">
-          ${vistas.map(v => `<a href="#${v.id}" class="kad-nav__a" data-vista="${v.id}"><svg viewBox="0 0 24 24" aria-hidden="true">${v.icono}</svg><span>${esc(t(v.id))}</span><i class="kad-count" data-count="${v.id}" hidden></i></a>`).join('')}
+          ${vistas.map(v => `<a href="#${v.id}" class="kad-nav__a" data-vista="${v.id}"><svg viewBox="0 0 24 24" aria-hidden="true">${v.icono}</svg><span>${esc(t(v.nav || v.id))}</span><i class="kad-count" data-count="${v.id}" hidden></i></a>`).join('')}
         </nav>
         <div class="kad-top__actions">
           ${config.modulos.carrito ? `<button type="button" class="kad-sonido" data-sonido aria-pressed="${!!pref.sonido}" title="${esc(t('sonido'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path class="kad-sonido__on" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/><path class="kad-sonido__off" d="m16 9 6 6M22 9l-6 6"/></svg><span>${esc(t('sonido'))}</span></button>` : ''}
@@ -870,6 +874,174 @@ export async function initAdmin(opts = {}) {
     };
   }
 
+  // =====================================================================
+  // QR DE LA CARTA: link fijo a /carta + tarjetas para imprimir con la marca
+  // =====================================================================
+  function urlCarta(sedeId) {
+    const base = opts.cartaUrl || config.cartaQR?.url || new URL('../carta/', location.href).href;
+    const u = new URL(base, location.href);
+    if (sedeId) u.searchParams.set('sede', sedeId); else u.searchParams.delete('sede');
+    return u.href;
+  }
+  const textosQRBase = () => {
+    const ig = String(config.instagram || '').replace(/^@/, '').trim();
+    const host = (() => { try { const u = new URL(urlCarta()); return (u.host + u.pathname).replace(/^www\./, '').replace(/\/$/, ''); } catch (_) { return ''; } })();
+    return { kicker: t('cartaDigital'), titulo: t('qrTitulo'), sub: t('qrSub'), pie: ig ? `@${ig}` : host, ...(config.cartaQR?.textos || {}) };
+  };
+  function prefQR() {
+    pref.qr = pref.qr || {};
+    const q = pref.qr;
+    if (!FORMATOS[q.formato]) q.formato = config.cartaQR?.formato || 'mesa';
+    if (!ESTILOS.includes(q.estilo)) q.estilo = config.cartaQR?.estilo || 'clasico';
+    q.textos = { ...textosQRBase(), ...(q.textos || {}) };
+    if (q.sede && !sucursales(config).some(x => x.id === q.sede)) q.sede = '';
+    return q;
+  }
+
+  async function vistaQR(main) {
+    const Q = prefQR();
+    const sedes = sucursales(config);
+    const host = location.hostname;
+    const local = /^(localhost|127\.|192\.168\.|10\.|0\.0\.0\.0|\[::1\])/.test(host) || location.protocol === 'file:';
+    const ico = {
+      mesa: '<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="11" y="5" width="18" height="27" rx="2"/><rect x="15" y="15" width="10" height="10" rx="1"/><path d="M8 35h24"/></svg>',
+      tent: '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 33 14 8h12l8 25"/><rect x="15" y="15" width="10" height="10" rx="1"/><path d="M4 33h32"/></svg>',
+      sticker: '<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="7" y="7" width="26" height="26" rx="4"/><rect x="14" y="14" width="12" height="12" rx="1"/></svg>',
+    };
+    const fmtTxt = { mesa: ['fmtMesa', 'fmtMesaSub'], tent: ['fmtTent', 'fmtTentSub'], sticker: ['fmtSticker', 'fmtStickerSub'] };
+    const estTxt = { clasico: 'estClasico', marca: 'estMarca', minimal: 'estMinimal' };
+    const muestra = (e) => { const P = paletaTarjeta(config.marca, e); return `<span class="kad-qr__muestra" style="--m-f:${esc(P.fondo)};--m-t:${esc(P.texto)};--m-a:${esc(P.acento)};--m-b:${esc(P.banda || P.fondo)}"><i></i><b></b><u></u></span>`; };
+    const campo = (k, lbl) => `<label class="kit-field"><span>${esc(t(lbl))}</span><input data-qr-campo="${k}" value="${esc(Q.textos[k] || '')}" maxlength="${k === 'titulo' ? 40 : 70}" autocomplete="off"></label>`;
+
+    main.innerHTML = `
+      <div class="kad-head"><h1>${esc(t('qr'))}</h1><p class="kad-sub kad-qr__intro">${esc(t('qrIntro'))}</p></div>
+      ${store.modo === 'demo' ? `<p class="kad-qr__nota">${esc(t('qrDemoNota'))}</p>` : ''}
+      ${local ? `<p class="kad-aviso">${esc(t('qrLocalNota', { host }))}</p>` : ''}
+      <div class="kad-qr">
+        <div class="kad-qr__prev">
+          <div class="kad-qr__mesa" data-qr-mesa><canvas data-qr-canvas aria-label="${esc(t('qrVistaPrevia'))}" role="img"></canvas></div>
+          <div class="kad-qr__acc">
+            <button type="button" class="kit-btn kit-btn--big kit-btn--block kad-qr__pdf" data-qr-pdf><span>${esc(t('descPDF'))}</span><small>${esc(t('descPDFSub'))}</small></button>
+            <div class="kad-qr__acc2">
+              <button type="button" class="kit-btn kit-btn--ghost" data-qr-jpg>${esc(t('descJPG'))}</button>
+              <button type="button" class="kit-btn kit-btn--ghost" data-qr-imprimir>${esc(t('imprimir'))}</button>
+            </div>
+            <button type="button" class="kad-link kad-qr__svg" data-qr-svg>${esc(t('soloQR'))}</button>
+            <p class="kad-muted kad-qr__consejo">${esc(t('qrConsejo'))}</p>
+          </div>
+        </div>
+        <div class="kad-qr__ctrl">
+          <section class="kad-caja">
+            <h2 class="kad-caja__t">${esc(t('qrLink'))}</h2>
+            <div class="kad-qr__link"><code data-qr-url>${esc(urlCarta(Q.sede))}</code></div>
+            <div class="kad-qr__linkacc">
+              <button type="button" class="kit-btn kit-btn--sm" data-qr-copiar>${esc(t('copiar'))}</button>
+              <a class="kit-btn kit-btn--sm kit-btn--ghost" data-qr-abrir href="${esc(urlCarta(Q.sede))}" target="_blank" rel="noopener">${esc(t('abrirCarta'))} ↗</a>
+            </div>
+            ${sedes.length > 1 ? `<label class="kit-field kad-sede"><span>${esc(t('qrSede'))}</span><select data-qr-sede><option value="">${esc(t('qrGeneral'))}</option>${sedes.map(x => `<option value="${esc(x.id)}"${x.id === Q.sede ? ' selected' : ''}>${esc(x.nombre)}</option>`).join('')}</select></label>` : ''}
+          </section>
+          <section class="kad-caja">
+            <h2 class="kad-caja__t">${esc(t('qrFormato'))}</h2>
+            <div class="kad-qr__fmts">${Object.keys(FORMATOS).map(f => `<button type="button" class="kad-qr__fmt" data-qr-formato="${f}" aria-pressed="${f === Q.formato}">${ico[f]}<b>${esc(t(fmtTxt[f][0]))}</b><small>${esc(t(fmtTxt[f][1]))}</small></button>`).join('')}</div>
+          </section>
+          <section class="kad-caja">
+            <h2 class="kad-caja__t">${esc(t('qrEstilo'))}</h2>
+            <div class="kad-qr__ests">${ESTILOS.map(e => `<button type="button" class="kad-qr__est" data-qr-estilo="${e}" aria-pressed="${e === Q.estilo}">${muestra(e)}<b>${esc(t(estTxt[e]))}</b></button>`).join('')}</div>
+          </section>
+          <section class="kad-caja">
+            <h2 class="kad-caja__t">${esc(t('qrTextos'))}</h2>
+            <div class="kad-qr__campos">${campo('kicker', 'qrKickerLbl')}${campo('titulo', 'qrTituloLbl')}${campo('sub', 'qrSubLbl')}${campo('pie', 'qrPieLbl')}</div>
+            <button type="button" class="kad-link" data-qr-restaurar>${esc(t('qrRestaurar'))}</button>
+          </section>
+        </div>
+      </div>`;
+
+    const canvas = $('[data-qr-canvas]', main), mesa = $('[data-qr-mesa]', main);
+    let turno = 0;
+    async function dibujar() {
+      const yo = ++turno;
+      const [mw] = FORMATOS[Q.formato].mm;
+      const ancho = Math.min(mesa.clientWidth - 48, Q.formato === 'tent' ? 620 : Q.formato === 'sticker' ? 380 : 400);
+      const px = Math.max(2, ancho * Math.min(devicePixelRatio || 1, 2.5) / mw);
+      const tmp = document.createElement('canvas');
+      await dibujarTarjeta(tmp, { formato: Q.formato, estilo: Q.estilo, url: urlCarta(Q.sede), config, textos: Q.textos, asset: ctx.asset, pxPorMm: px });
+      if (yo !== turno || !canvas.isConnected) return;
+      canvas.width = tmp.width; canvas.height = tmp.height;
+      canvas.getContext('2d').drawImage(tmp, 0, 0);
+      canvas.style.width = `${Math.round(ancho)}px`;
+      mesa.dataset.formato = Q.formato;
+      canvas.classList.remove('is-cambiando'); void canvas.offsetWidth; canvas.classList.add('is-cambiando');
+    }
+    const redibujar = debounce(dibujar, 140);
+    const guardar = () => { pref.qr = Q; guardarPref(); };
+    dibujar();
+    if (window.ResizeObserver) { let w0 = mesa.clientWidth; new ResizeObserver(() => { if (Math.abs(mesa.clientWidth - w0) > 8) { w0 = mesa.clientWidth; redibujar(); } }).observe(mesa); }
+
+    // archivo en alta para imprimir
+    async function enAlta() {
+      const c = document.createElement('canvas');
+      await dibujarTarjeta(c, { formato: Q.formato, estilo: Q.estilo, url: urlCarta(Q.sede), config, textos: Q.textos, asset: ctx.asset, pxPorMm: PX_MM_IMPRESION });
+      return c;
+    }
+    const nombreArchivo = (ext) => `${config.id}-qr-${Q.formato}${Q.sede ? `-${Q.sede}` : ''}.${ext}`;
+    async function hacerPDF() {
+      const c = await enAlta(); const jpg = await jpgDe(c);
+      return pdfHoja(jpg, c.width, c.height, Q.formato, { nota: `${config.nombre} · ${t(Q.formato === 'tent' ? 'pdfNotaTent' : 'pdfNota')}`, titulo: `${t('qr')} · ${config.nombre}` });
+    }
+    const ocupado = async (btn, fn) => {
+      if (btn.classList.contains('is-loading')) return;
+      btn.classList.add('is-loading'); btn.disabled = true;
+      try { await fn(); } catch (err) { console.error('[kit] qr', err); toast(t('error')); }
+      finally { btn.classList.remove('is-loading'); btn.disabled = false; }
+    };
+
+    main.oninput = (e) => {
+      const f = e.target.closest('[data-qr-campo]'); if (!f) return;
+      Q.textos[f.dataset.qrCampo] = f.value; guardar(); redibujar();
+    };
+    main.onchange = (e) => {
+      const s = e.target.closest('[data-qr-sede]'); if (!s) return;
+      Q.sede = s.value; guardar();
+      $('[data-qr-url]', main).textContent = urlCarta(Q.sede); $('[data-qr-abrir]', main).href = urlCarta(Q.sede);
+      dibujar();
+    };
+    main.onclick = async (e) => {
+      const fm = e.target.closest('[data-qr-formato]');
+      if (fm) { Q.formato = fm.dataset.qrFormato; guardar(); $$('[data-qr-formato]', main).forEach(b => b.setAttribute('aria-pressed', b === fm)); return dibujar(); }
+      const es = e.target.closest('[data-qr-estilo]');
+      if (es) { Q.estilo = es.dataset.qrEstilo; guardar(); $$('[data-qr-estilo]', main).forEach(b => b.setAttribute('aria-pressed', b === es)); return dibujar(); }
+      if (e.target.closest('[data-qr-restaurar]')) {
+        Q.textos = textosQRBase(); guardar();
+        $$('[data-qr-campo]', main).forEach(i => { i.value = Q.textos[i.dataset.qrCampo] || ''; });
+        return dibujar();
+      }
+      if (e.target.closest('[data-qr-copiar]')) {
+        const u = urlCarta(Q.sede);
+        try { await navigator.clipboard.writeText(u); } catch (_) { const r = document.createRange(); r.selectNodeContents($('[data-qr-url]', main)); getSelection().removeAllRanges(); getSelection().addRange(r); document.execCommand?.('copy'); }
+        toast(t('linkCopiado')); return;
+      }
+      const pdf = e.target.closest('[data-qr-pdf]');
+      if (pdf) return ocupado(pdf, async () => descargar(await hacerPDF(), nombreArchivo('pdf'), 'application/pdf'));
+      const jpg = e.target.closest('[data-qr-jpg]');
+      if (jpg) return ocupado(jpg, async () => descargar(await jpgDe(await enAlta()), nombreArchivo('jpg'), 'image/jpeg'));
+      const imp = e.target.closest('[data-qr-imprimir]');
+      if (imp) {
+        // la ventana se abre en el click (si no, el navegador la bloquea) y después recibe el PDF
+        const w = window.open('', '_blank');
+        return ocupado(imp, async () => {
+          const url = URL.createObjectURL(new Blob([await hacerPDF()], { type: 'application/pdf' }));
+          if (w) w.location.href = url; else descargar(await hacerPDF(), nombreArchivo('pdf'), 'application/pdf');
+          setTimeout(() => URL.revokeObjectURL(url), 120_000);
+        });
+      }
+      if (e.target.closest('[data-qr-svg]')) {
+        const P = paletaTarjeta(config.marca, Q.estilo);
+        const svg = qrSVG(crearQR(urlCarta(Q.sede), { nivel: 'Q' }), { color: P.qrColor, fondo: '#ffffff', margen: 4, lado: 1024 });
+        descargar(new Blob([svg], { type: 'image/svg+xml' }), nombreArchivo('svg'));
+      }
+    };
+  }
+
   // ---------- contadores + aviso de pedido nuevo
   async function contadores() {
     const [peds, ress] = await Promise.all([
@@ -889,13 +1061,14 @@ export async function initAdmin(opts = {}) {
     $$('[data-vista]', root).forEach(a => { const on = a.dataset.vista === vista; a.classList.toggle('is-on', on); a.setAttribute('aria-current', on ? 'page' : 'false'); });
     main.dataset.pantalla = vista;
     const y = scrollY;
-    main.onclick = null; main.onsubmit = null;
+    main.onclick = null; main.onsubmit = null; main.oninput = null; main.onchange = null;
     try {
       if (vista === 'pedidos') await vistaPedidos(main);
       else if (vista === 'reservas') await vistaReservas(main);
       else if (vista === 'carta') await vistaCarta(main);
       else if (vista === 'fechas') await vistaFechas(main);
       else if (vista === 'giftcards') await vistaGiftcards(main);
+      else if (vista === 'qr') await vistaQR(main);
     } catch (err) { console.error('[kit] panel', err); main.innerHTML = `<p class="kit-error">${esc(t('error'))}</p>`; }
     if (Math.abs(scrollY - y) > 2) scrollTo({ top: y });
     contadores();
@@ -908,7 +1081,7 @@ export async function initAdmin(opts = {}) {
     rt = setTimeout(() => {
       // no repintar con un popup abierto ni mientras se escribe un precio
       if (document.querySelector('.kit-pop') || document.activeElement?.matches?.('[data-precio], [data-buscar], [data-gc-input], [data-gc-monto]')) { contadores(); return; }
-      if (ev?.origen === 'local' && vista === 'carta') { contadores(); return; }   // la carta ya se actualizó en el lugar
+      if ((ev?.origen === 'local' && vista === 'carta') || vista === 'qr') { contadores(); return; }   // la carta ya se actualizó en el lugar · el QR no depende de los datos   // la carta ya se actualizó en el lugar
       render();
       if (ev?.origen !== 'local' && vista !== 'carta') toast(`${t('nuevo')} ✓`);
     }, 120);

@@ -5,6 +5,7 @@
 //
 // Copia:  kit/                      → web/kit/        (se reemplaza siempre: es código del kit)
 //         plantillas/admin/index.html → web/admin/index.html (solo si no existe)
+//         plantillas/carta/index.html → web/carta/index.html (solo si no existe: la carta del QR)
 //         plantillas/cliente.json   → web/cliente.json (solo si no existe)
 // Con --produccion también copia produccion/api/ → web/api/ (pagos reales del cliente).
 import { cp, mkdir, access, readFile, writeFile, rm } from 'node:fs/promises';
@@ -31,6 +32,12 @@ if (!(await existe(join(WEB, 'admin', 'index.html')))) {
   await cp(join(RAIZ, 'plantillas', 'admin', 'index.html'), join(WEB, 'admin', 'index.html'));
   console.log('✓ panel → admin/index.html');
 } else console.log('· admin/index.html ya existe (no se toca)');
+
+if (!(await existe(join(WEB, 'carta', 'index.html')))) {
+  await mkdir(join(WEB, 'carta'), { recursive: true });
+  await cp(join(RAIZ, 'plantillas', 'carta', 'index.html'), join(WEB, 'carta', 'index.html'));
+  console.log('✓ carta pública (la del QR) → carta/index.html');
+} else console.log('· carta/index.html ya existe (no se toca)');
 
 if (!(await existe(join(WEB, 'cliente.json')))) {
   await cp(join(RAIZ, 'plantillas', 'cliente.json'), join(WEB, 'cliente.json'));

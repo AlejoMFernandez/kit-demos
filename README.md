@@ -1,6 +1,6 @@
 # kit-demos
 
-Funcionalidades reutilizables para las webs demo de negocios locales: **carta con ABM, reservas (por horario o por servicio y tanda), carrito con salida a WhatsApp o Mercado Pago, gift cards con canje en el panel, y panel `/admin`** con la identidad de cada cliente.
+Funcionalidades reutilizables para las webs demo de negocios locales: **carta con ABM, reservas (por horario o por servicio y tanda), carrito con salida a WhatsApp o Mercado Pago, gift cards con canje en el panel, carta pública con QR y tarjetas para imprimir, y panel `/admin`** con la identidad de cada cliente.
 
 HTML + CSS + JS puros (módulos ES), sin frameworks y sin build. Se enchufa a la carpeta `web/` de cualquier demo hecha con la skill *demo-web-negocio-local*.
 
@@ -14,16 +14,18 @@ Este repo es también la **página de prueba** (`index.html` + `cliente.json`, u
 ```
 index.html  cliente.json  cliente-br.json  img/   ← página de prueba (igual a un web/ de demo)
 admin/index.html                                  ← panel de la página de prueba
+carta/index.html                                  ← carta pública (la del QR) de la página de prueba
 kit/
   kit.js  kit.css                                 ← entrada del sitio público
-  core/   theme · i18n (es / pt-BR) · pais · turnos · pedidos · sucursales · ui (popups) · util
+  menu.css                                        ← carta pública /carta
+  core/   theme · i18n (es / pt-BR) · pais · turnos · pedidos · sucursales · ui (popups) · util · qr · tarjeta-qr
   store/  index (elige adaptador) · local (demo) · supabase (producción)
-  modules/ carta · carrito · reservas · giftcards
+  modules/ carta · carrito · reservas · giftcards · menu (carta del QR)
   admin/  admin.js · admin.css                    ← panel
 api/mp-preference.js                              ← Mercado Pago SANDBOX compartido (Vercel)
 produccion/api/  mp-preference.js · mp-webhook.js ← pagos reales, se copian al web/ del cliente
 supabase/  schema.sql · migracion-servicios-giftcards.sql · alta-cliente.sql
-plantillas/ admin/index.html · cliente.json
+plantillas/ admin/index.html · carta/index.html · cliente.json
 scripts/instalar.mjs                              ← copia el kit a una demo
 tests/  kit.test.mjs (Node) · e2e.py (Playwright)
 docs/   INTEGRACION.md · PRODUCCION.md · MERCADOPAGO.md · cliente.schema.json
@@ -35,7 +37,7 @@ docs/   INTEGRACION.md · PRODUCCION.md · MERCADOPAGO.md · cliente.schema.json
 node scripts/instalar.mjs "C:\xampp\htdocs\1 - DEMOS\<Negocio>\web"
 ```
 
-Copia `kit/`, crea `admin/index.html` y un `cliente.json` de plantilla si no existen. Después, en el `index.html` de la demo:
+Copia `kit/`, crea `admin/index.html`, `carta/index.html` (la carta del QR) y un `cliente.json` de plantilla si no existen. Después, en el `index.html` de la demo:
 
 ```html
 <link rel="stylesheet" href="kit/kit.css?v=1">
@@ -51,6 +53,10 @@ Copia `kit/`, crea `admin/index.html` y un `cliente.json` de plantilla si no exi
 ```
 
 Paso a paso, plantillas propias de ítems y eventos: [docs/INTEGRACION.md](docs/INTEGRACION.md).
+
+### Carta del QR
+
+`/carta/` es la carta pública a la que lleva el QR de las mesas y se actualiza sola con lo que se edite en el panel. En `/admin` → **QR** se arma la tarjeta con la marca del cliente (mesa, cartel que se dobla o sticker) y se descarga en PDF A4 con marcas de corte, JPG a 300 dpi o solo el QR en SVG. Ver [docs/INTEGRACION.md](docs/INTEGRACION.md#carta-del-qr-y-tarjetas-para-imprimir-kit-17).
 
 ## Capa de datos
 

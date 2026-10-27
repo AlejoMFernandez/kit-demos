@@ -6,6 +6,7 @@
   "idioma": "es",
   "modo": "demo",
   "whatsapp": "<5491100000000 o link wa.me>",
+  "instagram": "<usuario sin @>",
   "prefijoPedido": "XX",
   "supabase": {
     "url": "",
@@ -15,6 +16,8 @@
     "logo": "img/logo.png",
     "logoPanel": "img/logo.png",
     "favicon": "img/favicon.png",
+    "logoClaro": "",
+    "isotipo": "",
     "colores": {
       "fondo": "#FFFFFF",
       "superficie": "#FFFFFF",

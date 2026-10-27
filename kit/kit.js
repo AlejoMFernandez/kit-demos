@@ -27,7 +27,7 @@ import { initCarrito } from './modules/carrito.js';
 import { initReservas } from './modules/reservas.js';
 import { initGiftcards } from './modules/giftcards.js';
 
-export const VERSION = '1.6.0';
+export const VERSION = '1.7.0';
 
 export async function cargarConfig(src = 'cliente.json') {
   const url = new URL(src, location.href);

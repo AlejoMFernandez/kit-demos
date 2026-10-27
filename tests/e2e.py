@@ -5,7 +5,8 @@ Uso:
   python tests/e2e.py http://localhost:5173/ [carpeta_capturas]
 
 Recorre: carta → carrito → pedido por WhatsApp → pedido con Mercado Pago (simulación si no hay
-función) → reserva → panel (pedidos, reservas, ABM de carta) → cambios visibles en el sitio.
+función) → reserva → panel (pedidos, reservas, ABM de carta) → cambios visibles en el sitio →
+carta del QR (/carta) y sección QR del panel (tarjeta, PDF, JPG, actualización en vivo).
 Revisa popups (X, Escape, click afuera), overflow horizontal y saca capturas en
 1440×900, 1366×680 y 390×844.
 """
@@ -195,11 +196,57 @@ async def flujo(browser, nombre, w, h):
     check(not errores, 'sin errores de JS ' + ('; '.join(errores) if errores else ''))
     await ctx.close()
 
+async def carta_qr(b, nombre, w, h):
+    """Carta pública /carta (la del QR) y sección QR del panel: tarjeta, PDF, JPG y actualización en vivo."""
+    print(f'\n[{nombre} · carta del QR]')
+    ctx = await b.new_context(viewport={'width': w, 'height': h}, accept_downloads=True)
+    pg = await ctx.new_page(); errores = []
+    pg.on('pageerror', lambda e: errores.append(str(e)))
+    await pg.goto(BASE + 'carta/'); await pg.wait_for_selector('.kmn-item')
+    await pg.wait_for_timeout(700)
+    await sin_overflow(pg, 'carta QR')
+    chips = pg.locator('.kmn-chip'); n = await chips.count()
+    check(n >= 2, f'carta QR: pestañas de secciones ({n})')
+    await chips.nth(1).click(); await pg.wait_for_timeout(300)
+    check(await chips.nth(1).get_attribute('aria-selected') == 'true', 'carta QR: cambia de sección')
+    await pg.screenshot(path=f'{SHOTS}/{nombre}-20-carta-qr.png')
+    alto0 = await pg.evaluate("document.querySelector('.kmn-bar').offsetHeight")
+    await pg.click('[data-lupa]'); await pg.fill('[data-buscar]', 'flan'); await pg.wait_for_timeout(400)
+    check(await pg.locator('.kmn-item').count() == 1, 'carta QR: buscador en toda la carta')
+    check(await pg.evaluate("document.querySelector('.kmn-bar').offsetHeight") == alto0, 'carta QR: el buscador no mueve nada')
+    await pg.click('[data-cerrar-busqueda]')
+    # panel → QR en otra pestaña del mismo navegador
+    adm = await ctx.new_page(); adm.on('pageerror', lambda e: errores.append(str(e)))
+    await adm.goto(BASE + 'admin/#qr')
+    if await adm.locator('.kit-login').count(): await adm.click('.kit-login button')
+    await adm.wait_for_selector('[data-qr-canvas]'); await adm.wait_for_timeout(800)
+    await sin_overflow(adm, 'panel QR')
+    check(await adm.evaluate("document.querySelector('[data-qr-canvas]').width > 200"), 'panel QR: vista previa de la tarjeta')
+    for f in ('tent', 'sticker', 'mesa'):
+        await adm.click(f'[data-qr-formato="{f}"]'); await adm.wait_for_timeout(250)
+    await adm.click('[data-qr-estilo="marca"]'); await adm.fill('[data-qr-campo="titulo"]', 'La carta de hoy'); await adm.wait_for_timeout(400)
+    await adm.screenshot(path=f'{SHOTS}/{nombre}-21-panel-qr.png', full_page=True)
+    async with adm.expect_download() as d: await adm.click('[data-qr-pdf]')
+    pdf = await (await d.value).path(); cab = open(pdf, 'rb').read(8)
+    check(cab.startswith(b'%PDF'), 'panel QR: descarga el PDF')
+    async with adm.expect_download() as d: await adm.click('[data-qr-jpg]')
+    jpg = await (await d.value).path()
+    check(open(jpg, 'rb').read(3) == b'\xff\xd8\xff', 'panel QR: descarga el JPG')
+    # cambio de precio en el panel → la carta del QR se actualiza sola
+    await adm.click('[data-vista="carta"]'); await adm.wait_for_selector('[data-precio]')
+    await adm.locator('[data-sec]').first.click(); await adm.wait_for_timeout(300)
+    await adm.locator('[data-precio]').first.fill('4321'); await adm.keyboard.press('Enter'); await adm.wait_for_timeout(300)
+    await pg.bring_to_front(); await chips.nth(0).click(); await pg.wait_for_timeout(600)
+    check('4321' in (await pg.locator('.kmn-main').inner_text()).replace('.', ''), 'carta QR: se actualiza sola al editar en el panel')
+    check(not errores, 'carta QR sin errores de JS ' + ('; '.join(errores) if errores else ''))
+    await ctx.close()
+
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch()
         for n, w, h in VIEWPORTS:
             await flujo(b, n, w, h)
+            await carta_qr(b, n, w, h)
         await b.close()
     print('\nFALLAS:' if fallas else '\nTODO OK', *fallas, sep='\n  ')
     sys.exit(1 if fallas else 0)

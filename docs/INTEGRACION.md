@@ -86,6 +86,7 @@ El carrito ya genera el mensaje y abre WhatsApp. Si el WOW de la demo tiene su p
 - [ ] Pedido por WhatsApp llega con el texto armado (probar en el celu).
 - [ ] Mercado Pago sandbox: pago aprobado con tarjeta de prueba y vuelta a la web.
 - [ ] Crédito en el footer.
+- [ ] Fotos optimizadas (webp, ancho según dónde se muestran, `srcset` en las grandes, miniaturas para la carta) y `img/lqip.json` generado: ninguna foto queda en gris mientras carga.
 
 
 ## Cadenas: varias sedes
@@ -235,3 +236,15 @@ Para locales que trabajan con turnos fijos (bodegones, parrillas con dos vueltas
 ### Varias cartas en la misma página (1.5)
 
 `data-kit-categorias="especiales,cookies"` en el contenedor muestra solo esas secciones, y `data-kit-pedir="false"` lo deja como vidriera (sin botón Agregar). Para opciones distintas por contenedor: `initKit({ cartas: { 'carta-local': { template, pedir: false } } })` (la clave es el `id` del contenedor). Ej.: la carta del mostrador como vidriera y los encargos con su propio selector.
+
+## Fotos que cargan lindo (kit 1.6)
+
+`initKit` arranca solo un cargador de imágenes (`core/imagenes.js`): mientras baja cada foto se ve un brillo animado sobre una vista previa borrosa (o el color de la marca), y al llegar aparece con un desenfoque que se aclara. Toma también las fotos que se agregan después (carta, galerías). No hace falta tocar el HTML: solo darle `width`/`height` a cada `<img>` para que no salte el diseño.
+
+```js
+initKit({ imagenes: { lqip: 'img/lqip.json' } }); // imagenes: false lo apaga; [data-kit-ph="no"] excluye un bloque
+```
+
+El mapa de vistas previas se genera con `python3 scripts/lqip.py web` (≈200 bytes por foto). Volver a correrlo cada vez que se agregan fotos.
+
+Optimizar siempre: webp q≈72, ancho máximo = 2× el tamaño en pantalla, `srcset`/`sizes` en hero y galerías, miniaturas (≈240 px) para las fotos chicas de la carta, `fetchpriority="high"` solo en la foto del hero y `loading="lazy"` en el resto.

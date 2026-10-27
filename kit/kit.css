@@ -350,3 +350,16 @@ html.kit-lock .kit-demo-pill { opacity: 0; pointer-events: none; transform: tran
 .kit-line__det { display: block; font-style: normal; font-size: .85rem; color: var(--kit-muted); }
 .kit-line__sena { display: inline-block; margin-left: .3rem; padding: .05rem .45rem; border-radius: 999px; background: var(--kit-accent); color: var(--kit-on-accent); font-size: .72rem; font-weight: 700; vertical-align: 1px; }
 .kit-sum__resto { color: var(--kit-muted); }
+
+/* cargador de imágenes (core/imagenes.js): nunca un hueco gris mientras baja una foto */
+img.kit-ph.kit-ph {
+  background:
+    linear-gradient(100deg, transparent 32%, rgba(255, 255, 255, .42) 50%, transparent 68%) 0 0 / 260% 100% no-repeat,
+    var(--kit-lqip, none) center / cover no-repeat,
+    color-mix(in srgb, var(--kit-primary, #8a7b70) 14%, var(--kit-surface, #f1ebe6));
+  animation: kit-ph 1.25s linear infinite;
+}
+img.kit-ph--ok { animation: kit-ph-in .6s cubic-bezier(.2, .7, .2, 1); }
+@keyframes kit-ph { from { background-position: 130% 0, center, 0 0; } to { background-position: -30% 0, center, 0 0; } }
+@keyframes kit-ph-in { from { filter: blur(14px) saturate(1.2); opacity: .55; } to { filter: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { img.kit-ph.kit-ph { animation: none; } img.kit-ph--ok { animation: none; } }

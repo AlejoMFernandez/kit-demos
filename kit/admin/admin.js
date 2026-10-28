@@ -629,9 +629,9 @@ export async function initAdmin(opts = {}) {
         <span class="kad-vivo">${esc(t('alInstante'))}</span>
         <button type="button" class="kit-btn" data-nuevo-prod="${esc(cat?.id || '')}">+ ${esc(t('agregarPlato'))}</button>
       </div>
-      ${lista.length ? `<div class="kad-prods-head" aria-hidden="true"><span></span><span>${esc(t('plato'))}</span><span>${esc(t('precio'))}</span><span>${esc(t('hayHoy'))}</span><span></span></div>
+      ${lista.length ? `<div class="kad-prods-head" aria-hidden="true"><span></span><span>${esc(t('plato'))}</span><span>${esc(CC.sinPrecio ? (CAMPOS.find(c => c.id === CC.campoFila)?.label || '') : t('precio'))}</span><span>${esc(t('hayHoy'))}</span><span></span></div>
       <ul class="kad-prods">${lista.map(p => filaProducto(p, q ? nombreCat(p.categoria) : '')).join('')}</ul>` : `<div class="kit-empty"><p>${esc(q ? t('nadaAca') : t('seccionVacia'))}</p></div>`}
-      ${!q && cat && lista.some(p => p.precio != null || tieneVariantes(p)) ? `<div class="kad-pct"><b>${esc(t('subirPrecios'))}</b>
+      ${!q && cat && !CC.sinPrecio && lista.some(p => p.precio != null || tieneVariantes(p)) ? `<div class="kad-pct"><b>${esc(t('subirPrecios'))}</b>
         <button type="button" class="kad-mini kad-mini--ghost" data-pct="5">+ 5%</button><button type="button" class="kad-mini kad-mini--ghost" data-pct="10">+ 10%</button><button type="button" class="kad-mini kad-mini--ghost" data-pct="otro">${esc(t('otroPct'))}</button>
         <span class="kad-muted">${esc(t('redondea', { n: ctx.money(Number(red)) }))}</span></div>` : ''}`;
   }
@@ -641,7 +641,8 @@ export async function initAdmin(opts = {}) {
     return `<li class="kad-prod${p.disponible === false ? ' is-off' : ''}" data-prod="${esc(p.id)}">
           <button type="button" class="kad-prod__img" data-editar aria-label="${esc(t('editar'))} ${esc(p.nombre)}">${p.foto ? `<img src="${esc(ctx.asset(p.foto))}" alt="" loading="lazy" decoding="async">` : `<span>${esc(t('fotoAgregar'))}</span>`}</button>
           <button type="button" class="kad-prod__main" data-editar><b>${esc(p.nombre)}</b>${catTxt ? `<small class="kad-prod__cat">${esc(catTxt)}</small>` : ''}${p.descripcion ? `<span>${esc(p.descripcion)}</span>` : ''}</button>
-          ${tieneVariantes(p) ? `<button type="button" class="kad-precio kad-precio--var" data-editar>${esc(p.variantes.map(v => `${v.nombre} ${ctx.money(v.precio) || '—'}`).join(' · '))}</button>`
+          ${CC.sinPrecio ? `<button type="button" class="kad-precio kad-precio--var" data-editar>${esc((CC.campoFila && p[CC.campoFila]) || '—')}</button>`
+            : tieneVariantes(p) ? `<button type="button" class="kad-precio kad-precio--var" data-editar>${esc(p.variantes.map(v => `${v.nombre} ${ctx.money(v.precio) || '—'}`).join(' · '))}</button>`
             : `<label class="kad-precio"><span aria-hidden="true">${esc(ctx.pais.simbolo || '$')}</span><input type="text" inputmode="decimal" data-precio value="${p.precio != null ? esc(formatoNumero(p.precio)) : ''}" placeholder="${esc(ph)}" aria-label="${esc(t('precio'))} ${esc(p.nombre)}"></label>`}
           <label class="kad-switch"><input type="checkbox" data-disp ${p.disponible !== false ? 'checked' : ''}><span class="kad-switch__ui" aria-hidden="true"></span><span class="kad-switch__txt">${esc(p.disponible !== false ? t('hay') : t('noHay'))}</span></label>
           <span class="kad-prod__fin"><span class="kad-ok" aria-live="polite">${esc(t('guardadoOk'))}</span><button type="button" class="kad-mini kad-mini--ghost" data-editar>${esc(t('editar'))}</button></span>
@@ -682,7 +683,7 @@ export async function initAdmin(opts = {}) {
               <div class="kit-row"><a class="kit-btn kit-btn--ghost" href="${esc(sitio)}?sala=${encodeURIComponent(fe.id)}" target="_blank" rel="noopener">${esc(t('verEnWeb'))} ↗</a><button class="kit-btn">${esc(t('guardar'))}</button></div></div>
           </form>
           <div class="kad-platos__head"><h2 class="kad-fe-t">${esc(t('productosFecha'))}</h2><span class="kad-vivo">${esc(t('alInstante'))}</span><button type="button" class="kit-btn" data-nuevo-prod="${esc(fe.id)}">+ ${esc(t('agregarPlato'))}</button></div>
-          ${lista.length ? `<div class="kad-prods-head" aria-hidden="true"><span></span><span>${esc(t('plato'))}</span><span>${esc(t('precio'))}</span><span>${esc(t('hayHoy'))}</span><span></span></div>
+          ${lista.length ? `<div class="kad-prods-head" aria-hidden="true"><span></span><span>${esc(t('plato'))}</span><span>${esc(CC.sinPrecio ? (CAMPOS.find(c => c.id === CC.campoFila)?.label || '') : t('precio'))}</span><span>${esc(t('hayHoy'))}</span><span></span></div>
           <ul class="kad-prods">${lista.map(p => filaProducto(p)).join('')}</ul>` : `<div class="kit-empty"><p>${esc(t('seccionVacia'))}</p></div>`}
         </section></div>`
       : `<div class="kit-empty"><p class="kit-empty__t">${esc(t('sinFechas'))}</p><p>${esc(t('sinFechasSub'))}</p><button type="button" class="kit-btn" data-fe-nueva>+ ${esc(t('nuevaFecha'))}</button></div>`}`;
@@ -728,6 +729,26 @@ export async function initAdmin(opts = {}) {
     });
   }
 
+  // CAMPOS PROPIOS del negocio (carta.campos en cliente.json): un teatro carga link de compra, funciones, género…
+  //   "carta": { "campos": [{ "id": "link", "label": "Link de compra", "tipo": "url" }, { "id": "destacada", "label": "Destacada", "tipo": "check" }],
+  //              "sinPrecio": true, "sinEtiquetas": true, "campoFila": "funciones" }
+  const CC = config.carta || {};
+  const CAMPOS = Array.isArray(CC.campos) ? CC.campos : [];
+  function camposExtraHTML(p0) {
+    return CAMPOS.map(c => {
+      const v = p0[c.id];
+      if (c.tipo === 'check') return `<label class="kit-check"><input type="checkbox" data-campo="${esc(c.id)}" ${v ? 'checked' : ''}><span>${esc(c.label || c.id)}</span></label>${c.ayuda ? `<p class="kad-muted">${esc(c.ayuda)}</p>` : ''}`;
+      const ph = c.placeholder ? ` placeholder="${esc(c.placeholder)}"` : '';
+      if (c.tipo === 'textarea') return `<label class="kit-field"><span>${esc(c.label || c.id)}</span><textarea data-campo="${esc(c.id)}" rows="3"${ph}>${esc(v || '')}</textarea></label>`;
+      return `<label class="kit-field"><span>${esc(c.label || c.id)}</span><input data-campo="${esc(c.id)}" type="${c.tipo === 'url' ? 'url' : 'text'}" ${c.tipo === 'url' ? 'inputmode="url"' : ''} value="${esc(v || '')}"${ph} autocomplete="off"></label>`;
+    }).join('');
+  }
+  function leerCamposExtra(f) {
+    const o = {};
+    CAMPOS.forEach(c => { const el = f.querySelector(`[data-campo="${CSS.escape(c.id)}"]`); if (el) o[c.id] = c.tipo === 'check' ? el.checked : el.value.trim(); });
+    return o;
+  }
+
   function editorProducto(prod, cats, prods, catDefault) {
     const p0 = prod || { nombre: '', descripcion: '', precio: '', categoria: catDefault || cats[0]?.id || null, etiquetas: [], disponible: true, foto: '' };
     let foto = p0.foto || '';
@@ -743,11 +764,12 @@ export async function initAdmin(opts = {}) {
       ${tieneVariantes(p0) ? `<fieldset class="kad-vars"><legend>${esc(t('tamanos'))} (${esc(ctx.pais.moneda)})</legend><div class="kit-field-row">
         ${p0.variantes.map(v => `<label class="kit-field"><span>${esc(v.nombre)}</span><input data-var="${esc(v.id)}" type="number" inputmode="decimal" min="0" step="${ctx.pais.decimales ? '0.01' : '1'}" value="${v.precio ?? ''}"></label>`).join('')}</div></fieldset>` : ''}
       <div class="kit-field-row">
-        ${tieneVariantes(p0) ? '<input name="precio" type="hidden" value="">' : `<label class="kit-field"><span>${esc(t('precio'))} (${esc(ctx.pais.moneda)})</span><input name="precio" type="number" inputmode="decimal" min="0" step="${ctx.pais.decimales ? '0.01' : '1'}" value="${p0.precio ?? ''}"></label>`}
+        ${tieneVariantes(p0) || CC.sinPrecio ? '<input name="precio" type="hidden" value="">' : `<label class="kit-field"><span>${esc(t('precio'))} (${esc(ctx.pais.moneda)})</span><input name="precio" type="number" inputmode="decimal" min="0" step="${ctx.pais.decimales ? '0.01' : '1'}" value="${p0.precio ?? ''}"></label>`}
         <label class="kit-field"><span>${esc(t('categoria'))}</span><select name="categoria">${cats.map(c => `<option value="${esc(c.id)}" ${c.id === p0.categoria ? 'selected' : ''}>${esc(c.nombre)}</option>`).join('')}<option value="" ${!p0.categoria ? 'selected' : ''}>${esc(t('sinCategoria'))}</option></select></label>
       </div>
-      <label class="kit-field"><span>${esc(t('descripcion'))}</span><textarea name="descripcion" rows="3" maxlength="400">${esc(p0.descripcion)}</textarea></label>
-      <label class="kit-field"><span>${esc(t('etiquetas'))}</span><input name="etiquetas" value="${esc((p0.etiquetas || []).join(', '))}" placeholder="picante, veggie, casa, nuevo"></label>
+      <label class="kit-field"><span>${esc(t('descripcion'))}</span><textarea name="descripcion" rows="${CC.sinPrecio ? 6 : 3}" maxlength="${CC.descripcionMax || 400}">${esc(p0.descripcion)}</textarea></label>
+      ${camposExtraHTML(p0)}
+      ${CC.sinEtiquetas ? '<input name="etiquetas" type="hidden" value="">' : `<label class="kit-field"><span>${esc(t('etiquetas'))}</span><input name="etiquetas" value="${esc((p0.etiquetas || []).join(', '))}" placeholder="picante, veggie, casa, nuevo"></label>`}
       <label class="kit-check"><input type="checkbox" name="disponible" ${p0.disponible !== false ? 'checked' : ''}><span>${esc(t('disponible'))}</span></label>
       <p class="kit-msg" role="alert" hidden></p>
       <div class="kit-row kit-row--between kad-editor__foot">
@@ -784,6 +806,7 @@ export async function initAdmin(opts = {}) {
           ...(tieneVariantes(p0) ? { variantes: p0.variantes.map(v => { const inp = f.querySelector(`[data-var="${CSS.escape(String(v.id))}"]`); return { ...v, precio: inp && inp.value !== '' ? Number(inp.value) : null }; }) } : {}),
           etiquetas: f.etiquetas.value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
           disponible: f.disponible.checked, foto, orden: prod?.orden ?? (Math.max(0, ...enCat.map(x => x.orden || 0)) + 1),
+          ...leerCamposExtra(f),
         });
         if (!prod) st.cat = f.categoria.value || '_sin';
         pop.close(); toast(t('guardado')); render();

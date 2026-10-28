@@ -303,3 +303,27 @@ Para B&B, cabañas y posadas (primer uso: B&B Como en Casa, Villa La Angostura).
 - JS: `kit.estadias.abrir({ habitacion, llegada, salida })`, `kit.estadias.cotizar(hab, a, b)`, `kit.estadias.ocupadas(hab)`.
 - Panel → **Estadías**: ocupación por habitación (14 días, navegable), solicitudes (confirmar / WhatsApp / cancelar), próximas llegadas, tarifas por temporada editables (+ % de seña y mínimo de noches), reserva manual (WhatsApp, teléfono, Booking) y bloqueo de fechas. En demo arranca con ocupación de ejemplo (`"demoOcupacion": false` la apaga).
 - Producción: correr `supabase/migracion-estadias.sql` (tabla con restricción anti-solapamiento, RPC públicas `ocupacion_estadias` y `crear_estadia`). Pendiente: sincronizar con el iCal de Booking para evitar doble reserva.
+
+
+## Campos propios por producto (ej. cartelera de un teatro)
+
+Para negocios donde cada "producto" no es un plato con precio (un teatro con obras, un club con actividades). En `cliente.json`:
+
+```json
+"modulos": { "carta": true, "carrito": false, "cartaQR": false },
+"carta": {
+  "sinPrecio": true, "sinEtiquetas": true, "descripcionMax": 1200, "campoFila": "funciones",
+  "campos": [
+    { "id": "genero", "label": "Género" },
+    { "id": "funciones", "label": "Días y horarios" },
+    { "id": "link", "label": "Link de compra", "tipo": "url" },
+    { "id": "destacada", "label": "Destacada en la portada", "tipo": "check", "ayuda": "…" }
+  ]
+}
+```
+
+- El editor del panel suma esos campos (`tipo`: texto, `url`, `textarea`, `check`) y los guarda en el producto (`p.link`, `p.destacada`…). La web los recibe tal cual en el `template` de la carta y en `kit:carta`.
+- `sinPrecio` saca el precio del editor, la columna de la lista (muestra `campoFila`) y el "subir precios"; `sinEtiquetas` saca las etiquetas.
+- Renombrá el panel con `textos` (`"carta": "Cartelera"`, `"agregarPlato": "Agregar obra"`, `"plato": "Obra"`…).
+- Producción: correr `supabase/migracion-campos.sql` (columna `extra jsonb`).
+- Primer uso: Teatro Politeama.

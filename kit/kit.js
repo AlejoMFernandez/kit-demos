@@ -29,7 +29,7 @@ import { initReservas } from './modules/reservas.js';
 import { initGiftcards } from './modules/giftcards.js';
 import { initEstadias } from './modules/estadias.js';
 
-export const VERSION = '1.9.0';
+export const VERSION = '1.10.0';
 
 export async function cargarConfig(src = 'cliente.json') {
   const url = new URL(src, location.href);

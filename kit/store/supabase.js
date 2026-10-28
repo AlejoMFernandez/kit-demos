@@ -29,8 +29,9 @@ const aGiftcard = (r) => {
 };
 const aProducto = (r) => r && ({
   id: r.id, categoria: r.categoria, nombre: r.nombre, descripcion: r.descripcion || '', precio: r.precio == null ? null : Number(r.precio),
-  foto: r.foto, etiquetas: r.etiquetas || [], disponible: r.disponible, orden: r.orden,
+  foto: r.foto, etiquetas: r.etiquetas || [], disponible: r.disponible, orden: r.orden, ...(r.extra || {}),
 });
+const BASE_PROD = ['negocio', 'id', 'categoria', 'nombre', 'descripcion', 'precio', 'foto', 'etiquetas', 'disponible', 'orden', 'actualizado', 'variantes', 'extra'];
 
 import { temporadaValida, temporadasDe } from '../core/temporadas.js';
 
@@ -87,6 +88,8 @@ export async function createSupabaseStore(config) {
     async getProductos() { return ok(await sb.from('productos').select('*').eq('negocio', N).order('orden')).map(aProducto); },
     async saveProducto(p) {
       const row = { negocio: N, id: p.id, categoria: p.categoria ?? null, nombre: p.nombre, descripcion: p.descripcion || '', precio: p.precio === '' || p.precio == null ? null : Number(p.precio), foto: p.foto || null, etiquetas: p.etiquetas || [], disponible: p.disponible !== false, orden: p.orden ?? 0, actualizado: new Date().toISOString() };
+      const extra = Object.fromEntries(Object.entries(p).filter(([k]) => !BASE_PROD.includes(k)));
+      if (Object.keys(extra).length) row.extra = extra;   // campos propios (carta.campos): requiere supabase/migracion-campos.sql
       const r = aProducto(ok(await sb.from('productos').upsert(row).select().single())); emitir(); return r;
     },
     async deleteProducto(id) { ok(await sb.from('productos').delete().eq('negocio', N).eq('id', id)); emitir(); },

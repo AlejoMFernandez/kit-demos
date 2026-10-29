@@ -49,7 +49,7 @@ export function crearFormReserva(ctx, { onDone, inicial = {} } = {}) {
   const fmtDia = (d) => {
     const [, m, dd] = d.fecha.split('-').map(Number);
     const nombre = d.offset === 0 ? t('hoy') : d.offset === 1 ? t('manana') : t('diasCortos')[d.dow];
-    return { nombre: soloEventos && d.offset > 1 ? `${t('diasCortos')[d.dow]} ${dd}` : nombre, num: `${dd} ${t('meses')[m - 1]}` };
+    return { nombre, num: `${dd} ${t('meses')[m - 1]}` };
   };
 
   function pintarDias() {

@@ -385,7 +385,8 @@ export function initCarrito(ctx, opts = {}) {
       <h3>${esc(titulo)}</h3><p>${esc(sub)}</p>
       <div class="kit-row kit-row--center">${waUrl ? `<a class="kit-btn" href="${esc(waUrl)}" target="_blank" rel="noopener">${esc(t('abrirWA'))}</a>` : ''}
       <button type="button" class="kit-btn kit-btn--ghost" data-close>${esc(t('seguir'))}</button></div></div>`);
-    popup({ titulo, contenido: box, clase: 'kit-pop--sm' });
+    // el título grande ya está en el cuerpo: arriba va el nombre del carrito (no se repite)
+    popup({ titulo: t('tuPedido'), contenido: box, clase: 'kit-pop--sm' });
   }
 
   function exitoGiftcards(gcs, codigo) {

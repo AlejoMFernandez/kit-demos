@@ -25,6 +25,7 @@ import { paginasCarta, HOJA } from '../core/carta-impresa.js';
 import { filtrarCarta } from '../core/temporadas.js';
 import { destacadosDe } from '../core/destacados.js';
 import { panelEstadias } from './estadias.js';
+import { panelCanchas } from './canchas.js';
 
 const ACTIVOS = ['pendiente', 'confirmado', 'listo'];
 const PAGADO = ['aprobado', 'cobrado'];
@@ -43,6 +44,7 @@ export async function initAdmin(opts = {}) {
 
   const vistas = [
     config.modulos.carrito && { id: 'pedidos', icono: '<path d="M5 8h14l-1.3 11.1a2 2 0 0 1-2 1.9H8.3a2 2 0 0 1-2-1.9L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>' },
+    config.modulos.canchas && { id: 'canchas', icono: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M12 4v16M3 12h18"/><circle cx="12" cy="12" r="2.6"/>' },
     config.modulos.estadias && { id: 'estadias', icono: '<path d="M3 18V8M3 14h18v4M21 18v-6a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="2"/>' },
     config.modulos.reservas && { id: 'reservas', icono: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>' },
     config.modulos.carta && { id: 'carta', icono: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/>' },
@@ -71,6 +73,7 @@ export async function initAdmin(opts = {}) {
   };
   let pendientesAntes = null;
   let PE = null;   // panel de estadías (se crea al entrar)
+  let PC = null;   // panel de canchas
   const yaVistos = new Set(); let tableroVisto = false;
 
   // ---------- login
@@ -1249,10 +1252,11 @@ export async function initAdmin(opts = {}) {
     const nr = ress.filter(r => r.estado === 'pendiente' && r.fecha >= hoy()).length;
     const set = (k, n) => { const el = $(`[data-count="${k}"]`, root); if (el) { el.textContent = n; el.hidden = !n; } };
     const ne = ests.filter(e => e.estado === 'pendiente' && e.salida >= hoy() && e.origen !== 'bloqueo').length;
-    set('pedidos', np); set('reservas', nr); set('estadias', ne);
+    const nc = config.modulos.canchas ? (await store.getTurnosCancha()).filter(x => x.estado === 'pendiente' && x.origen === 'web' && x.fecha >= hoy()).length : 0;
+    set('pedidos', np); set('reservas', nr); set('estadias', ne); set('canchas', nc);
     if (pendientesAntes != null && np > pendientesAntes && pref.sonido) beep();
     pendientesAntes = np;
-    document.title = `${np + nr + ne ? `(${np + nr + ne}) ` : ''}${t('panel')} · ${config.nombre}`;
+    document.title = `${np + nr + ne + nc ? `(${np + nr + ne + nc}) ` : ''}${t('panel')} · ${config.nombre}`;
   }
 
   async function render() {
@@ -1263,6 +1267,7 @@ export async function initAdmin(opts = {}) {
     main.onclick = null; main.onsubmit = null; main.oninput = null; main.onchange = null;
     try {
       if (vista === 'pedidos') await vistaPedidos(main);
+      else if (vista === 'canchas') { PC = PC || panelCanchas(ctx, { hoy, render }); await PC.vista(main); }
       else if (vista === 'estadias') { PE = PE || panelEstadias(ctx, { hoy, render }); await PE.vista(main); }
       else if (vista === 'reservas') await vistaReservas(main);
       else if (vista === 'carta') await vistaCarta(main);

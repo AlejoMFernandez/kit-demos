@@ -10,6 +10,7 @@
 //   carta    → cada [data-kit="carta"]
 //   carrito  → botón flotante + checkout (WhatsApp / Mercado Pago) y [data-kit-add], [data-kit-qty]
 //   reservas → cada [data-kit="reservas"] y [data-kit-open="reservas"] (con "servicios": almuerzo / cena por tandas)
+//   canchas  → complejos deportivos: [data-kit="canchas"], [data-kit-open="canchas"] y kit.canchas.* (turnos por cancha, pico/no pico, seña, abonos)
 //   estadias → alojamientos: [data-kit="estadias"] y [data-kit-open="estadias"] (noches, habitaciones, tarifas por temporada, seña)
 //   giftcards → [data-kit="giftcard"] o kit.giftcards.agregar({ monto, para, de, mensaje }) (necesita carrito)
 //   admin    → el panel vive en /admin (ver kit/admin)
@@ -29,8 +30,9 @@ import { initReservas } from './modules/reservas.js';
 import { initGiftcards } from './modules/giftcards.js';
 import { initEstadias } from './modules/estadias.js';
 import { destacadosDe } from './core/destacados.js';
+import { initCanchas } from './modules/canchas.js';
 
-export const VERSION = '1.11.0';
+export const VERSION = '1.12.0';
 
 export async function cargarConfig(src = 'cliente.json') {
   const url = new URL(src, location.href);
@@ -40,7 +42,7 @@ export async function cargarConfig(src = 'cliente.json') {
   const P = pais(config.pais);
   config.idioma = config.idioma || P.idioma;
   config.zonaHoraria = config.zonaHoraria || P.tz;
-  config.modulos = { carta: true, carrito: false, reservas: false, estadias: false, admin: true, ...(config.modulos || {}) };
+  config.modulos = { carta: true, carrito: false, reservas: false, estadias: false, canchas: false, admin: true, ...(config.modulos || {}) };
   config.prefijoPedido = config.prefijoPedido || String(config.nombre || 'PD').replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || 'PD';
   return { config, base: url };
 }
@@ -82,6 +84,7 @@ export async function initKit(opts = {}) {
   if (M.carta) ctx.cartas = Array.from(document.querySelectorAll('[data-kit="carta"]')).map(el => mountCarta(el, ctx, (opts.cartas && el.id && opts.cartas[el.id]) || opts.carta));
   if (M.reservas) ctx.reservas = initReservas(ctx);
   if (M.estadias) ctx.estadias = initEstadias(ctx, opts.estadias);
+  if (M.canchas) ctx.canchas = initCanchas(ctx, opts.canchas);
   if (M.carrito && ctx.config.giftcards) ctx.giftcards = initGiftcards(ctx);
   // destacados editables desde el panel: [data-kit-destacado="tolva.origen"] + evento kit:destacados
   if (destacadosDe(ctx.config).length && ctx.store.getDestacados) {

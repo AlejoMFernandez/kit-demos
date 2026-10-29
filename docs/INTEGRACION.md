@@ -352,3 +352,27 @@ Primer uso: Makia (cafetería de especialidad con ventanilla take away).
 - **Destacados** (`destacados`): textos cortos que el dueño cambia desde el panel (pestaña con el nombre del destacado). En la web, `<span data-kit-destacado="tolva.origen"></span>` se completa solo y el evento `kit:destacados` trae todos (`ctx.destacado('tolva')`). En producción se guardan en `negocios.config.destacados` (no hace falta migración).
 - **Producción**: opciones, casillas y retiro en el día son, por ahora, solo modo demo, igual que los tamaños: antes de un cliente real hay que sumarlos a `crear_pedido` en Supabase (recalcular `opc`, `ajustes` y aceptar el `retiro` con hora).
 - **Confirmación propia** (`kit:exito`, cancelable): `document.addEventListener('kit:exito', e => { e.preventDefault(); /* e.detail.pedido, .codigo, .estado, .waUrl */ })` reemplaza el popup de “¡Pedido enviado!” / “Pago aprobado” por el de la demo (en Makia, el ticket que sale por la ventanilla). En demo, `getPedidoPublico` ahora también trae `retiro`, `items` y el nombre.
+## Complejos deportivos: reservas por cancha (kit 1.12)
+
+Para canchas de fútbol, pádel, tenis… (primer uso: La Estación Fútbol · Pádel, Villa Bosch). En `cliente.json`:
+
+```json
+"modulos": { "carta": false, "carrito": false, "canchas": true, "cartaQR": false, "admin": true },
+"canchas": {
+  "canchas":  [{ "id": "p1", "nombre": "Pádel 1", "deporte": "padel" }, { "id": "f1", "nombre": "Fútbol 5 · 1", "deporte": "f5" }],
+  "deportes": [{ "id": "padel", "nombre": "Pádel", "duracion": 90 }, { "id": "f5", "nombre": "Fútbol 5", "duracion": 60 },
+               { "id": "f8", "nombre": "Fútbol 8", "duracion": 60, "usa": ["f1", "f2", "f3"] }],
+  "tarifas":  { "padel": { "noPico": 45000, "pico": 70000 }, "f5": { "noPico": 45000, "pico": 70000 }, "f8": { "noPico": 120000, "pico": 190000 } },
+  "pico": { "desde": "18:00", "findes": true, "feriados": true }, "feriados": ["2026-12-08"],
+  "sena": 30, "extras": [{ "id": "paleta", "nombre": "Alquiler de paleta", "precio": 5000, "deportes": ["padel"], "max": 4 }],
+  "diasAdelante": 14, "anticipacionMin": 30, "cancelacionHoras": 48
+}
+```
+
+- Los turnos arrancan alineados a la apertura (`horarios`) cada `duracion` minutos. Un deporte con `usa` es **combinado**: reservarlo ocupa todas esas canchas juntas (fútbol 8 = las 3 de fútbol 5) y solo se ofrece cuando están todas libres.
+- **Pico / no pico** automático: desde `pico.desde` entre semana, todo el día en fines de semana y `feriados`. El dueño cambia precios, hora pico y % de seña desde el panel.
+- **Seña** (`sena` %): sobre el valor del turno; los adicionales se pagan en el complejo. Salidas: "Pagar la seña" (Mercado Pago, misma función compartida) o "Reservar y pagar en el complejo" (avisa por WhatsApp).
+- **La demo dibuja su propio selector** (mapa del predio, tablero…) con `kit.canchas`: `dias()`, `disponibilidad(deporte, fecha)`, `estado(fecha, desde, hasta)`, `cotizar(...)`, `tarifas()`, `abrir({ deporte, unidad, fecha, desde })` (checkout: hoja en el celu, modal en desktop) y `onCambio(fn)`. Sin JS propio: `<div data-kit="canchas">` o `<button data-kit-open="canchas" data-kit-deporte="padel" data-kit-fecha="…" data-kit-desde="1200">`.
+- Confirmación propia: `document.addEventListener('kit:cancha-lista', e => { e.preventDefault(); … e.detail.turno, e.detail.resumen, e.detail.whatsapp })`.
+- Panel → **Canchas**: grilla del día por cancha (pico sombreado, línea de "ahora", F8 como un bloque sobre las 3 filas, tocar un hueco = reserva manual), indicadores, para confirmar, próximos turnos (confirmar, cobré el resto, no vino, WhatsApp, cancelar), **abonos fijos** (mismo día y hora todas las semanas, liberar una semana, dar de baja), precios y franjas, y **"Llueve: bloquear"** (bloquea canchas en un rango y lista los turnos afectados con el mensaje de reprogramación listo para WhatsApp). En demo arranca con ocupación de ejemplo alrededor de hoy (`"demoOcupacion": false` la apaga).
+- Producción: correr `supabase/migracion-canchas.sql` y copiar el bloque `canchas` de cliente.json a `negocios.config.canchas`. `crear_turno_cancha` recalcula precio y seña en el servidor y bloquea con un lock para que no haya dos reservas pisándose. Pendiente: que el webhook de Mercado Pago pase el turno a "confirmada" al aprobarse la seña.

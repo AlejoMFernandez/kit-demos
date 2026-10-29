@@ -1,4 +1,5 @@
 import { configEstadias } from '../core/estadias.js';
+import { configCanchas, tarifasDe as tarifasCanchas, ocupaDe, deporteDe } from '../core/canchas.js';
 // Adaptador PRODUCCIÓN: Supabase (base de datos + login del dueño + fotos).
 // Se activa con "modo": "produccion" y "supabase": { "url", "anonKey" } en cliente.json.
 // Esquema y permisos: supabase/schema.sql. Las altas públicas (pedidos y reservas) pasan
@@ -40,6 +41,12 @@ const aEstadia = (e) => e && ({ id: e.id, codigo: e.codigo, habitacion: e.habita
   huespedes: e.huespedes, nombre: e.nombre, telefono: e.telefono, email: e.email, horaLlegada: e.hora_llegada, comentario: e.comentario, total: e.total == null ? null : Number(e.total),
   sena: e.sena == null ? null : Number(e.sena), origen: e.origen, pago: e.pago, pagoEstado: e.pago_estado, estado: e.estado, creado: e.creado });
 
+const aTurno = (r) => r && ({ id: r.id, codigo: r.codigo, deporte: r.deporte, unidad: r.unidad, canchas: r.canchas, fecha: r.fecha, desde: r.desde, hasta: r.hasta,
+  nombre: r.nombre, telefono: r.telefono || '', email: r.email || '', comentario: r.comentario || '', motivo: r.motivo || '', extras: r.extras || [],
+  precio: r.precio == null ? null : Number(r.precio), total: r.total == null ? null : Number(r.total), sena: r.sena == null ? null : Number(r.sena), pico: r.pico,
+  origen: r.origen, pago: r.pago, pagoEstado: r.pago_estado, estado: r.estado, creado: r.creado });
+const aAbono = (r) => r && ({ id: r.id, deporte: r.deporte, unidad: r.unidad, canchas: r.canchas, dow: r.dow, hora: r.hora, duracion: r.duracion, nombre: r.nombre, telefono: r.telefono || '', desde: r.desde, liberadas: r.liberadas || [], estado: r.estado });
+
 export async function createSupabaseStore(config) {
   const { createClient } = await import(SUPABASE_ESM);
   const sb = createClient(config.supabase.url, config.supabase.anonKey, { auth: { persistSession: true } });
@@ -57,6 +64,8 @@ export async function createSupabaseStore(config) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'negocios', filter: `id=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'estadias', filter: `negocio=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'giftcards', filter: `negocio=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'turnos_cancha', filter: `negocio=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'abonos_cancha', filter: `negocio=eq.${N}` }, () => subs.forEach(f => f({ origen: 'remoto' })))
       .subscribe();
   }
   const emitir = () => subs.forEach(f => f({ origen: 'local' }));
@@ -152,6 +161,43 @@ export async function createSupabaseStore(config) {
     },
     async deleteEstadia(id) { ok(await sb.from('estadias').delete().eq('negocio', N).eq('id', id)); emitir(); },
     async getEstadiaPublica() { return null; },   // en producción el estado del pago lo actualiza el webhook
+    // ---- canchas (supabase/migracion-canchas.sql)
+    async getOcupacionCanchas(desde, hasta) { return (ok(await sb.rpc('ocupacion_canchas', { p_negocio: N, p_desde: desde, p_hasta: hasta })) || []).map(o => ({ fecha: o.fecha, canchas: o.canchas, desde: o.desde, hasta: o.hasta })); },
+    async getTurnosCancha() { return ok(await sb.from('turnos_cancha').select('*').eq('negocio', N).gte('fecha', new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10)).order('fecha').order('desde').limit(2000)).map(aTurno); },
+    async getAbonosCancha() { return ok(await sb.from('abonos_cancha').select('*').eq('negocio', N).order('dow')).map(aAbono); },
+    async getTarifasCancha() { const r = ok(await sb.from('negocios').select('config').eq('id', N).maybeSingle()); return tarifasCanchas(configCanchas(config), r?.config?.tarifasCanchas || {}); },
+    async saveTarifasCancha(tf) {
+      const r = ok(await sb.from('negocios').select('config').eq('id', N).maybeSingle());
+      ok(await sb.from('negocios').update({ config: { ...(r?.config || {}), tarifasCanchas: tf } }).eq('id', N)); emitir(); return tf;
+    },
+    async createTurnoCancha(data) {
+      if (data.origen && data.origen !== 'web') {     // desde el panel (manual / bloqueo): inserta directo (RLS del dueño)
+        const C = configCanchas(config); const d = deporteDe(C, data.deporte);
+        const canchas = data.origen === 'bloqueo' ? data.canchas : ocupaDe(C, data.deporte, data.unidad);
+        const fila = { negocio: N, deporte: data.deporte || null, unidad: data.unidad || null, canchas, fecha: data.fecha, desde: Number(data.desde),
+          hasta: data.origen === 'bloqueo' ? Number(data.hasta) : Number(data.desde) + (d?.duracion || 60), nombre: data.nombre || '', telefono: data.telefono || '', motivo: data.motivo || '',
+          origen: data.origen, pago: 'externo', estado: 'confirmada' };
+        const r = aTurno(ok(await sb.from('turnos_cancha').insert(fila).select().single())); emitir(); return r;
+      }
+      try { const r = aTurno(ok(await sb.rpc('crear_turno_cancha', { p_negocio: N, p_data: data }))); emitir(); return r; }
+      catch (e) { if (/sin_lugar/.test(e.message)) e.code = 'sin_lugar'; throw e; }
+    },
+    async updateTurnoCancha(id, patch) {
+      const m = { estado: 'estado', pagoEstado: 'pago_estado', fecha: 'fecha', desde: 'desde', hasta: 'hasta', canchas: 'canchas', nombre: 'nombre', telefono: 'telefono' };
+      const fila = {}; Object.entries(patch).forEach(([k, v]) => { if (m[k]) fila[m[k]] = v; });
+      if (patch.pagoEstado === 'aprobado') fila.estado = 'confirmada';
+      const r = aTurno(ok(await sb.from('turnos_cancha').update(fila).eq('negocio', N).eq('id', id).select().single())); emitir(); return r;
+    },
+    async deleteTurnoCancha(id) { ok(await sb.from('turnos_cancha').delete().eq('negocio', N).eq('id', id)); emitir(); },
+    async getTurnoCanchaPublico(id) { const r = (ok(await sb.rpc('turno_cancha_publico', { p_id: id })) || [])[0]; return r ? aTurno(r) : null; },
+    async saveAbonoCancha(ab) {
+      const C = configCanchas(config); const d = deporteDe(C, ab.deporte);
+      const fila = { negocio: N }; ['deporte', 'unidad', 'nombre', 'telefono', 'desde', 'liberadas', 'estado'].forEach(k => { if (ab[k] !== undefined) fila[k] = ab[k]; });
+      if (ab.dow != null) fila.dow = Number(ab.dow); if (ab.hora != null) fila.hora = Number(ab.hora);
+      if (d) { fila.canchas = ocupaDe(C, ab.deporte, ab.unidad); fila.duracion = d.duracion; }
+      const q = ab.id ? sb.from('abonos_cancha').update(fila).eq('negocio', N).eq('id', ab.id) : sb.from('abonos_cancha').insert(fila);
+      const r = aAbono(ok(await q.select().single())); emitir(); return r;
+    },
     async getReservas() { return ok(await sb.from('reservas').select('*').eq('negocio', N).order('fecha').order('hora')).map(aReserva); },
     async updateReserva(id, patch) { const r = ok(await sb.from('reservas').update({ estado: patch.estado }).eq('id', id).select().single()); emitir(); return r; },
 

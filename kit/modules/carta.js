@@ -38,6 +38,14 @@ export function mountCarta(el, ctx, opts = {}) {
   }
   ctx.etiquetaHTML = etiquetaHTML;
 
+  // stock del día: "Quedan 4" cuando quedan pocas, "Agotado por hoy" en 0
+  function stockBadge(p) {
+    const q = ctx.stockDe(p); if (q == null) return '';
+    if (q === 0) return `<span class="kit-badge kit-badge--off">${esc(t('agotadoHoy'))}</span>`;
+    return q <= ctx.stockAviso ? `<span class="kit-badge kit-badge--warn">${esc(t('ultimasN', { n: q }))}</span>` : '';
+  }
+  ctx.stockBadge = stockBadge;
+
   function itemHTML(p, i) {
     if (opts.template) return opts.template(p, { ...ctx, index: i, etiquetaHTML });
     const precio = tieneVariantes(p) ? esc(t('desdePrecio', { precio: ctx.money(precioDesde(p)) })) : ctx.money(p.precio) ?? `<span class="kit-price--na">${esc(ctx.pedible(p) ? t('aConfirmar') : t('sinPrecio'))}</span>`;
@@ -50,7 +58,7 @@ export function mountCarta(el, ctx, opts = {}) {
       <div class="kit-item__side">
         <span class="kit-price">${precio}</span>
         ${ctx.carrito && pedir && ctx.pedible(p) ? `<div class="kit-qty" data-kit-qty="${esc(p.id)}"></div>` : ''}
-        ${p.disponible === false ? `<span class="kit-badge kit-badge--off">${esc(t('noDisponible'))}</span>` : ''}
+        ${p.disponible === false ? `<span class="kit-badge kit-badge--off">${esc(t('noDisponible'))}</span>` : stockBadge(p)}
       </div>`;
   }
 
@@ -67,7 +75,7 @@ export function mountCarta(el, ctx, opts = {}) {
         ${grupos.map(g => `<button type="button" role="tab" class="kit-tab${g.id === actual ? ' is-on' : ''}${g.especial ? ' kit-tab--especial' : ''}" id="${uidp}-t-${esc(g.id)}" aria-controls="${uidp}-p-${esc(g.id)}" aria-selected="${g.id === actual}" data-cat="${esc(g.id)}">${esc(g.nombre)}</button>`).join('')}
       </div>` : ''}
       ${grupos.map(g => `<div class="kit-carta__panel" role="tabpanel" id="${uidp}-p-${esc(g.id)}" aria-labelledby="${uidp}-t-${esc(g.id)}" ${g.id === actual ? '' : 'hidden'}>
-        ${g.items.map((p, i) => `<article class="kit-item${p.disponible === false ? ' is-off' : ''}${opts.itemClass ? ' ' + opts.itemClass : ''}" data-id="${esc(p.id)}" data-cat="${esc(g.id)}" ${p.foto ? `data-photo="${esc(ctx.asset(p.foto))}"` : ''} style="--i:${i}">${itemHTML(p, i)}</article>`).join('')}
+        ${g.items.map((p, i) => `<article class="kit-item${p.disponible === false || ctx.agotado(p) ? ' is-off' : ''}${opts.itemClass ? ' ' + opts.itemClass : ''}" data-id="${esc(p.id)}" data-cat="${esc(g.id)}" ${p.foto ? `data-photo="${esc(ctx.asset(p.foto))}"` : ''} style="--i:${i}">${itemHTML(p, i)}</article>`).join('')}
       </div>`).join('')}`;
     el.removeAttribute('aria-busy');
     ctx.carrito?.sync(el);

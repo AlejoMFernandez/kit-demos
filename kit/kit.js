@@ -25,6 +25,7 @@ import { h, esc } from './core/util.js';
 import { cargadorImagenes } from './core/imagenes.js';
 import { mountCarta } from './modules/carta.js';
 import { tieneVariantes } from './core/variantes.js';
+import { stockDe } from './core/stock.js';
 import { initCarrito } from './modules/carrito.js';
 import { initReservas } from './modules/reservas.js';
 import { initGiftcards } from './modules/giftcards.js';
@@ -32,7 +33,9 @@ import { initEstadias } from './modules/estadias.js';
 import { destacadosDe } from './core/destacados.js';
 import { initCanchas } from './modules/canchas.js';
 
-export const VERSION = '1.12.0';
+export const VERSION = '1.13.0';
+
+export { stockDe };
 
 export async function cargarConfig(src = 'cliente.json') {
   const url = new URL(src, location.href);
@@ -61,7 +64,12 @@ export async function crearContexto({ config, base }) {
     // { pct, dia, feriado } del descuento en efectivo de hoy (pagos.efectivo)
     efectivoHoy: () => efectivoHoy(config),
     // ¿se puede sumar al carrito? Con "pedidos.sinPrecio": "a_confirmar" también los que no tienen precio.
-    pedible: (p) => !!p && p.disponible !== false && (p.precio != null || tieneVariantes(p) || config.pedidos?.sinPrecio === 'a_confirmar'),
+    // Con "carta.stock": true, un producto con stock 0 está agotado por hoy.
+    pedible: (p) => !!p && p.disponible !== false && stockDe(config, p) !== 0 && (p.precio != null || tieneVariantes(p) || config.pedidos?.sinPrecio === 'a_confirmar'),
+    // stock del día (kit 1.13): número que queda, o null si el negocio no lo usa / el producto no tiene límite
+    stockDe: (p) => stockDe(config, p),
+    agotado: (p) => stockDe(config, p) === 0,
+    stockAviso: Number(config.carta?.stockAviso ?? 6),
     hoy: () => ahoraEn(config.zonaHoraria).fecha,
     forzarEspecial: null,                                   // id de fecha especial a mostrar sí o sí (pitch: ?sala=pascuas)
     visibles(cats) { return categoriasVisibles(cats, this.hoy(), this.forzarEspecial); },

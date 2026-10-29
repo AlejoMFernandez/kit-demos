@@ -536,6 +536,10 @@
                   }
                 }
               }
+            },
+            "cupoFranja": {
+              "type": "integer",
+              "description": "Pedidos activos por día y franja; llena = 'completa' y no se ofrece (o 'cupo' en cada franja)."
             }
           }
         }
@@ -776,6 +780,14 @@
               }
             }
           }
+        },
+        "stock": {
+          "type": "boolean",
+          "description": "Stock del día (kit 1.13): cada producto con 'stock' (lo que queda hoy) y 'stockBase' (lo que se cocina por noche). Los pedidos descuentan y al cancelarse devuelven."
+        },
+        "stockAviso": {
+          "type": "integer",
+          "description": "Desde cuántas unidades la carta muestra 'Últimas N' (por defecto 6)."
         }
       }
     },

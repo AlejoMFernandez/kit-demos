@@ -510,3 +510,6 @@ img.kit-ph--ok { animation: kit-ph-in .6s cubic-bezier(.2, .7, .2, 1); }
 .kit-canw { display: grid; gap: 14px; }
 .kit-canw > div { display: flex; gap: 8px; flex-wrap: wrap; }
 .kit-canw__dias { flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; }
+/* stock del día (kit 1.13): el + queda apagado al llegar al tope */
+.kit-step button:disabled { opacity: .35; cursor: not-allowed; }
+.kit-franja.is-off small { text-transform: lowercase; }

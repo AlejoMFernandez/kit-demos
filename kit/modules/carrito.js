@@ -27,6 +27,7 @@ import { diaSemana, diaNum } from '../core/turnos.js';
 import { sucursales, sucursalPorId, pideSucursal, resumenSucursal } from '../core/sucursales.js';
 import { descuentoEfectivo } from '../core/descuentos.js';
 import { configGiftcards, montoValido } from '../core/giftcards.js';
+import { faltantes } from '../core/stock.js';
 
 export function initCarrito(ctx, opts = {}) {
   const { config, store } = ctx;
@@ -39,6 +40,7 @@ export function initCarrito(ctx, opts = {}) {
   const CAS = Array.isArray(P.casillas) ? P.casillas.filter(x => x && x.id) : [];
   let productos = [];
   let categorias = [];
+  let ocupFr = {};          // cupo por franja: { 'fecha|franja': pedidos }
   let lineas = leer();
   let pop = null;
   const SEDE_KEY = `kit:${config.id}:sede`;
@@ -86,11 +88,13 @@ export function initCarrito(ctx, opts = {}) {
   // ---------- selectores de cantidad en la carta
   function qtyHTML(id) {
     const n = cantDe(id);
+    const q = ctx.stockDe(productos.find(x => x.id === id));
+    const tope = q != null && n >= q;
     if (!n) return `<button type="button" class="kit-add" data-kit-add="${esc(id)}"><span aria-hidden="true">+</span> ${esc(t('agregar'))}</button>`;
     return `<div class="kit-step" role="group" aria-label="${esc(t('tuPedido'))}">
       <button type="button" data-kit-dec="${esc(id)}" aria-label="${esc(t('quitar'))}">−</button>
       <output aria-live="polite">${n}</output>
-      <button type="button" data-kit-add="${esc(id)}" aria-label="${esc(t('agregar'))}">+</button></div>`;
+      <button type="button" data-kit-add="${esc(id)}" aria-label="${esc(t('agregar'))}" ${tope ? 'disabled aria-disabled="true"' : ''}>+</button></div>`;
   }
   function lineaQtyHTML(i) {
     const k = esc(claveLinea(i));
@@ -104,6 +108,8 @@ export function initCarrito(ctx, opts = {}) {
   function cambiar(id, delta, origen, nota = '', opc = {}) {
     const p = productos.find(x => x.id === id);
     if (!p || !ctx.pedible(p)) return;
+    const max = ctx.stockDe(p);
+    if (delta > 0 && max != null && cantDe(id) + delta > max) { toast(t('stockMax', { n: max }), 'warn', 3200); document.dispatchEvent(new CustomEvent('kit:stock-tope', { detail: { producto: p, quedan: max } })); return; }
     const pl = precioLinea(p, opc);
     // la posición del botón se toma ANTES de redibujar (sync reemplaza el botón y su rect queda en 0,0)
     const desde = origen && origen.isConnected ? origen.getBoundingClientRect() : null;
@@ -267,7 +273,7 @@ export function initCarrito(ctx, opts = {}) {
 
   // ---------- encargo: día y franja de retiro
   function retiroOpciones() {
-    return opcionesRetiro({ horarios: config.horarios, encargo: P.encargo, tz: ctx.tz, productos, categorias, lineas, ignorarVentanas: !!ctx.forzarEspecial });
+    return opcionesRetiro({ horarios: config.horarios, encargo: P.encargo, tz: ctx.tz, productos, categorias, lineas, ignorarVentanas: !!ctx.forzarEspecial, ocupacion: ocupFr });
   }
   function elegirRetiro(op) {
     let dia = op.dias.find(d => d.fecha === datos.retiroFecha && d.abierto);
@@ -290,7 +296,7 @@ export function initCarrito(ctx, opts = {}) {
     </fieldset>
     ${dia ? `<fieldset class="kit-franjas"><legend>${esc(t('franja'))}</legend><div class="kit-franjas__list">
       ${dia.franjas.map(f => `<label class="kit-franja${f.disponible ? '' : ' is-off'}${f.id === datos.retiroFranja ? ' is-on' : ''}"><input type="radio" name="retiroFranja" value="${esc(f.id)}" ${f.id === datos.retiroFranja ? 'checked' : ''} ${f.disponible ? '' : 'disabled'}>
-        <span><b>${esc(f.nombre)}</b><small>${esc(f.desde.replace(/^0/, ''))} a ${esc(f.hasta.replace(/^0/, ''))}</small></span></label>`).join('')}
+        <span><b>${esc(f.nombre)}</b>${f.lleno ? `<small>${esc(t('franjaLlena'))}</small>` : String(f.nombre).includes(f.desde) ? '' : `<small>${esc(f.desde.replace(/^0/, ''))} a ${esc(f.hasta.replace(/^0/, ''))}</small>`}</span></label>`).join('')}
     </div></fieldset>` : ''}`;
   }
   // ---------- retiro en el día: lo antes posible o a una hora
@@ -325,6 +331,7 @@ export function initCarrito(ctx, opts = {}) {
   async function enviar() {
     const c = calc();
     const faltan = [];
+    if (faltantes(config, productos, lineas).length) { await cargar(); return error(t('stockCambio')); }
     if (!datos.nombre.trim()) faltan.push(t('nombre').toLowerCase());
     if (!telValido(datos.telefono)) faltan.push(t('telefono').toLowerCase());
     if (pideSucursal(config) && !sucursalPorId(config, datos.sucursal)) faltan.unshift(t('laSede'));
@@ -348,8 +355,9 @@ export function initCarrito(ctx, opts = {}) {
       if (datos.pago === 'mercadopago') return pagarMP(pedido);
       await salirPorWhatsApp(pedido);
     } catch (err) {
-      console.error('[kit] pedido', err);
       btn.disabled = false; btn.classList.remove('is-loading');
+      if (err.code === 'stock' || /stock/.test(err.message)) { await cargar(); return error(t('stockCambio')); }
+      console.error('[kit] pedido', err);
       error(t('error'));
     }
   }
@@ -470,7 +478,12 @@ export function initCarrito(ctx, opts = {}) {
 
   async function cargar() {
     [productos, categorias] = await Promise.all([store.getProductos(), store.getCategorias()]);
+    if (E?.cupoFranja && store.getOcupacionFranjas) { try { ocupFr = await store.getOcupacionFranjas(); } catch (_) { ocupFr = {}; } }
     lineas = lineas.filter(l => l.gc ? (GC && montoValido(GC, l.gc.monto)) : ctx.pedible(productos.find(p => p.id === l.id)));
+    // stock del día: ninguna línea puede pedir más de lo que queda
+    lineas.forEach(l => { if (l.gc) return; const q = ctx.stockDe(productos.find(p => p.id === l.id)); if (q == null) return;
+      const otras = lineas.filter(x => x !== l && x.id === l.id).reduce((a, x) => a + x.cant, 0); l.cant = Math.max(0, Math.min(l.cant, q - otras)); });
+    lineas = lineas.filter(l => l.cant > 0);
     guardar(); sync(); pintarFab();
     if (pop) pintarDrawer();
   }

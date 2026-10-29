@@ -376,3 +376,22 @@ Para canchas de fútbol, pádel, tenis… (primer uso: La Estación Fútbol · P
 - Confirmación propia: `document.addEventListener('kit:cancha-lista', e => { e.preventDefault(); … e.detail.turno, e.detail.resumen, e.detail.whatsapp })`.
 - Panel → **Canchas**: grilla del día por cancha (pico sombreado, línea de "ahora", F8 como un bloque sobre las 3 filas, tocar un hueco = reserva manual), indicadores, para confirmar, próximos turnos (confirmar, cobré el resto, no vino, WhatsApp, cancelar), **abonos fijos** (mismo día y hora todas las semanas, liberar una semana, dar de baja), precios y franjas, y **"Llueve: bloquear"** (bloquea canchas en un rango y lista los turnos afectados con el mensaje de reprogramación listo para WhatsApp). En demo arranca con ocupación de ejemplo alrededor de hoy (`"demoOcupacion": false` la apaga).
 - Producción: correr `supabase/migracion-canchas.sql` y copiar el bloque `canchas` de cliente.json a `negocios.config.canchas`. `crear_turno_cancha` recalcula precio y seña en el servidor y bloquea con un lock para que no haya dos reservas pisándose. Pendiente: que el webhook de Mercado Pago pase el turno a "confirmada" al aprobarse la seña.
+## Stock del día y cupo por franja (kit 1.13)
+
+Para cocinas que hacen una cantidad fija por noche y se agotan (primer uso: Lumbre · Empanadas, Villa del Parque). En `cliente.json`:
+
+```json
+"carta": { "stock": true, "stockAviso": 6, "productos": [
+  { "id": "vacio", "nombre": "Vacío al malbec", "precio": 4500, "stock": 18, "stockBase": 36 }
+] },
+"pedidos": { "encargo": { "anticipacionHoras": 0, "diasAdelante": 2, "cupoFranja": 6, "franjas": [
+  { "id": "f2100", "nombre": "21:00 a 21:30", "desde": "21:00", "hasta": "21:30" } ] } }
+```
+
+- `stock` = lo que queda hoy (vacío o `null` = sin límite); `stockBase` = lo que se cocina por noche.
+- Cada pedido descuenta el stock al crearse; si el pedido se cancela desde el panel, lo devuelve. Con stock 0 el producto queda **agotado por hoy** (`ctx.pedible(p)` da `false`, la carta lo marca `is-off` y muestra “Agotado por hoy”).
+- El carrito no deja sumar más de lo que queda (toast “Por hoy quedan N…” y evento `kit:stock-tope`), recorta las líneas si el stock bajó en otra pestaña y, si al enviar algo ya no alcanza, avisa sin crear el pedido.
+- En la web: `kit.stockDe(p)` (número o `null`), `kit.agotado(p)`, `kit.stockAviso`. La carta por defecto muestra “Últimas N” cuando quedan `stockAviso` o menos.
+- Panel → Carta: la columna “Stock hoy” con − n + en cada renglón (vacío = sin límite), el botón **Cargar stock de la noche** (vuelve todo a `stockBase`) y los dos campos en el editor del plato.
+- **Cupo por franja** (`encargo.cupoFranja`, o `cupo` en cada franja): cuando una franja llega a ese número de pedidos activos del día, el checkout la muestra “completa” y no la ofrece. Si la franja se llama por su horario (“21:00 a 21:30”) no se repite el horario en el checkout ni en el WhatsApp.
+- **Producción**: por ahora solo modo demo. El stock se guarda en `productos.extra` (migración de campos), pero falta que `crear_pedido` de Supabase lo valide y descuente en el servidor, y una RPC pública con la ocupación de franjas.

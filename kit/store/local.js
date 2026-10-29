@@ -3,6 +3,7 @@
 // Se siembra con la carta de cliente.json y se puede reiniciar desde el panel.
 import { uid, clone, codigoCorto } from '../core/util.js';
 import { armarPedido } from '../core/pedidos.js';
+import { faltantes, cantidadesPorProducto, ocupacionFranjas, stockDe } from '../core/stock.js';
 import { tieneVariantes } from '../core/variantes.js';
 import { configReservas, serviciosDe, tandaDe, usadosEn, capacidadEn } from '../core/turnos.js';
 import { temporadaValida } from '../core/temporadas.js';
@@ -241,10 +242,18 @@ export function createLocalStore(config) {
       return mut(db => {
         const calc = armarPedido(db.productos.filter(p => p.precio != null || tieneVariantes(p) || config.pedidos?.sinPrecio === 'a_confirmar'), data.items, { tipo: data.tipo, pedidos: config.pedidos, descuentoPct: data.pago === 'efectivo' ? descuentoEfectivo(config) : 0, giftcards: GC, categorias: db.categorias, casillas: data.casillas || [] });
         if (!calc.items.length) throw Object.assign(new Error('vacio'), { code: 'vacio' });
+        // stock del día: si no alcanza, no entra; si alcanza, se descuenta (y vuelve si el pedido se cancela)
+        const conStock = !!config.carta?.stock;
+        if (conStock) {
+          const f = faltantes(config, db.productos, calc.items);
+          if (f.length) throw Object.assign(new Error('stock'), { code: 'stock', faltantes: f });
+          cantidadesPorProducto(calc.items).forEach((n, id) => { const x = db.productos.find(q => q.id === id); if (x && stockDe(config, x) != null) x.stock = stockDe(config, x) - n; });
+        }
         const p = {
           id: uid('o-'), codigo: codigoCorto(config.prefijoPedido || 'PD'), ...calc,
           tipo: data.tipo, cliente: data.cliente, nota: data.nota || '', pago: data.pago, sucursal: data.sucursal || null, retiro: data.retiro || null,
           pagoEstado: data.pago === 'mercadopago' ? 'pendiente' : 'a_coordinar', estado: 'pendiente', creado: new Date().toISOString(),
+          ...(conStock ? { stockDescontado: true } : {}),
         };
         db.pedidos.push(p);
         // cada gift card del pedido queda "pendiente" hasta que se cobra
@@ -256,10 +265,20 @@ export function createLocalStore(config) {
         return p;
       });
     },
+    // cupo por franja (pedidos.encargo.cupoFranja): cuántos pedidos activos hay en cada día|franja
+    async getOcupacionFranjas() { return ocupacionFranjas(leer().pedidos); },
+    // vuelve a poner el stock de la noche (stockBase) en todos los productos que lo tienen
+    async cargarStock() { return mut(db => { db.productos.forEach(p => { if (p.stockBase != null && p.stockBase !== '') p.stock = Number(p.stockBase); }); }); },
     async getPedidos() { return leer().pedidos.slice().sort((a, b) => b.creado.localeCompare(a.creado)); },
     async updatePedido(id, patch) {
       return mut(db => {
-        const p = db.pedidos.find(x => x.id === id); if (p) Object.assign(p, patch);
+        const p = db.pedidos.find(x => x.id === id);
+        // cancelado: devuelve el stock que había descontado
+        if (p && p.stockDescontado && String(patch.estado || '').startsWith('cancel') && !String(p.estado || '').startsWith('cancel')) {
+          cantidadesPorProducto(p.items).forEach((n, pid) => { const x = db.productos.find(q => q.id === pid); if (x && x.stock != null && x.stock !== '') x.stock = Number(x.stock) + n; });
+          p.stockDescontado = false;
+        }
+        if (p) Object.assign(p, patch);
         if (p && ['aprobado', 'cobrado'].includes(patch.pagoEstado)) activar(db, id);
         return p;
       });

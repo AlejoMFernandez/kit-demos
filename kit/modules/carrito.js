@@ -244,7 +244,7 @@ export function initCarrito(ctx, opts = {}) {
       if (f.name === 'retiroFecha') { datos.retiroFranja = ''; pintarDrawer(); return; }
       if (f.name === 'retiroFranja') { $$('.kit-franja', body).forEach(l => l.classList.toggle('is-on', l.querySelector('input').checked)); return; }
       if (f.name === 'retiroHora') { $$('.kit-hora, .kit-rh__asap', body).forEach(l => l.classList.toggle('is-on', l.querySelector('input').checked)); return; }
-      if (f.name === 'casilla') { datos.casillas = $$('input[name="casilla"]', body).filter(x => x.checked).map(x => x.value); pintarTotales(); return; }
+      if (f.name === 'casilla') { datos.casillas = $$('input[name="casilla"]', body).filter(x => x.checked).map(x => x.value); pintarTotales(); document.dispatchEvent(new CustomEvent('kit:casillas', { detail: datos.casillas.slice() })); return; }
       if (f.name === 'tipo') { body.querySelector('[data-dir]').hidden = f.value !== 'delivery'; pintarTotales(); }
       if (f.name === 'pago') { if (pctPago(f.value) || c.descuento) { pintarTotales(); return; } body.querySelector('[data-enviar]').textContent = textoBoton(calc()); }
     });
@@ -360,14 +360,18 @@ export function initCarrito(ctx, opts = {}) {
     const { url, soloLink } = linkWhatsApp(sede?.whatsapp || config.whatsapp, texto);
     vaciar();
     if (soloLink) { await copiar(texto); toast(t('copiado'), 'ok', 4200); }
-    exito(t('pedidoListo'), t('pedidoListoSub', { codigo: pedido.codigo }), url);
+    exito(t('pedidoListo'), t('pedidoListoSub', { codigo: pedido.codigo }), url, 'ok', { pedido, estado: 'enviado' });
     if (url) window.open(url, '_blank', 'noopener');
   }
 
   function vaciar() { lineas = []; guardar(); sync(); pintarFab(); document.dispatchEvent(new CustomEvent('kit:carrito', { detail: { lineas: [], delta: 0 } })); }
 
-  function exito(titulo, sub, waUrl, tipo = 'ok') {
+  // La demo puede mostrar su propia confirmación: escucha "kit:exito" y hace preventDefault() (kit 1.11).
+  // detail: { titulo, sub, waUrl, tipo: 'ok'|'warn', estado: 'enviado'|'aprobado'|'pendiente'|'rechazado', pedido, codigo }
+  function exito(titulo, sub, waUrl, tipo = 'ok', extra = {}) {
     if (pop) pop.close();
+    const ev = new CustomEvent('kit:exito', { cancelable: true, detail: { titulo, sub, waUrl, tipo, ...extra, codigo: extra.codigo || extra.pedido?.codigo || '' } });
+    if (!document.dispatchEvent(ev)) return;
     const box = h(`<div class="kit-done kit-done--${tipo}">
       <div class="kit-done__ico" aria-hidden="true">${tipo === 'ok' ? '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M12 7v6M12 17h.01"/></svg>'}</div>
       <h3>${esc(titulo)}</h3><p>${esc(sub)}</p>
@@ -448,10 +452,10 @@ export function initCarrito(ctx, opts = {}) {
         if (document.dispatchEvent(ev)) exitoGiftcards(gcs, codigo);
         return;
       }
-      exito(t('pedidoPagado'), t('pedidoPagadoSub', { codigo }));
+      exito(t('pedidoPagado'), t('pedidoPagadoSub', { codigo }), null, 'ok', { pedido: ped, estado: 'aprobado', codigo });
     }
-    else if (estado === 'pendiente') exito(t('pagoPendiente'), t('pagoPendienteSub', { codigo }), null, 'warn');
-    else exito(t('pagoRechazado'), t('pagoRechazadoSub'), null, 'warn');
+    else if (estado === 'pendiente') exito(t('pagoPendiente'), t('pagoPendienteSub', { codigo }), null, 'warn', { pedido: ped, estado: 'pendiente', codigo });
+    else exito(t('pagoRechazado'), t('pagoRechazadoSub'), null, 'warn', { pedido: ped, estado: 'rechazado', codigo });
   }
 
   function revisarRetornoMP() {

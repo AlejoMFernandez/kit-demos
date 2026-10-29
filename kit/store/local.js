@@ -179,7 +179,7 @@ export function createLocalStore(config) {
         return p;
       });
     },
-    async getPedidoPublico(id) { const p = leer().pedidos.find(x => x.id === id); return p ? { id: p.id, codigo: p.codigo, estado: p.estado, pagoEstado: p.pagoEstado, total: p.total, aPagar: p.aPagar, saldo: p.saldo } : null; },
+    async getPedidoPublico(id) { const p = leer().pedidos.find(x => x.id === id); return p ? { id: p.id, codigo: p.codigo, estado: p.estado, pagoEstado: p.pagoEstado, total: p.total, aPagar: p.aPagar, saldo: p.saldo, retiro: p.retiro || null, items: (p.items || []).map(i => ({ nombre: i.nombre, cant: i.cant, detalle: i.detalle || '' })), cliente: { nombre: p.cliente?.nombre || '' } } : null; },
     // Solo demo: lo usa el retorno de Mercado Pago (en producción lo actualiza el webhook).
     async marcarPago(id, pagoEstado, pagoId = '') { return this.updatePedido(id, { pagoEstado, pagoId }); },
 

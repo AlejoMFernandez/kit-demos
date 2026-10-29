@@ -296,7 +296,7 @@ export function initCarrito(ctx, opts = {}) {
     </fieldset>
     ${dia ? `<fieldset class="kit-franjas"><legend>${esc(t('franja'))}</legend><div class="kit-franjas__list">
       ${dia.franjas.map(f => `<label class="kit-franja${f.disponible ? '' : ' is-off'}${f.id === datos.retiroFranja ? ' is-on' : ''}"><input type="radio" name="retiroFranja" value="${esc(f.id)}" ${f.id === datos.retiroFranja ? 'checked' : ''} ${f.disponible ? '' : 'disabled'}>
-        <span><b>${esc(f.nombre)}</b>${f.lleno ? `<small>${esc(t('franjaLlena'))}</small>` : String(f.nombre).includes(f.desde) ? '' : `<small>${esc(f.desde.replace(/^0/, ''))} a ${esc(f.hasta.replace(/^0/, ''))}</small>`}</span></label>`).join('')}
+        <span><b>${esc(f.nombre)}</b>${f.lleno ? `<small>${esc(t('franjaLlena'))}</small>` : String(f.nombre).includes(f.desde) ? '' : `<small>${esc(f.desde.replace(/^0(\d)/, '$1'))} a ${esc(f.hasta.replace(/^0(\d)/, '$1'))} hs</small>`}</span></label>`).join('')}
     </div></fieldset>` : ''}`;
   }
   // ---------- retiro en el día: lo antes posible o a una hora

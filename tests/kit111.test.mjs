@@ -44,8 +44,8 @@ test('retiro hoy: lo antes posible, horas y próximo día abierto', () => {
   assert.equal(franjaRetiroHoy(op, '10:30'), null);
   const sab = opcionesRetiroHoy({ horarios: H, retiroHoy: {}, ahora: ahora('2026-10-31', 1230) });
   assert.equal(sab.fecha, '2026-11-02'); assert.equal(sab.esHoy, false); assert.equal(sab.asap, null);
-  assert.equal(textoRetiro({ fecha: '2026-10-29', franja: { id: '10:45', desde: '10:45', hasta: '10:45' } }, { hoy: '2026-10-29' }), 'hoy 29/10 · 10:45 h');
-  assert.equal(textoRetiro({ fecha: '2026-10-29', franja: { id: 'manana', nombre: 'Mañana', desde: '08:00', hasta: '12:00' } }, { hoy: '2026-10-29' }), 'hoy 29/10 · Mañana (8 a 12 h)');
+  assert.equal(textoRetiro({ fecha: '2026-10-29', franja: { id: '10:45', desde: '10:45', hasta: '10:45' } }, { hoy: '2026-10-29' }), 'hoy 29/10 · 10:45 hs');
+  assert.equal(textoRetiro({ fecha: '2026-10-29', franja: { id: 'manana', nombre: 'Mañana', desde: '08:00', hasta: '12:00' } }, { hoy: '2026-10-29' }), 'hoy 29/10 · Mañana (8:00 a 12:00 hs)');
 });
 
 test('destacados: valores de cliente.json pisados por lo guardado', () => {

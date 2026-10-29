@@ -119,11 +119,12 @@ export function textoRetiro(r, { dias, hoy, asapTexto = 'lo antes posible' } = {
   if (!r?.fecha) return '';
   const [, m, d] = r.fecha.split('-').map(Number);
   const pre = r.fecha === hoy ? 'hoy ' : dias ? dias[diaSemana(r.fecha)].toLowerCase() + ' ' : '';
-  const hs = (s) => String(s || '').replace(/^0/, '').replace(/:00$/, '');
+  // horarios siempre con minutos y "hs": "8:00 a 12:00 hs" (kit 1.15)
+  const hs = (s) => String(s || '').replace(/^0(\d)/, '$1');
   const fr = r.franja;
-  const f = !fr ? '' : fr.asap || fr.id === 'asap' ? ` · ${asapTexto} (~${String(fr.desde).replace(/^0/, '')} h)`
-    : fr.desde && fr.desde === fr.hasta ? ` · ${String(fr.desde).replace(/^0/, '')} h`
+  const f = !fr ? '' : fr.asap || fr.id === 'asap' ? ` · ${asapTexto} (~${hs(fr.desde)} hs)`
+    : fr.desde && fr.desde === fr.hasta ? ` · ${hs(fr.desde)} hs`
     // si la franja ya se llama por su horario ("21:00 a 21:30") no se repite entre paréntesis (kit 1.13)
-    : String(fr.nombre).includes(fr.desde) ? ` · ${fr.nombre} h` : ` · ${fr.nombre} (${hs(fr.desde)} a ${hs(fr.hasta)} h)`;
+    : String(fr.nombre).includes(fr.desde) ? ` · ${fr.nombre} hs` : ` · ${fr.nombre} (${hs(fr.desde)} a ${hs(fr.hasta)} hs)`;
   return `${pre}${d}/${m}${f}`;
 }

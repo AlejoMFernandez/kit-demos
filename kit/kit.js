@@ -33,7 +33,7 @@ import { initEstadias } from './modules/estadias.js';
 import { destacadosDe } from './core/destacados.js';
 import { initCanchas } from './modules/canchas.js';
 
-export const VERSION = '1.14.0';
+export const VERSION = '1.15.0';
 
 export { stockDe };
 

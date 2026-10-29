@@ -50,7 +50,7 @@ const DICT = {
     avisoSinPrecio: 'Algunos precios están a confirmar: el local te los confirma por WhatsApp antes de prepararlo.',
     mpSinPrecio: 'Se habilita cuando todos los productos tienen precio.',
     paraCuando: '¿Para cuándo?', diaRetiro: 'Día de retiro', diaEnvio: 'Día de entrega', franja: 'Franja horaria', elDia: 'el día', laFranja: 'la franja',
-    rhTitulo: '¿Cuándo pasás a retirar?', rhHoy: 'Hoy', rhManana: 'Mañana', rhAsap: 'Lo antes posible', rhAsapSub: 'listo a las {hora}', rhOtraHora: 'Elegí la hora', rhCerrado: 'Hoy ya cerramos: elegí la hora para el {dia}.', rhSinHorario: 'No hay horarios de retiro disponibles. Escribinos por WhatsApp.', laHora: 'la hora', asapTexto: 'lo antes posible',
+    rhTitulo: '¿Cuándo pasás a retirar?', rhHoy: 'Hoy', rhManana: 'Mañana', rhAsap: 'Lo antes posible', rhAsapSub: 'listo a las {hora} hs', rhOtraHora: 'Elegí la hora', rhCerrado: 'Hoy ya cerramos: elegí la hora para el {dia}.', rhSinHorario: 'No hay horarios de retiro disponibles. Escribinos por WhatsApp.', laHora: 'la hora', asapTexto: 'lo antes posible',
     casillasTitulo: 'Antes de pedir', opcElegi: 'Elegí', destacados: 'Destacados', destacadosSub: 'Lo que cambies acá se ve al toque en la web.', guardar: 'Guardar',
     anticipacion: 'Se encarga con {h} h de anticipación', sinDiasRetiro: 'No hay días disponibles para este encargo. Escribinos por WhatsApp.',
     ventanaEspecial: 'Los productos de {nombre} se retiran del {desde} al {hasta}.',

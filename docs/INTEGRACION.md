@@ -412,3 +412,7 @@ Para cocinas que hacen una cantidad fija por noche y se agotan (primer uso: Lumb
 - Panel → Carta: la columna “Stock hoy” con − n + en cada renglón (vacío = sin límite), el botón **Cargar stock de la noche** (vuelve todo a `stockBase`) y los dos campos en el editor del plato.
 - **Cupo por franja** (`encargo.cupoFranja`, o `cupo` en cada franja): cuando una franja llega a ese número de pedidos activos del día, el checkout la muestra “completa” y no la ofrece. Si la franja se llama por su horario (“21:00 a 21:30”) no se repite el horario en el checkout ni en el WhatsApp.
 - **Producción**: por ahora solo modo demo. El stock se guarda en `productos.extra` (migración de campos), pero falta que `crear_pedido` de Supabase lo valide y descuente en el servidor, y una RPC pública con la ocupación de franjas.
+
+## Horarios siempre con minutos y "hs" (kit 1.15)
+
+Regla de Alejo para todas las demos: los horarios se escriben **"8:00 a 20:00 hs"**, nunca "8 a 20". El kit ya los muestra así en el retiro de los pedidos, los encargos y el WhatsApp ("Mañana (9:00 a 13:00 hs)", "hoy 29/10 · 10:45 hs"). En el HTML de cada demo (horarios del local, footer, menú, chips de "abierto hasta…") usar el mismo formato.

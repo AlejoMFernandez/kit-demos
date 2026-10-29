@@ -47,5 +47,5 @@ test('pedido con precio a confirmar: total y mensaje de WhatsApp', () => {
   assert.match(totalTexto(c, money), /a confirmar/);
   const txt = mensajePedido({ ...c, codigo: 'LBA-1', cliente: { nombre: 'Ana' }, tipo: 'retiro', pago: 'whatsapp' }, { negocio: 'X', money, retiroTexto: textoRetiro({ fecha: '2030-12-02', franja: { nombre: 'Mañana', desde: '07:00', hasta: '12:00' } }, { dias: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'], hoy: '2030-12-01' }) });
   assert.match(txt, /Chocotorta \(precio a confirmar\)/);
-  assert.match(txt, /Retira: lunes 2\/12 · Mañana \(7 a 12 h\)/);
+  assert.match(txt, /Retira: lunes 2\/12 · Mañana \(7:00 a 12:00 hs\)/);
 });

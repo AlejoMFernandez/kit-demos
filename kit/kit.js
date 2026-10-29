@@ -28,8 +28,9 @@ import { initCarrito } from './modules/carrito.js';
 import { initReservas } from './modules/reservas.js';
 import { initGiftcards } from './modules/giftcards.js';
 import { initEstadias } from './modules/estadias.js';
+import { destacadosDe } from './core/destacados.js';
 
-export const VERSION = '1.10.0';
+export const VERSION = '1.11.0';
 
 export async function cargarConfig(src = 'cliente.json') {
   const url = new URL(src, location.href);
@@ -82,6 +83,21 @@ export async function initKit(opts = {}) {
   if (M.reservas) ctx.reservas = initReservas(ctx);
   if (M.estadias) ctx.estadias = initEstadias(ctx, opts.estadias);
   if (M.carrito && ctx.config.giftcards) ctx.giftcards = initGiftcards(ctx);
+  // destacados editables desde el panel: [data-kit-destacado="tolva.origen"] + evento kit:destacados
+  if (destacadosDe(ctx.config).length && ctx.store.getDestacados) {
+    ctx.destacados = {};
+    ctx.destacado = (id) => ctx.destacados[id] || {};
+    const pintar = async () => {
+      try { ctx.destacados = await ctx.store.getDestacados(); } catch (err) { console.warn('[kit] destacados', err); return; }
+      document.querySelectorAll('[data-kit-destacado]').forEach(el => {
+        const [d, c] = el.dataset.kitDestacado.split('.');
+        const v = ctx.destacados[d]?.[c]; if (v != null && el.textContent !== v) el.textContent = v;
+      });
+      document.dispatchEvent(new CustomEvent('kit:destacados', { detail: ctx.destacados }));
+    };
+    ctx.store.onChange(pintar);
+    await pintar();
+  }
 
   // Píldora "Probá el panel": en la demo invita al dueño a entrar a /admin.
   if (ctx.store.modo === 'demo' && M.admin && opts.badge !== false) {

@@ -527,3 +527,10 @@ body { margin: 0; background: var(--kit-bg); color: var(--kit-text); font-family
 .kad-est-form__2 { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .kad-est-det .kad-ec { border: 0; padding: 0; }
 @media (min-width: 900px) { .kad-est-row { grid-template-columns: 130px minmax(0, 1fr); } }
+
+/* destacados editables (kit 1.11) */
+.kad-dests { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); align-items: start; }
+.kad-dest { display: grid; gap: 14px; padding: 22px; border: var(--kit-border-w) solid var(--kit-border); border-radius: var(--kit-radius); background: var(--kit-surface); }
+.kad-dest h2 { margin: 0; font: 400 1.3rem/1.1 var(--kit-font-head); text-transform: var(--kit-head-case); }
+.kad-dest .kit-btn { justify-self: start; }
+.kad-note--ajuste b { color: var(--kit-ok); }

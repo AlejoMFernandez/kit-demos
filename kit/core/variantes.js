@@ -5,10 +5,29 @@
 //     "variantes": [{ "id": "20", "nombre": "20 cm", "precio": 71000 }, { "id": "24", "nombre": "24 cm", "precio": 77500 }],
 //     "adicionales": [{ "id": "macarons", "nombre": "Macarons", "precios": { "20": 12000, "24": 21000 } }] }
 //   (un adicional puede tener "precio" fijo en vez de "precios" por variante)
-// Línea de carrito: { id, cant, variante: "24", extras: ["macarons"], nota }
+// Línea de carrito: { id, cant, variante: "24", extras: ["macarons"], opc: { molienda: "moka" }, nota }
+//
+// Opciones de elección única (kit 1.11): "elegí una" por grupo, sin cambiar el precio salvo que el valor tenga "precio":
+//   "opciones": [{ "id": "molienda", "nombre": "Molienda",
+//                  "valores": [{ "id": "grano", "nombre": "En grano" }, { "id": "moka", "nombre": "Para moka" }] }]
+//   (sin elegir, va el primer valor de cada grupo)
 //
 // Seña: una categoría con "sena": 0.5 cobra ese porcentaje al encargar y el resto al retirar
 // (Mercado Pago cobra solo la seña de esos productos y el total de los demás).
+
+export const tieneOpciones = (p) => Array.isArray(p?.opciones) && p.opciones.some(g => g && Array.isArray(g.valores) && g.valores.length);
+
+// { grupoId: valorId } completo y válido (los grupos sin elegir toman su primer valor)
+export function opcionesElegidas(p, opc = {}) {
+  const out = {};
+  if (!tieneOpciones(p)) return out;
+  for (const g of p.opciones) {
+    if (!g || !Array.isArray(g.valores) || !g.valores.length) continue;
+    const v = g.valores.find(x => String(x.id) === String(opc?.[g.id])) || g.valores[0];
+    out[g.id] = String(v.id);
+  }
+  return out;
+}
 
 export const tieneVariantes = (p) => Array.isArray(p?.variantes) && p.variantes.some(v => v && v.precio != null);
 
@@ -27,8 +46,15 @@ export function precioLinea(p, l = {}) {
     extras.push({ id: a.id, nombre: a.nombre, precio: Number(pa) });
     if (precio != null) precio += Number(pa);
   }
-  const detalle = [v?.nombre, ...extras.map(e => `+ ${e.nombre}`)].filter(Boolean).join(' ');
-  return { precio, variante: v ? String(v.id) : null, extras: extras.map(e => e.id), detalle };
+  const opc = opcionesElegidas(p, l.opc);
+  const opcNombres = [];
+  for (const g of (tieneOpciones(p) ? p.opciones : [])) {
+    const val = (g.valores || []).find(x => String(x.id) === opc[g.id]); if (!val) continue;
+    opcNombres.push(val.nombre);
+    if (val.precio != null && precio != null) precio += Number(val.precio);
+  }
+  const detalle = [v?.nombre, ...opcNombres, ...extras.map(e => `+ ${e.nombre}`)].filter(Boolean).join(' · ').replace(/ · \+ /g, ' + ');
+  return { precio, variante: v ? String(v.id) : null, extras: extras.map(e => e.id), detalle, ...(Object.keys(opc).length ? { opc } : {}) };
 }
 
 // "desde $X" para productos con tamaños
@@ -38,7 +64,8 @@ export function precioDesde(p) {
 }
 
 // clave única de una línea (mismo producto con otro tamaño/adicional = otra línea)
-export const claveLinea = (l) => l.gc ? `gc|${l.key}` : `${l.id}|${l.variante || ''}|${(l.extras || []).slice().sort().join('+')}|${l.nota || ''}`;
+const claveOpc = (o) => o && typeof o === 'object' ? Object.keys(o).sort().map(k => `${k}=${o[k]}`).join(',') : '';
+export const claveLinea = (l) => l.gc ? `gc|${l.key}` : `${l.id}|${l.variante || ''}|${(l.extras || []).slice().sort().join('+')}|${l.nota || ''}${l.opc && Object.keys(l.opc).length ? `|${claveOpc(l.opc)}` : ''}`;
 
 // porcentaje de seña de un producto según su categoría (1 = pago total)
 export function pctSena(p, categorias = []) {

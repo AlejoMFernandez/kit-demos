@@ -14,12 +14,16 @@
 // Tamaños y adicionales: kit.carrito.agregar(id, 1, { variante: '24', extras: ['macarons'] }).
 // kit.carrito.setRetiro({ fecha, franja }) deja elegido el día y la franja (ej. desde un selector propio de la demo).
 // Seña (categoría con "sena": 0.5): el checkout muestra Hoy pagás / Resto al retirar y Mercado Pago cobra solo la seña.
+// Opciones de elección única (kit 1.11): kit.carrito.agregar(id, 1, { variante: 'q', opc: { molienda: 'moka' } }).
+// Retiro en el día (pedidos.retiroHoy): "Lo antes posible" o una hora de hoy (o del próximo día abierto).
+// Casillas (pedidos.casillas): "Traigo mi vaso" con descuento sobre algunas categorías.
 import { esc, h, $$, telValido, uid } from '../core/util.js';
 import { t } from '../core/i18n.js';
 import { popup, toast, copiar } from '../core/ui.js';
 import { armarPedido, mensajePedido, linkWhatsApp, totalTexto, itemsCobro } from '../core/pedidos.js';
 import { precioLinea, claveLinea } from '../core/variantes.js';
-import { configEncargo, opcionesRetiro, textoRetiro } from '../core/encargos.js';
+import { configEncargo, opcionesRetiro, textoRetiro, configRetiroHoy, opcionesRetiroHoy, franjaRetiroHoy } from '../core/encargos.js';
+import { diaSemana, diaNum } from '../core/turnos.js';
 import { sucursales, sucursalPorId, pideSucursal, resumenSucursal } from '../core/sucursales.js';
 import { descuentoEfectivo } from '../core/descuentos.js';
 import { configGiftcards, montoValido } from '../core/giftcards.js';
@@ -31,6 +35,8 @@ export function initCarrito(ctx, opts = {}) {
   const salidas = (P.salidas || ['whatsapp']).filter(s => s !== 'mercadopago' || config.pagos?.mercadopago);
   const tipos = P.tipos || ['retiro'];
   const E = configEncargo(P.encargo);
+  const RH = configRetiroHoy(P.retiroHoy);
+  const CAS = Array.isArray(P.casillas) ? P.casillas.filter(x => x && x.id) : [];
   let productos = [];
   let categorias = [];
   let lineas = leer();
@@ -38,7 +44,7 @@ export function initCarrito(ctx, opts = {}) {
   const SEDE_KEY = `kit:${config.id}:sede`;
   const sedes = sucursales(config);
   const sedeGuardada = (() => { try { return localStorage.getItem(SEDE_KEY) || ''; } catch (_) { return ''; } })();
-  let datos = { tipo: tipos[0], pago: salidas[0], nombre: '', telefono: '', direccion: '', nota: '', retiroFecha: '', retiroFranja: '',
+  let datos = { tipo: tipos[0], pago: salidas[0], nombre: '', telefono: '', direccion: '', nota: '', retiroFecha: '', retiroFranja: '', retiroHora: '', casillas: [],
     sucursal: sucursalPorId(config, sedeGuardada) ? sedeGuardada : (sedes.length === 1 ? sedes[0].id : '') };
   function setSucursal(id) {
     if (!sucursalPorId(config, id)) return;
@@ -53,7 +59,11 @@ export function initCarrito(ctx, opts = {}) {
   const cantDe = (id) => lineas.filter(l => l.id === id).reduce((s, l) => s + l.cant, 0);
   const pctPago = (pago) => pago === 'efectivo' ? descuentoEfectivo(config) : 0;
   const GC = configGiftcards(config);
-  const calc = () => armarPedido(productos, lineas, { tipo: datos.tipo, pedidos: P, descuentoPct: pctPago(datos.pago), giftcards: GC, categorias });
+  const calc = () => armarPedido(productos, lineas, { tipo: datos.tipo, pedidos: P, descuentoPct: pctPago(datos.pago), giftcards: GC, categorias, casillas: datos.casillas });
+  // ¿el pedido va con día y franja (encargo) o con hora de hoy? Un encargo con anticipación siempre gana.
+  const pideEncargo = () => lineas.some(l => { const c = categorias.find(x => x.id === productos.find(p => p.id === l.id)?.categoria); return c && (c.especial || Number(c.anticipacionHoras) > 0); });
+  const modoRetiro = () => (E && (!RH || pideEncargo())) ? 'encargo' : RH && datos.tipo !== 'delivery' ? 'hoy' : null;
+  const opRH = () => opcionesRetiroHoy({ horarios: config.horarios, retiroHoy: P.retiroHoy, tz: ctx.tz });
   const conSena = (c) => c.saldo > 0;
 
   // ---------- botón flotante
@@ -98,7 +108,7 @@ export function initCarrito(ctx, opts = {}) {
     // la posición del botón se toma ANTES de redibujar (sync reemplaza el botón y su rect queda en 0,0)
     const desde = origen && origen.isConnected ? origen.getBoundingClientRect() : null;
     nota = String(nota || '').trim().slice(0, 140);
-    const nueva = { id, cant: delta, nota, ...(pl.variante ? { variante: pl.variante } : {}), ...(pl.extras.length ? { extras: pl.extras } : {}) };
+    const nueva = { id, cant: delta, nota, ...(pl.variante ? { variante: pl.variante } : {}), ...(pl.extras.length ? { extras: pl.extras } : {}), ...(pl.opc ? { opc: pl.opc } : {}) };
     const l = lineas.find(x => !x.gc && claveLinea(x) === claveLinea(nueva));
     if (l) l.cant = Math.max(0, Math.min(99, l.cant + delta));
     else if (delta > 0) lineas.push(nueva);
@@ -153,7 +163,7 @@ export function initCarrito(ctx, opts = {}) {
     const dec = e.target.closest('[data-kit-dec]'); if (dec) { e.preventDefault(); cambiar(dec.dataset.kitDec, -1); return; }
     const gq = e.target.closest('[data-kit-gc-quitar]'); if (gq) { e.preventDefault(); quitarGiftcard(gq.dataset.kitGcQuitar); return; }
     const li = e.target.closest('[data-kit-linea]');
-    if (li) { e.preventDefault(); const l = lineas.find(x => !x.gc && claveLinea(x) === li.dataset.kitLinea); if (l) cambiar(l.id, Number(li.dataset.delta) || 0, li, l.nota || '', { variante: l.variante, extras: l.extras }); return; }
+    if (li) { e.preventDefault(); const l = lineas.find(x => !x.gc && claveLinea(x) === li.dataset.kitLinea); if (l) cambiar(l.id, Number(li.dataset.delta) || 0, li, l.nota || '', { variante: l.variante, extras: l.extras, opc: l.opc }); return; }
     const suc = e.target.closest('[data-kit-sucursal]'); if (suc) setSucursal(suc.dataset.kitSucursal);
     const op = e.target.closest('[data-kit-open="carrito"]'); if (op) { e.preventDefault(); abrir(); }
   });
@@ -187,14 +197,14 @@ export function initCarrito(ctx, opts = {}) {
           return `<li class="kit-line">
             ${p.foto ? `<img src="${esc(ctx.asset(p.foto))}" alt="" class="kit-line__img">` : '<span class="kit-line__img kit-line__img--na"></span>'}
             <div class="kit-line__body"><b>${esc(i.nombre)}</b>${i.detalle ? `<em class="kit-line__det">${esc(i.detalle)}</em>` : ''}${i.nota ? `<em class="kit-line__nota">${esc(i.nota)}</em>` : ''}<span>${i.precio != null ? ctx.money(i.precio) : `<span class="kit-price--na">${esc(t('aConfirmar'))}</span>`}${i.sena ? ` <small class="kit-line__sena">${esc(t('senaDe', { pct: Math.round(i.sena * 100) }))}</small>` : ''}</span></div>
-            <div class="kit-qty">${i.nota || i.variante || i.extras ? lineaQtyHTML(i) : qtyHTML(i.id)}</div>
+            <div class="kit-qty">${i.nota || i.variante || i.extras || i.opc ? lineaQtyHTML(i) : qtyHTML(i.id)}</div>
           </li>`;
         }).join('')}</ul>
 
         <form class="kit-form" novalidate>
           ${tipos.length > 1 ? `<fieldset class="kit-seg"><legend class="kit-sr">${esc(t('waEntrega'))}</legend>
             ${tipos.map(tp => `<label><input type="radio" name="tipo" value="${tp}" ${datos.tipo === tp ? 'checked' : ''}><span>${esc(t(tp))}</span></label>`).join('')}</fieldset>` : ''}
-          ${E ? encargoHTML(c) : ''}
+          ${modoRetiro() === 'encargo' ? encargoHTML(c) : modoRetiro() === 'hoy' ? retiroHoyHTML() : ''}
           ${pideSucursal(config) ? `<fieldset class="kit-sedes"><legend>${esc(t(datos.tipo === 'delivery' ? 'sedeDelivery' : 'sedeRetiro'))}</legend>
             <div class="kit-sedes__list">${sedes.map(s => `<label class="kit-sede"><input type="radio" name="sucursal" value="${esc(s.id)}" ${datos.sucursal === s.id ? 'checked' : ''}>
               <span><b>${esc(s.nombre || s.id)}</b>${s.direccion ? `<small>${esc(s.direccion)}</small>` : ''}</span></label>`).join('')}</div></fieldset>` : ''}
@@ -202,6 +212,8 @@ export function initCarrito(ctx, opts = {}) {
           <label class="kit-field"><span>${esc(t('telefono'))}</span><input name="telefono" type="tel" inputmode="tel" autocomplete="tel" required value="${esc(datos.telefono)}"></label>
           <label class="kit-field" ${datos.tipo === 'delivery' ? '' : 'hidden'} data-dir><span>${esc(t('direccion'))}</span><input name="direccion" autocomplete="street-address" value="${esc(datos.direccion)}"></label>
           <label class="kit-field"><span>${esc(t('notaPedido'))}</span><textarea name="nota" rows="2" maxlength="280">${esc(datos.nota)}</textarea></label>
+          ${CAS.length ? `<fieldset class="kit-casillas"><legend class="kit-sr">${esc(t('casillasTitulo'))}</legend>${CAS.map(x => `<label class="kit-casilla${datos.casillas.includes(x.id) ? ' is-on' : ''}"><input type="checkbox" name="casilla" value="${esc(x.id)}" ${datos.casillas.includes(x.id) ? 'checked' : ''}>
+            <span class="kit-casilla__sw" aria-hidden="true"></span><span class="kit-casilla__txt"><b>${esc(x.label || x.id)}</b>${x.sub ? `<small>${esc(x.sub)}</small>` : ''}</span></label>`).join('')}</fieldset>` : ''}
           ${salidas.length > 1 ? `<fieldset class="kit-pay"><legend>${esc(t('comoPagas'))}</legend>
             ${salidas.map(s => { const off = s === 'mercadopago' && c.sinPrecio; return `<label class="kit-pay__opt${off ? ' is-off' : ''}"><input type="radio" name="pago" value="${s}" ${datos.pago === s ? 'checked' : ''} ${off ? 'disabled' : ''}>
               <span class="kit-pay__card"><b>${esc(t(s === 'whatsapp' ? 'porWhatsapp' : s === 'efectivo' ? 'porEfectivo' : 'porMP'))}</b><small>${esc(off ? t('mpSinPrecio') : s === 'efectivo' ? (pctPago(s) ? t('porEfectivoSub', { pct: pctPago(s) }) : t('porEfectivoSubSin')) : t(s === 'whatsapp' ? 'porWhatsappSub' : 'porMPSub'))}</small></span></label>`; }).join('')}
@@ -210,9 +222,10 @@ export function initCarrito(ctx, opts = {}) {
       </div>
       <div class="kit-cart__foot">
         <div class="kit-sum">
-          ${c.envio || c.descuento ? `<div><span>${esc(t('subtotal'))}</span><span>${ctx.money(c.subtotal)}</span></div>` : ''}
+          ${c.envio || c.descuento || (c.ajustes || []).some(a => a.monto) ? `<div><span>${esc(t('subtotal'))}</span><span>${ctx.money(c.subtotal)}</span></div>` : ''}
           ${c.envio ? `<div><span>${esc(t('envio'))}</span><span>${ctx.money(c.envio)}</span></div>` : ''}
           ${c.descuento ? `<div class="kit-sum__desc"><span>${esc(t('descEfectivo', { pct: c.descuentoPct }))}</span><span>−${ctx.money(c.descuento)}</span></div>` : ''}
+          ${(c.ajustes || []).filter(a => a.monto).map(a => `<div class="kit-sum__desc"><span>${esc(a.nombre)} (${a.pct}%)</span><span>−${ctx.money(a.monto)}</span></div>`).join('')}
           ${conSena(c) ? `<div><span>${esc(t('total'))}</span><span>${esc(totalTexto(c, ctx.money))}</span></div>
           <div class="kit-sum__resto"><span>${esc(t('saldoRetiro'))}</span><span>${ctx.money(c.saldo)}</span></div>
           <div class="kit-sum__total"><span>${esc(t('hoyPagas'))}</span><b>${ctx.money(c.aPagar)}</b></div>`
@@ -230,11 +243,16 @@ export function initCarrito(ctx, opts = {}) {
       datos[f.name] = f.value;
       if (f.name === 'retiroFecha') { datos.retiroFranja = ''; pintarDrawer(); return; }
       if (f.name === 'retiroFranja') { $$('.kit-franja', body).forEach(l => l.classList.toggle('is-on', l.querySelector('input').checked)); return; }
+      if (f.name === 'retiroHora') { $$('.kit-hora, .kit-rh__asap', body).forEach(l => l.classList.toggle('is-on', l.querySelector('input').checked)); return; }
+      if (f.name === 'casilla') { datos.casillas = $$('input[name="casilla"]', body).filter(x => x.checked).map(x => x.value); pintarTotales(); return; }
       if (f.name === 'tipo') { body.querySelector('[data-dir]').hidden = f.value !== 'delivery'; pintarTotales(); }
       if (f.name === 'pago') { if (pctPago(f.value) || c.descuento) { pintarTotales(); return; } body.querySelector('[data-enviar]').textContent = textoBoton(calc()); }
     });
     form.addEventListener('submit', (e) => { e.preventDefault(); enviar(); });
     body.querySelector('[data-enviar]').addEventListener('click', enviar);
+    // la hora elegida a la vista dentro de su fila (sin mover la página)
+    const fila = body.querySelector('.kit-rh__horas'), on = fila?.querySelector('.is-on');
+    if (fila && on) fila.scrollLeft = Math.max(0, on.offsetLeft - fila.offsetLeft - 12);
   }
   function pintarTotales() { if (pop) pintarDrawer(); }
   function textoBoton(c) {
@@ -275,8 +293,26 @@ export function initCarrito(ctx, opts = {}) {
         <span><b>${esc(f.nombre)}</b><small>${esc(f.desde.replace(/^0/, ''))} a ${esc(f.hasta.replace(/^0/, ''))}</small></span></label>`).join('')}
     </div></fieldset>` : ''}`;
   }
+  // ---------- retiro en el día: lo antes posible o a una hora
+  function retiroHoyHTML() {
+    const op = opRH();
+    if (!op || !op.fecha) return `<fieldset class="kit-retiro"><legend>${esc(t('rhTitulo'))}</legend><p class="kit-hint">${esc(t('rhSinHorario'))}</p></fieldset>`;
+    if (!(datos.retiroHora === 'asap' && op.asap) && !op.horas.includes(datos.retiroHora)) datos.retiroHora = op.asap ? 'asap' : op.horas[0] || '';
+    const manana = diaNum(op.fecha) - diaNum(ctx.hoy()) === 1;
+    const nombreDia = op.esHoy ? t('rhHoy') : manana ? t('rhManana') : t('dias')[diaSemana(op.fecha)];
+    return `<fieldset class="kit-retiro kit-rh"><legend>${esc(t('rhTitulo'))}<small>${esc(nombreDia)}</small></legend>
+      ${op.esHoy ? '' : `<p class="kit-hint">${esc(t('rhCerrado', { dia: String(nombreDia).toLowerCase() }))}</p>`}
+      ${op.asap ? `<label class="kit-rh__asap${datos.retiroHora === 'asap' ? ' is-on' : ''}"><input type="radio" name="retiroHora" value="asap" ${datos.retiroHora === 'asap' ? 'checked' : ''}>
+        <span><b>${esc(t('rhAsap'))}</b><small>${esc(t('rhAsapSub', { hora: op.asap.hora.replace(/^0/, '') }))}</small></span></label>` : ''}
+      ${op.horas.length ? `<span class="kit-rh__lbl">${esc(t('rhOtraHora'))}</span><div class="kit-rh__horas" role="group" aria-label="${esc(t('rhOtraHora'))}">${op.horas.map(h => `<label class="kit-hora${datos.retiroHora === h ? ' is-on' : ''}"><input type="radio" name="retiroHora" value="${h}" ${datos.retiroHora === h ? 'checked' : ''}><span>${h.replace(/^0/, '')}</span></label>`).join('')}</div>` : ''}
+    </fieldset>`;
+  }
   function retiroElegido() {
-    if (!E) return null;
+    if (modoRetiro() === 'hoy') {
+      const op = opRH(); const fr = franjaRetiroHoy(op, datos.retiroHora);
+      return op?.fecha && fr ? { fecha: op.fecha, franja: fr } : null;
+    }
+    if (modoRetiro() !== 'encargo') return null;
     const op = retiroOpciones();
     const dia = op.dias.find(d => d.fecha === datos.retiroFecha && d.abierto);
     const fr = dia?.franjas.find(f => f.id === datos.retiroFranja && f.disponible);
@@ -294,14 +330,16 @@ export function initCarrito(ctx, opts = {}) {
     if (pideSucursal(config) && !sucursalPorId(config, datos.sucursal)) faltan.unshift(t('laSede'));
     if (datos.tipo === 'delivery' && datos.direccion.trim().length < 5) faltan.push(t('direccion').toLowerCase());
     const retiro = retiroElegido();
-    if (E && !retiro) faltan.unshift(datos.retiroFecha ? t('laFranja') : t('elDia'));
+    if (modoRetiro() === 'encargo' && !retiro) faltan.unshift(datos.retiroFecha ? t('laFranja') : t('elDia'));
+    if (modoRetiro() === 'hoy' && !retiro) faltan.unshift(t('laHora'));
     if (faltan.length) return error(t('faltan', { campos: faltan.join(', ') }));
     if (P.minimo && !c.sinPrecio && c.subtotal < P.minimo) return error(t('minimo', { monto: ctx.money(P.minimo) }));
     if (c.sinPrecio && datos.pago === 'mercadopago') datos.pago = 'whatsapp';
     const btn = pop.body.querySelector('[data-enviar]'); btn.disabled = true; btn.classList.add('is-loading');
     try {
       const pedido = await store.createPedido({
-        items: lineas.map(l => l.gc ? { id: 'giftcard', cant: 1, gc: l.gc } : { id: l.id, cant: l.cant, nota: l.nota, variante: l.variante, extras: l.extras }), tipo: datos.tipo,
+        items: lineas.map(l => l.gc ? { id: 'giftcard', cant: 1, gc: l.gc } : { id: l.id, cant: l.cant, nota: l.nota, variante: l.variante, extras: l.extras, ...(l.opc ? { opc: l.opc } : {}) }), tipo: datos.tipo,
+        ...(datos.casillas.length ? { casillas: datos.casillas.slice() } : {}),
         cliente: { nombre: datos.nombre.trim(), telefono: datos.telefono.trim(), direccion: datos.tipo === 'delivery' ? datos.direccion.trim() : '' },
         nota: datos.nota.trim(), pago: datos.pago, ...(retiro ? { retiro } : {}),
         ...(sedes.length ? { sucursal: resumenSucursal(sucursalPorId(config, datos.sucursal)) } : {}),
@@ -317,7 +355,7 @@ export function initCarrito(ctx, opts = {}) {
   }
 
   async function salirPorWhatsApp(pedido) {
-    const texto = mensajePedido(pedido, { negocio: config.nombre, money: ctx.money, retiroTexto: textoRetiro(pedido.retiro, { dias: t('dias'), hoy: ctx.hoy() }) });
+    const texto = mensajePedido(pedido, { negocio: config.nombre, money: ctx.money, retiroTexto: textoRetiro(pedido.retiro, { dias: t('dias'), hoy: ctx.hoy(), asapTexto: t('asapTexto') }) });
     const sede = pedido.sucursal ? sucursalPorId(config, pedido.sucursal.id) : null;
     const { url, soloLink } = linkWhatsApp(sede?.whatsapp || config.whatsapp, texto);
     vaciar();
@@ -437,8 +475,11 @@ export function initCarrito(ctx, opts = {}) {
 
   return {
     abrir, sync, listo,
-    agregar: (id, n = 1, o = {}) => cambiar(id, n, o.origen || null, o.nota || '', { variante: o.variante, extras: o.extras }),
-    setRetiro, get retiro() { return { fecha: datos.retiroFecha, franja: datos.retiroFranja }; },
+    agregar: (id, n = 1, o = {}) => cambiar(id, n, o.origen || null, o.nota || '', { variante: o.variante, extras: o.extras, opc: o.opc }),
+    setRetiro, get retiro() { return { fecha: datos.retiroFecha, franja: datos.retiroFranja, hora: datos.retiroHora }; },
+    setHora: (h) => { datos.retiroHora = h || ''; if (pop) pintarDrawer(); }, retiroHoyOpciones: opRH,
+    setCasilla: (id, on = true) => { const s = new Set(datos.casillas); on ? s.add(id) : s.delete(id); datos.casillas = [...s].filter(x => CAS.some(c => c.id === x)); pintarFab(); if (pop) pintarDrawer(); document.dispatchEvent(new CustomEvent('kit:casillas', { detail: datos.casillas.slice() })); },
+    get casillas() { return datos.casillas.slice(); },
     agregarGiftcard: (gc, o = {}) => agregarGiftcard(gc, o.origen || null), quitarGiftcard,
     setSucursal, get sucursal() { return sucursalPorId(config, datos.sucursal); },
     vaciar, get lineas() { return lineas.slice(); }, calc, retiroOpciones,

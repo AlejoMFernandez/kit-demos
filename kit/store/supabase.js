@@ -34,6 +34,7 @@ const aProducto = (r) => r && ({
 const BASE_PROD = ['negocio', 'id', 'categoria', 'nombre', 'descripcion', 'precio', 'foto', 'etiquetas', 'disponible', 'orden', 'actualizado', 'variantes', 'extra'];
 
 import { temporadaValida, temporadasDe } from '../core/temporadas.js';
+import { mezclarDestacados } from '../core/destacados.js';
 
 const aEstadia = (e) => e && ({ id: e.id, codigo: e.codigo, habitacion: e.habitacion, llegada: e.llegada, salida: e.salida, noches: Math.round((Date.parse(e.salida) - Date.parse(e.llegada)) / 864e5),
   huespedes: e.huespedes, nombre: e.nombre, telefono: e.telefono, email: e.email, horaLlegada: e.hora_llegada, comentario: e.comentario, total: e.total == null ? null : Number(e.total),
@@ -74,6 +75,17 @@ export async function createSupabaseStore(config) {
       if (!conTemporadas) return null;
       const r = ok(await sb.from('negocios').select('config').eq('id', N).maybeSingle());
       return temporadaValida(config, r?.config?.temporadaActiva);
+    },
+    // destacados (kit 1.11): se guardan en negocios.config → "destacados"
+    async getDestacados() {
+      const r = ok(await sb.from('negocios').select('config').eq('id', N).maybeSingle());
+      return mezclarDestacados(config, r?.config?.destacados || {});
+    },
+    async saveDestacado(id, valores) {
+      const r = ok(await sb.from('negocios').select('config').eq('id', N).single());
+      const destacados = { ...(r.config?.destacados || {}), [id]: { ...valores } };
+      ok(await sb.from('negocios').update({ config: { ...(r.config || {}), destacados } }).eq('id', N));
+      emitir(); return mezclarDestacados(config, destacados)[id];
     },
     async setTemporada(id) {
       const r = ok(await sb.from('negocios').select('config').eq('id', N).single());

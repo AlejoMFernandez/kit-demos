@@ -14,7 +14,7 @@
 //   { "id": "navidad", "nombre": "Navidad", "especial": true, "desde": "2026-12-01", "hasta": "2026-12-24", "avisoDias": 45, "bajada": "…" }
 // - En la web se ven desde (desde − avisoDias) hasta "hasta" inclusive.
 // - Sus productos solo se pueden retirar entre "desde" y "hasta".
-import { ahoraEn, aMin, diaNum, fechaDeNum, diaSemana, franjas as franjasHorario } from './turnos.js';
+import { ahoraEn, aMin, aHora, diaNum, fechaDeNum, diaSemana, franjas as franjasHorario } from './turnos.js';
 
 const DEF = {
   anticipacionHoras: 0, diasAdelante: 14, cerrados: [],
@@ -79,12 +79,46 @@ export function opcionesRetiro({ horarios, encargo, tz, productos = [], categori
   return { dias, horas, desde, hasta };
 }
 
-// "lunes 26/10 · Mañana (7 a 12 h)"
-export function textoRetiro(r, { dias, hoy } = {}) {
+// ---------- retiro en el día, a una hora (kit 1.11): cafeterías y take away
+// cliente.json → "pedidos": { "retiroHoy": { "cadaMin": 15, "prepMin": 10, "asap": true, "diasAdelante": 6 } }
+// Devuelve el primer día abierto con horarios por delante (hoy si queda tiempo):
+//   { fecha, esHoy, asap: { hora: "10:40" } | null, horas: ["10:45", "11:00", …], prepMin }
+export const configRetiroHoy = (cfg) => (cfg ? { cadaMin: 15, prepMin: 10, asap: true, diasAdelante: 6, ...cfg } : null);
+export function opcionesRetiroHoy({ horarios, retiroHoy, tz, ahora = null }) {
+  const R = configRetiroHoy(retiroHoy); if (!R) return null;
+  const now = ahora || ahoraEn(tz);
+  const paso = Math.max(5, Number(R.cadaMin) || 15), prep = Math.max(0, Number(R.prepMin) || 0);
+  for (let i = 0; i <= R.diasAdelante; i++) {
+    const n = now.dia + i; const fecha = fechaDeNum(n);
+    const desdeMin = i === 0 ? now.min + prep : 0;
+    const horas = []; let asap = null;
+    for (const [a, b] of franjasHorario(horarios, fecha)) {
+      if (i === 0 && R.asap && now.min >= a && desdeMin <= b - 5 && !asap) asap = { hora: aHora(Math.min(Math.ceil(desdeMin / 5) * 5, 1439)) };
+      let x = Math.max(a + (i === 0 ? 0 : prep), Math.ceil(desdeMin / paso) * paso);
+      x = Math.ceil(x / paso) * paso;
+      for (; x <= b - paso && x < 1440; x += paso) horas.push(aHora(x));
+    }
+    if (horas.length || asap) return { fecha, esHoy: i === 0, asap, horas, prepMin: prep };
+  }
+  return { fecha: null, esHoy: false, asap: null, horas: [], prepMin: prep };
+}
+// la franja que guarda el pedido (mismo formato que los encargos: el panel lo ordena por "desde")
+export function franjaRetiroHoy(op, hora) {
+  if (!op) return null;
+  if (hora === 'asap' && op.asap) return { id: 'asap', nombre: 'asap', desde: op.asap.hora, hasta: op.asap.hora, asap: true };
+  if (op.horas.includes(hora)) return { id: hora, nombre: hora, desde: hora, hasta: hora };
+  return null;
+}
+
+// "lunes 26/10 · Mañana (7 a 12 h)" · "hoy 29/10 · 10:30 h" · "hoy 29/10 · lo antes posible (~10:40 h)"
+export function textoRetiro(r, { dias, hoy, asapTexto = 'lo antes posible' } = {}) {
   if (!r?.fecha) return '';
   const [, m, d] = r.fecha.split('-').map(Number);
   const pre = r.fecha === hoy ? 'hoy ' : dias ? dias[diaSemana(r.fecha)].toLowerCase() + ' ' : '';
   const hs = (s) => String(s || '').replace(/^0/, '').replace(/:00$/, '');
-  const f = r.franja ? ` · ${r.franja.nombre} (${hs(r.franja.desde)} a ${hs(r.franja.hasta)} h)` : '';
+  const fr = r.franja;
+  const f = !fr ? '' : fr.asap || fr.id === 'asap' ? ` · ${asapTexto} (~${String(fr.desde).replace(/^0/, '')} h)`
+    : fr.desde && fr.desde === fr.hasta ? ` · ${String(fr.desde).replace(/^0/, '')} h`
+    : ` · ${fr.nombre} (${hs(fr.desde)} a ${hs(fr.hasta)} h)`;
   return `${pre}${d}/${m}${f}`;
 }

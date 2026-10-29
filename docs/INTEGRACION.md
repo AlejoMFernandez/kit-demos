@@ -327,3 +327,27 @@ Para negocios donde cada "producto" no es un plato con precio (un teatro con obr
 - Renombrá el panel con `textos` (`"carta": "Cartelera"`, `"agregarPlato": "Agregar obra"`, `"plato": "Obra"`…).
 - Producción: correr `supabase/migracion-campos.sql` (columna `extra jsonb`).
 - Primer uso: Teatro Politeama.
+
+## Cafeterías y take away: opciones, retiro en el día, casillas y destacados (kit 1.11)
+
+Primer uso: Makia (cafetería de especialidad con ventanilla take away).
+
+```json
+"carta": { "productos": [{ "id": "peru", "categoria": "grano", "nombre": "Perú · Amazonas", "precio": null,
+  "variantes": [{ "id": "q", "nombre": "¼ kg", "precio": 9500 }, { "id": "m", "nombre": "½ kg", "precio": 18000 }],
+  "opciones": [{ "id": "molienda", "nombre": "Molienda", "valores": [{ "id": "grano", "nombre": "En grano" }, { "id": "moka", "nombre": "Para moka" }] }] }] },
+"pedidos": {
+  "salidas": ["mercadopago", "efectivo", "whatsapp"], "tipos": ["retiro"],
+  "retiroHoy": { "cadaMin": 15, "prepMin": 10, "asap": true },
+  "encargo": { "anticipacionHoras": 48, "franjas": [ … ] },
+  "casillas": [{ "id": "vaso", "label": "Traigo mi vaso térmico", "sub": "10% off en el café", "descuentoPct": 10, "categorias": ["cafe", "frios"] }]
+},
+"destacados": [{ "id": "tolva", "nombre": "En tolva", "campos": [{ "id": "origen", "label": "Origen" }, { "id": "notas", "label": "Notas", "largo": true }],
+  "valores": { "origen": "Perú · Amazonas", "notas": "Caramelo, muy dulce" } }]
+```
+
+- **Opciones de elección única** (`opciones`): “elegí una” por grupo (molienda, leche, punto). Sin elegir va el primer valor; un valor puede sumar `precio`. `kit.carrito.agregar('peru', 1, { variante: 'q', opc: { molienda: 'moka' } })`. Es otra línea del carrito y el detalle (“¼ kg · Para moka”) llega al WhatsApp y al panel.
+- **Retiro en el día** (`retiroHoy`): el checkout ofrece “Lo antes posible (listo a las 10:35)” o una hora de hoy cada `cadaMin`, dentro de `horarios` y con `prepMin` de preparación. Si hoy ya cerró, ofrece el próximo día abierto. El pedido guarda `retiro: { fecha, franja: { id: '10:45', desde: '10:45', hasta: '10:45' } }` (o `id: 'asap'`), así el panel lo ordena igual que los encargos. Si el carrito tiene algo de una categoría con `anticipacionHoras` o una fecha especial, usa el selector de encargo (día y franja). `kit.carrito.setHora('10:45' | 'asap')`.
+- **Casillas** (`casillas`): interruptores del checkout. Con `descuentoPct` descuentan ese % de los productos de `categorias` (sin `categorias`, de todo); sin `descuentoPct` son solo un aviso. El pedido guarda `ajustes: [{ id, nombre, pct, monto }]`; el WhatsApp y la tarjeta del panel los muestran. `kit.carrito.setCasilla('vaso', true)` + evento `kit:casillas`.
+- **Destacados** (`destacados`): textos cortos que el dueño cambia desde el panel (pestaña con el nombre del destacado). En la web, `<span data-kit-destacado="tolva.origen"></span>` se completa solo y el evento `kit:destacados` trae todos (`ctx.destacado('tolva')`). En producción se guardan en `negocios.config.destacados` (no hace falta migración).
+- **Producción**: opciones, casillas y retiro en el día son, por ahora, solo modo demo, igual que los tamaños: antes de un cliente real hay que sumarlos a `crear_pedido` en Supabase (recalcular `opc`, `ajustes` y aceptar el `retiro` con hora).

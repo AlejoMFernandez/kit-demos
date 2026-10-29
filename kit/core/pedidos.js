@@ -6,7 +6,11 @@ import { precioLinea, pctSena } from './variantes.js';
 // Recalcula el pedido con los precios de la carta (nunca confía en el precio que trae el carrito).
 // Las gift cards (líneas con "gc") se validan contra los montos de cliente.json → giftcards.
 // Con tamaños/adicionales el precio sale de la variante elegida; con seña (categoría "sena") calcula aPagar y saldo.
-export function armarPedido(productos, lineas, { tipo = 'retiro', pedidos = {}, descuentoPct = 0, giftcards = null, categorias = [] } = {}) {
+//
+// Casillas del checkout (kit 1.11): "pedidos.casillas": [{ "id": "vaso", "label": "Traigo mi vaso térmico",
+//   "descuentoPct": 10, "categorias": ["cafe"] }] → si el cliente la marca, descuenta ese % de los productos de
+//   esas categorías (sin "categorias": de todo el pedido). Sin "descuentoPct" es solo un aviso para el local.
+export function armarPedido(productos, lineas, { tipo = 'retiro', pedidos = {}, descuentoPct = 0, giftcards = null, categorias = [], casillas = [] } = {}) {
   const porId = new Map(productos.map(p => [p.id, p]));
   const items = [];
   for (const l of lineas) {
@@ -24,7 +28,8 @@ export function armarPedido(productos, lineas, { tipo = 'retiro', pedidos = {}, 
     const precio = pl.precio;
     const sena = pctSena(p, categorias);
     items.push({ id: p.id, nombre: p.nombre, precio, cant, nota: (l.nota || '').slice(0, 140), subtotal: precio == null ? 0 : precio * cant,
-      ...(pl.variante || pl.extras.length ? { variante: pl.variante, extras: pl.extras, detalle: pl.detalle } : {}),
+      ...(pl.variante || pl.extras.length || pl.opc ? { variante: pl.variante, extras: pl.extras, detalle: pl.detalle } : {}),
+      ...(pl.opc ? { opc: pl.opc } : {}),
       ...(sena < 1 ? { sena } : {}) });
   }
   const subtotal = items.reduce((s, i) => s + i.subtotal, 0);
@@ -32,7 +37,20 @@ export function armarPedido(productos, lineas, { tipo = 'retiro', pedidos = {}, 
   // descuento (ej. efectivo al retirar): se aplica sobre los productos, no sobre el envío
   const pct = Math.max(0, Math.min(100, Number(descuentoPct) || 0));
   const descuento = pct ? Math.round(subtotal * pct / 100) : 0;
-  const out = { items, subtotal, envio, descuentoPct: pct, descuento, total: subtotal + envio - descuento, sinPrecio: items.some(i => i.precio == null) };
+  // casillas marcadas (ej. "traigo mi vaso"): descuento sobre las categorías que indiquen
+  const ajustes = [];
+  const elegidas = Array.isArray(casillas) ? casillas : [];
+  for (const cfg of (pedidos.casillas || [])) {
+    if (!cfg || !elegidas.includes(cfg.id)) continue;
+    const pc = Math.max(0, Math.min(100, Number(cfg.descuentoPct) || 0));
+    const cats = Array.isArray(cfg.categorias) && cfg.categorias.length ? cfg.categorias : null;
+    const base = items.filter(i => !i.giftcard && (!cats || cats.includes(porId.get(i.id)?.categoria))).reduce((s, i) => s + i.subtotal, 0);
+    const monto = pc ? Math.round(base * (1 - pct / 100) * pc / 100) : 0;
+    ajustes.push({ id: cfg.id, nombre: cfg.label || cfg.id, pct: pc, monto });
+  }
+  const descCasillas = ajustes.reduce((s, a) => s + a.monto, 0);
+  const out = { items, subtotal, envio, descuentoPct: pct, descuento, total: subtotal + envio - descuento - descCasillas, sinPrecio: items.some(i => i.precio == null),
+    ...(ajustes.length ? { ajustes } : {}) };
   // seña: lo que se paga hoy (el % de los productos con seña + el resto completo); el saldo, al retirar
   if (items.some(i => i.sena)) {
     const k = out.subtotal ? out.total / out.subtotal : 1;            // reparte descuento/envío en proporción
@@ -70,6 +88,7 @@ export function mensajePedido(pedido, { negocio, money, retiroTexto = '' }) {
   });
   if (pedido.envio) L.push(`${t('envio')}: ${money(pedido.envio)}`);
   if (pedido.descuento) L.push(`${t('descEfectivo', { pct: pedido.descuentoPct })}: -${money(pedido.descuento)}`);
+  (pedido.ajustes || []).forEach(a => L.push(a.monto ? `${a.nombre} (${a.pct}%): -${money(a.monto)}` : `✔ ${a.nombre}`));
   L.push(`*${t('total')}: ${totalTexto(pedido, money)}*`);
   if (pedido.saldo > 0) L.push(`${pedido.senaPct ? t('waSena', { pct: Math.round(pedido.senaPct * 100) }) : t('waSenaSin')}: ${money(pedido.aPagar)}`, `${t('waSaldo')}: ${money(pedido.saldo)}`);
   L.push('');

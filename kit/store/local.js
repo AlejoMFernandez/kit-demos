@@ -9,6 +9,7 @@ import { temporadaValida } from '../core/temporadas.js';
 import { descuentoEfectivo } from '../core/descuentos.js';
 import { configEstadias, ocupacionDemo, libre, nochesEntre, cotizar, ACTIVA } from '../core/estadias.js';
 import { ahoraEn } from '../core/turnos.js';
+import { mezclarDestacados } from '../core/destacados.js';
 import { configGiftcards, codigoGiftcard, normalizarCodigo, estadoGiftcard, canjeable, venceDesde } from '../core/giftcards.js';
 
 const VERSION = 1;
@@ -74,6 +75,9 @@ export function createLocalStore(config) {
     async getProductos() { return ordenar(leer().productos); },
     // temporada de la carta que se ve en la web (null si el negocio no usa temporadas)
     async getTemporada() { return temporadaValida(config, leer().temporada); },
+    // destacados editables (kit 1.11): { id: { campo: valor } }
+    async getDestacados() { return mezclarDestacados(config, leer().destacados || {}); },
+    async saveDestacado(id, valores) { return mut(db => { db.destacados = { ...(db.destacados || {}), [id]: { ...valores } }; return mezclarDestacados(config, db.destacados)[id]; }); },
     async setTemporada(id) { return mut(db => { db.temporada = temporadaValida(config, id); return db.temporada; }); },
     async saveProducto(p) {
       return mut(db => {
@@ -150,7 +154,7 @@ export function createLocalStore(config) {
     // ---- pedidos
     async createPedido(data) {
       return mut(db => {
-        const calc = armarPedido(db.productos.filter(p => p.precio != null || tieneVariantes(p) || config.pedidos?.sinPrecio === 'a_confirmar'), data.items, { tipo: data.tipo, pedidos: config.pedidos, descuentoPct: data.pago === 'efectivo' ? descuentoEfectivo(config) : 0, giftcards: GC, categorias: db.categorias });
+        const calc = armarPedido(db.productos.filter(p => p.precio != null || tieneVariantes(p) || config.pedidos?.sinPrecio === 'a_confirmar'), data.items, { tipo: data.tipo, pedidos: config.pedidos, descuentoPct: data.pago === 'efectivo' ? descuentoEfectivo(config) : 0, giftcards: GC, categorias: db.categorias, casillas: data.casillas || [] });
         if (!calc.items.length) throw Object.assign(new Error('vacio'), { code: 'vacio' });
         const p = {
           id: uid('o-'), codigo: codigoCorto(config.prefijoPedido || 'PD'), ...calc,

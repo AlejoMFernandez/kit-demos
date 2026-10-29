@@ -23,6 +23,7 @@ import { crearQR, qrSVG } from '../core/qr.js';
 import { FORMATOS, ESTILOS, PX_MM_IMPRESION, dibujarTarjeta, paletaTarjeta, jpgDe, pdfHoja, pdfPaginas, descargar } from '../core/tarjeta-qr.js';
 import { paginasCarta, HOJA } from '../core/carta-impresa.js';
 import { filtrarCarta } from '../core/temporadas.js';
+import { destacadosDe } from '../core/destacados.js';
 import { panelEstadias } from './estadias.js';
 
 const ACTIVOS = ['pendiente', 'confirmado', 'listo'];
@@ -47,6 +48,7 @@ export async function initAdmin(opts = {}) {
     config.modulos.carta && { id: 'carta', icono: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/>' },
     config.modulos.carta && (config.modulos.fechas || (config.carta?.categorias || []).some(c => c.especial)) && { id: 'fechas', icono: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m12 12.6.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3Z"/>' },
     config.modulos.carta && config.modulos.cartaQR !== false && { id: 'qr', nav: 'qrNav', icono: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><path d="M14 14h2.5v2.5H14zM18 18h2.5v2.5H18zM18 14h2.5M14 18v2.5"/>' },
+    destacadosDe(config).length && { id: 'destacados', label: destacadosDe(config).length === 1 ? destacadosDe(config)[0].nombre : '', icono: '<path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6-4.5-4.2 6.1-.7Z"/>' },
     config.modulos.carrito && config.giftcards && { id: 'giftcards', icono: '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 12h18M12 8v12M12 8c-1.5-3.5-6.5-3.5-5 0M12 8c1.5-3.5 6.5-3.5 5 0"/>' },
   ].filter(Boolean);
   const GC = configGiftcards(config);
@@ -105,7 +107,7 @@ export async function initAdmin(opts = {}) {
           ${config.marca?.logo ? `<img src="${esc(ctx.asset(config.marca.logoPanel || config.marca.logo))}" alt="${esc(config.nombre)}">` : `<b>${esc(config.nombre)}</b>`}
         </a>
         <nav class="kad-nav" aria-label="${esc(t('panel'))}">
-          ${vistas.map(v => `<a href="#${v.id}" class="kad-nav__a" data-vista="${v.id}"><svg viewBox="0 0 24 24" aria-hidden="true">${v.icono}</svg><span>${esc(t(v.nav || v.id))}</span><i class="kad-count" data-count="${v.id}" hidden></i></a>`).join('')}
+          ${vistas.map(v => `<a href="#${v.id}" class="kad-nav__a" data-vista="${v.id}"><svg viewBox="0 0 24 24" aria-hidden="true">${v.icono}</svg><span>${esc(v.label || t(v.nav || v.id))}</span><i class="kad-count" data-count="${v.id}" hidden></i></a>`).join('')}
         </nav>
         <div class="kad-top__actions">
           ${config.modulos.carrito ? `<button type="button" class="kad-sonido" data-sonido aria-pressed="${!!pref.sonido}" title="${esc(t('sonido'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path class="kad-sonido__on" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/><path class="kad-sonido__off" d="m16 9 6 6M22 9l-6 6"/></svg><span>${esc(t('sonido'))}</span></button>` : ''}
@@ -258,6 +260,28 @@ export async function initAdmin(opts = {}) {
   }
 
   // =====================================================================
+  // DESTACADOS (kit 1.11): textos cortos de la web que cambian seguido (ej. "En tolva")
+  // =====================================================================
+  async function vistaDestacados(main) {
+    const ds = destacadosDe(config);
+    const vals = await store.getDestacados();
+    main.innerHTML = `<div class="kad-head"><h1>${esc(ds.length === 1 ? ds[0].nombre : t('destacados'))}</h1><p class="kad-muted">${esc(t('destacadosSub'))}</p></div>
+      <div class="kad-dests">${ds.map(d => `<form class="kad-dest" data-dest="${esc(d.id)}">
+        ${ds.length > 1 ? `<h2>${esc(d.nombre)}</h2>` : ''}${d.ayuda ? `<p class="kad-muted">${esc(d.ayuda)}</p>` : ''}
+        ${d.campos.map(c => `<label class="kit-field"><span>${esc(c.label || c.id)}</span>${c.largo
+          ? `<textarea name="${esc(c.id)}" rows="3" maxlength="400">${esc(vals[d.id]?.[c.id] || '')}</textarea>`
+          : `<input name="${esc(c.id)}" maxlength="120" value="${esc(vals[d.id]?.[c.id] || '')}">`}</label>`).join('')}
+        <button type="submit" class="kit-btn">${esc(t('guardar'))}</button></form>`).join('')}</div>`;
+    main.onsubmit = async (e) => {
+      const f = e.target.closest('[data-dest]'); if (!f) return; e.preventDefault();
+      const d = ds.find(x => x.id === f.dataset.dest); const b = f.querySelector('[type=submit]'); b.disabled = true;
+      try { await store.saveDestacado(d.id, Object.fromEntries(d.campos.map(c => [c.id, f.elements[c.id].value.trim()]))); toast(t('guardadoOk')); }
+      catch (err) { console.error('[kit] destacado', err); toast(t('error'), 'warn'); }
+      b.disabled = false;
+    };
+  }
+
+  // =====================================================================
   // PEDIDOS: tablero de cocina
   // =====================================================================
   async function vistaPedidos(main) {
@@ -339,9 +363,10 @@ export async function initAdmin(opts = {}) {
         <b class="kad-code">${esc(p.codigo)}</b>
         <time class="kad-reloj${urg}" datetime="${esc(p.creado)}">${esc(relativo(p.creado))}</time>
       </header>
-      ${p.retiro?.fecha ? `<p class="kad-retiro${p.retiro.fecha === hoy() ? ' is-hoy' : p.retiro.fecha < hoy() ? ' is-vencido' : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>${esc(t('retira', { cuando: textoRetiro(p.retiro, { dias: t('dias'), hoy: hoy() }) }))}</span></p>` : ''}
+      ${p.retiro?.fecha ? `<p class="kad-retiro${p.retiro.fecha === hoy() ? ' is-hoy' : p.retiro.fecha < hoy() ? ' is-vencido' : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>${esc(t('retira', { cuando: textoRetiro(p.retiro, { dias: t('dias'), hoy: hoy(), asapTexto: t('asapTexto') }) }))}</span></p>` : ''}
       <div class="kad-chips">${chipPago(p)}<span class="kad-chip">${esc(delivery ? t('chipDelivery') : t('chipRetiro'))}</span>${p.sucursal ? `<span class="kad-chip kad-chip--sede">${esc(p.sucursal.nombre)}</span>` : ''}</div>
       <ul class="kad-items">${(p.items || []).map(i => `<li><b>${i.cant} ×</b> <span>${esc(i.nombre)}${i.detalle ? ` <em>${esc(i.detalle)}</em>` : ''}${i.precio == null && (p.items || []).some(x => x.precio != null) ? ` <small class="kad-sinprecio">${esc(t('aConfirmar'))}</small>` : ''}${i.nota ? `<em>${esc(i.nota)}</em>` : ''}</span></li>`).join('')}</ul>
+      ${(p.ajustes || []).length ? `<p class="kad-note kad-note--ajuste">${p.ajustes.map(a => `<b>✔ ${esc(a.nombre)}</b>${a.monto ? ` · −${esc(ctx.money(a.monto))}` : ''}`).join('<br>')}</p>` : ''}
       ${p.nota ? `<p class="kad-note"><b>${esc(t('waNota'))}:</b> ${esc(p.nota)}</p>` : ''}
       ${delivery && p.cliente?.direccion ? `<a class="kad-dir" href="${esc(mapsUrl(p.cliente.direccion))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg><span><b>${esc(p.cliente.direccion)}</b> · ${esc(t('abrirMaps'))}</span></a>` : ''}
       <div class="kad-quien"><span>${esc(nombre)}${p.cliente?.telefono ? ` · ${esc(p.cliente.telefono)}` : ''}</span>${waGen ? `<a href="${esc(waGen)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</div>
@@ -1244,6 +1269,7 @@ export async function initAdmin(opts = {}) {
       else if (vista === 'fechas') await vistaFechas(main);
       else if (vista === 'giftcards') await vistaGiftcards(main);
       else if (vista === 'qr') await vistaQR(main);
+      else if (vista === 'destacados') await vistaDestacados(main);
     } catch (err) { console.error('[kit] panel', err); main.innerHTML = `<p class="kit-error">${esc(t('error'))}</p>`; }
     if (Math.abs(scrollY - y) > 2) scrollTo({ top: y });
     contadores();
@@ -1255,7 +1281,7 @@ export async function initAdmin(opts = {}) {
     clearTimeout(rt);
     rt = setTimeout(() => {
       // no repintar con un popup abierto ni mientras se escribe un precio
-      if (document.querySelector('.kit-pop') || document.activeElement?.matches?.('[data-precio], [data-buscar], [data-gc-input], [data-gc-monto], .kad-tf')) { contadores(); return; }
+      if (document.querySelector('.kit-pop') || document.activeElement?.matches?.('[data-precio], [data-buscar], [data-gc-input], [data-gc-monto], .kad-tf, .kad-dest input, .kad-dest textarea')) { contadores(); return; }
       if ((ev?.origen === 'local' && vista === 'carta') || vista === 'qr') { contadores(); return; }   // la carta ya se actualizó en el lugar · el QR no depende de los datos   // la carta ya se actualizó en el lugar
       render();
       if (ev?.origen !== 'local' && vista !== 'carta') toast(`${t('nuevo')} ✓`);

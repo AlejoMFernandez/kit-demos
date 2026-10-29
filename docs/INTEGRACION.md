@@ -220,6 +220,23 @@ Para locales que trabajan con turnos fijos (bodegones, parrillas con dos vueltas
 - La reserva guarda `servicio` y `extras`; el panel agrupa la lista del día por “Cena · Primer tiempo” y muestra una barra de ocupación por tanda.
 - Confirmación propia: `document.addEventListener('kit:reserva-lista', e => { e.preventDefault(); /* e.detail.resumen, e.detail.el */ })`.
 
+## Eventos con fecha y cupo (1.14)
+
+Para catas, shows o talleres en locales que no reservan mesa: un servicio con `fechas` en vez de `dias`.
+
+```json
+"modulos": { "reservas": true },
+"reservas": { "maxPersonas": 6, "anticipacionMin": 120, "diasAdelante": 60, "servicios": [
+  { "id": "cata", "nombre": "Cata de vinos", "fechas": ["2026-11-12"],
+    "tandas": [ { "nombre": "Cata de vinos", "turnos": ["20:30"], "capacidad": 20 } ] }
+] }
+```
+
+- El servicio solo se ofrece esas fechas, aunque el local cierre antes de esa hora (la cata es a las 20:30 y el café cierra a las 20).
+- `kit.reservas.turnos(fecha, personas)` devuelve `libres` y `capacidad`: con eso la demo dibuja el cupo (copas, butacas…) y “Quedan N”.
+- El panel muestra las reservas del evento agrupadas por servicio, con la barra de ocupación.
+- Cambiar la fecha o el cupo por ahora es en `cliente.json` (en producción, en la config del negocio).
+
 ## Gift cards (1.4)
 
 ```json

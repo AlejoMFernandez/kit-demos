@@ -396,6 +396,14 @@
                     }
                   }
                 }
+              },
+              "fechas": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "description": "Evento con fecha puntual (cata, show): el servicio solo se ofrece esas fechas, aunque el local no abra a esa hora. Pisa a 'dias'."
               }
             }
           }

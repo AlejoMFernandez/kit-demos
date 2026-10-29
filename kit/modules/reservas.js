@@ -13,8 +13,10 @@ export function crearFormReserva(ctx, { onDone, inicial = {} } = {}) {
   const { config, store } = ctx;
   const R = configReservas(config.reservas);
   const env = { horarios: config.horarios, reservas: config.reservas, tz: ctx.tz };
-  const dias = diasReservables(env);
   const conServicios = !!serviciosDe(R);
+  // Solo eventos con fecha (catas, shows): mostrar únicamente esas fechas, no una fila de días "cerrado".
+  const soloEventos = conServicios && serviciosDe(R).every(s => Array.isArray(s.fechas));
+  const dias = diasReservables(env).filter(d => !soloEventos || d.abierto);
   const extras = Array.isArray(R.extras) ? R.extras : [];
   const fechaIni = inicial.fecha && dias.some(d => d.abierto && d.fecha === inicial.fecha) ? inicial.fecha : (dias.find(d => d.abierto) || {}).fecha;
   const servIni = conServicios && inicial.hora ? (tandaDe(R, inicial.hora)?.servicio.id || null) : null;
@@ -47,7 +49,7 @@ export function crearFormReserva(ctx, { onDone, inicial = {} } = {}) {
   const fmtDia = (d) => {
     const [, m, dd] = d.fecha.split('-').map(Number);
     const nombre = d.offset === 0 ? t('hoy') : d.offset === 1 ? t('manana') : t('diasCortos')[d.dow];
-    return { nombre, num: `${dd} ${t('meses')[m - 1]}` };
+    return { nombre: soloEventos && d.offset > 1 ? `${t('diasCortos')[d.dow]} ${dd}` : nombre, num: `${dd} ${t('meses')[m - 1]}` };
   };
 
   function pintarDias() {
@@ -192,7 +194,7 @@ export function initReservas(ctx) {
   async function turnos(fecha, personas = 1) {
     let ocup = {};
     try { ocup = await ctx.store.getOcupacion(fecha); } catch (e) { console.error('[kit] ocupación', e); }
-    return generarTurnos(env, fecha, ocup, personas).map(x => ({ ...x, capacidad: configReservas(ctx.config.reservas).capacidad }));
+    return generarTurnos(env, fecha, ocup, personas).map(x => ({ capacidad: configReservas(ctx.config.reservas).capacidad, ...x }));  // con tandas, el cupo es el de la tanda
   }
   return { abrir, dias, turnos };
 }

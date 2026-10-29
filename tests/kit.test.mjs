@@ -168,3 +168,14 @@ test('gift cards: el pedido toma el monto de la config, no del carrito', () => {
   assert.equal(ped.items[0].giftcard.para, 'Martín');
   assert.equal(armarPedido(prods, [{ id: 'giftcard', gc: { monto: 50000 } }], {}).items.length, 0); // sin config de gift cards
 });
+
+// ---------- 1.14: eventos con fecha puntual (servicio con "fechas") ----------
+test('servicios: un evento con fechas solo aparece esos días, aunque el local cierre antes', () => {
+  const env = { tz: 'America/Argentina/Buenos_Aires', horarios: { jue: [['08:00', '20:00']] },
+    reservas: { capacidad: 20, anticipacionMin: 0, diasAdelante: 400, servicios: [
+      { id: 'cata', nombre: 'Cata de vinos', fechas: ['2030-01-03'], tandas: [{ nombre: 'Cata', turnos: ['20:30'], capacidad: 20 }] }] } };
+  assert.deepEqual(serviciosDelDia(env, '2030-01-03').map(s => s.id), ['cata']);
+  assert.deepEqual(serviciosDelDia(env, '2030-01-10').map(s => s.id), []);   // otro jueves: no
+  const ts = generarTurnos(env, '2030-01-03', { '20:30': 6 }, 2);
+  assert.equal(ts.length, 1); assert.equal(ts[0].libres, 14); assert.equal(ts[0].capacidad, 20);
+});

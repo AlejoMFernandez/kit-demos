@@ -85,7 +85,9 @@ export function serviciosDelDia({ horarios, reservas }, fecha) {
   const R = configReservas(reservas);
   if ((R.cerrados || []).includes(fecha)) return [];
   const dow = DIAS[diaSemana(fecha)];
-  return (serviciosDe(R) || []).filter(s => Array.isArray(s.dias) ? s.dias.includes(dow) : franjas(horarios, fecha).length > 0);
+  // "fechas": evento con fecha puntual (cata, show…): solo esos días, aunque el local no abra a esa hora.
+  return (serviciosDe(R) || []).filter(s => Array.isArray(s.fechas) ? s.fechas.includes(fecha)
+    : Array.isArray(s.dias) ? s.dias.includes(dow) : franjas(horarios, fecha).length > 0);
 }
 
 // Turnos de un día con lugares libres.

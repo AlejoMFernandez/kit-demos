@@ -33,7 +33,7 @@ import { initEstadias } from './modules/estadias.js';
 import { destacadosDe } from './core/destacados.js';
 import { initCanchas } from './modules/canchas.js';
 
-export const VERSION = '1.16.0';
+export const VERSION = '1.17.0';
 
 export { stockDe };
 
@@ -89,6 +89,8 @@ export async function initKit(opts = {}) {
   ctx.imagenes = imagenes;
 
   if (M.carrito) ctx.carrito = initCarrito(ctx, opts.carrito);
+  // checkout en página aparte (kit 1.17): <div data-kit="checkout"></div>
+  if (ctx.carrito) document.querySelectorAll('[data-kit="checkout"]').forEach(el => ctx.carrito.montarCheckout(el));
   if (M.carta) ctx.cartas = Array.from(document.querySelectorAll('[data-kit="carta"]')).map(el => mountCarta(el, ctx, (opts.cartas && el.id && opts.cartas[el.id]) || opts.carta));
   if (M.reservas) ctx.reservas = initReservas(ctx);
   if (M.estadias) ctx.estadias = initEstadias(ctx, opts.estadias);

@@ -17,6 +17,9 @@
 // Opciones de elección única (kit 1.11): kit.carrito.agregar(id, 1, { variante: 'q', opc: { molienda: 'moka' } }).
 // Retiro en el día (pedidos.retiroHoy): "Lo antes posible" o una hora de hoy (o del próximo día abierto).
 // Casillas (pedidos.casillas): "Traigo mi vaso" con descuento sobre algunas categorías.
+// Checkout en página aparte (kit 1.17): "pedidos": { "checkout": { "pagina": "encargar/" } }
+//   el panel lateral queda solo como carrito (productos, cantidades, total y "Continuar") y el encargo
+//   (retiro, datos y pago) se completa en una página con <div data-kit="checkout"></div>.
 import { esc, h, $$, telValido, uid } from '../core/util.js';
 import { t } from '../core/i18n.js';
 import { popup, toast, copiar } from '../core/ui.js';
@@ -43,6 +46,12 @@ export function initCarrito(ctx, opts = {}) {
   let ocupFr = {};          // cupo por franja: { 'fecha|franja': pedidos }
   let lineas = leer();
   let pop = null;
+  // checkout en página aparte (kit 1.17)
+  const PAGINA = opts.pagina || P.checkout?.pagina || null;
+  let pagEl = null;
+  let terminado = false;   // la página ya muestra el pedido enviado: no se vuelve a pintar vacía
+  const raiz = () => pagEl || pop?.body;
+  function repintar() { if (pop) pintarDrawer(); if (pagEl) pintarPagina(); }
   const SEDE_KEY = `kit:${config.id}:sede`;
   const sedes = sucursales(config);
   const sedeGuardada = (() => { try { return localStorage.getItem(SEDE_KEY) || ''; } catch (_) { return ''; } })();
@@ -52,7 +61,7 @@ export function initCarrito(ctx, opts = {}) {
     if (!sucursalPorId(config, id)) return;
     datos.sucursal = id;
     try { localStorage.setItem(SEDE_KEY, id); } catch (_) { /* sin storage */ }
-    if (pop) pintarDrawer();
+    repintar();
     document.dispatchEvent(new CustomEvent('kit:sucursal', { detail: sucursalPorId(config, id) }));
   }
 
@@ -120,7 +129,7 @@ export function initCarrito(ctx, opts = {}) {
     else if (delta > 0) lineas.push(nueva);
     lineas = lineas.filter(x => x.cant > 0);
     guardar(); sync(); pintarFab(delta > 0);
-    if (pop) pintarDrawer();
+    repintar();
     if (delta > 0 && desde && desde.width) volar(desde, p);
     document.dispatchEvent(new CustomEvent('kit:carrito', { detail: { lineas: lineas.slice(), producto: p, delta } }));
   }
@@ -132,14 +141,14 @@ export function initCarrito(ctx, opts = {}) {
     const key = uid('gc').replace(/[^a-z0-9]/gi, '').slice(0, 12);
     lineas.push({ id: 'giftcard', key, cant: 1, gc: { monto: Number(gc.monto), para: String(gc.para || '').trim().slice(0, 60), de: String(gc.de || '').trim().slice(0, 60), mensaje: String(gc.mensaje || '').trim().slice(0, 200) } });
     guardar(); pintarFab(true);
-    if (pop) pintarDrawer();
+    repintar();
     if (desde && desde.width) volar(desde, { foto: opts.giftcardFoto || '' });
     document.dispatchEvent(new CustomEvent('kit:carrito', { detail: { lineas: lineas.slice(), giftcard: gc, delta: 1 } }));
     return key;
   }
   function quitarGiftcard(key) {
     lineas = lineas.filter(l => !(l.gc && l.key === key));
-    guardar(); pintarFab(); if (pop) pintarDrawer();
+    guardar(); pintarFab(); repintar();
     document.dispatchEvent(new CustomEvent('kit:carrito', { detail: { lineas: lineas.slice(), delta: -1 } }));
   }
 
@@ -181,86 +190,167 @@ export function initCarrito(ctx, opts = {}) {
     pintarDrawer();
   }
 
+  // ---------- piezas del checkout (las usan el panel lateral y la página)
+  function lineasHTML(c) {
+    return `<ul class="kit-lines">${c.items.map(i => {
+      if (i.giftcard) return `<li class="kit-line kit-line--gc">
+        ${opts.giftcardFoto ? `<img src="${esc(ctx.asset(opts.giftcardFoto))}" alt="" class="kit-line__img">` : '<span class="kit-line__img kit-line__img--gc" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M12 7v13M12 7c-1.5-3-6-3-5 0M12 7c1.5-3 6-3 5 0"/></svg></span>'}
+        <div class="kit-line__body"><b>${esc(i.nombre)}</b>${i.nota ? `<em class="kit-line__nota">${esc(i.nota)}${i.giftcard.de ? ` · ${esc(t('gcDe', { de: i.giftcard.de }))}` : ''}</em>` : ''}<span>${ctx.money(i.precio)}</span></div>
+        <div class="kit-qty"><button type="button" class="kit-gc-x" data-kit-gc-quitar="${esc(i.key)}" aria-label="${esc(t('quitar'))} ${esc(i.nombre)}">${esc(t('quitar'))}</button></div>
+      </li>`;
+      const p = productos.find(x => x.id === i.id) || {};
+      return `<li class="kit-line">
+        ${p.foto ? `<img src="${esc(ctx.asset(p.foto))}" alt="" class="kit-line__img">` : '<span class="kit-line__img kit-line__img--na"></span>'}
+        <div class="kit-line__body"><b>${esc(i.nombre)}</b>${i.detalle ? `<em class="kit-line__det">${esc(i.detalle)}</em>` : ''}${i.nota ? `<em class="kit-line__nota">${esc(i.nota)}</em>` : ''}<span>${i.precio != null ? ctx.money(i.precio) : `<span class="kit-price--na">${esc(t('aConfirmar'))}</span>`}${i.sena ? ` <small class="kit-line__sena">${esc(t('senaDe', { pct: Math.round(i.sena * 100) }))}</small>` : ''}</span></div>
+        <div class="kit-qty">${i.nota || i.variante || i.extras || i.opc ? lineaQtyHTML(i) : qtyHTML(i.id)}</div>
+      </li>`;
+    }).join('')}</ul>`;
+  }
+  function parteRetiro(c) {
+    return `${tipos.length > 1 ? `<fieldset class="kit-seg"><legend class="kit-sr">${esc(t('waEntrega'))}</legend>
+        ${tipos.map(tp => `<label><input type="radio" name="tipo" value="${tp}" ${datos.tipo === tp ? 'checked' : ''}><span>${esc(t(tp))}</span></label>`).join('')}</fieldset>` : ''}
+      ${modoRetiro() === 'encargo' ? encargoHTML(c) : modoRetiro() === 'hoy' ? retiroHoyHTML() : ''}
+      ${pideSucursal(config) ? `<fieldset class="kit-sedes"><legend>${esc(t(datos.tipo === 'delivery' ? 'sedeDelivery' : 'sedeRetiro'))}</legend>
+        <div class="kit-sedes__list">${sedes.map(s => `<label class="kit-sede"><input type="radio" name="sucursal" value="${esc(s.id)}" ${datos.sucursal === s.id ? 'checked' : ''}>
+          <span><b>${esc(s.nombre || s.id)}</b>${s.direccion ? `<small>${esc(s.direccion)}</small>` : ''}</span></label>`).join('')}</div></fieldset>` : ''}`;
+  }
+  function parteDatos() {
+    return `<label class="kit-field"><span>${esc(t('nombre'))}</span><input name="nombre" autocomplete="name" required value="${esc(datos.nombre)}"></label>
+      <label class="kit-field"><span>${esc(t('telefono'))}</span><input name="telefono" type="tel" inputmode="tel" autocomplete="tel" required value="${esc(datos.telefono)}"></label>
+      <label class="kit-field" ${datos.tipo === 'delivery' ? '' : 'hidden'} data-dir><span>${esc(t('direccion'))}</span><input name="direccion" autocomplete="street-address" value="${esc(datos.direccion)}"></label>
+      <label class="kit-field"><span>${esc(t('notaPedido'))}</span><textarea name="nota" rows="2" maxlength="280">${esc(datos.nota)}</textarea></label>
+      ${CAS.length ? `<fieldset class="kit-casillas"><legend class="kit-sr">${esc(t('casillasTitulo'))}</legend>${CAS.map(x => `<label class="kit-casilla${datos.casillas.includes(x.id) ? ' is-on' : ''}"><input type="checkbox" name="casilla" value="${esc(x.id)}" ${datos.casillas.includes(x.id) ? 'checked' : ''}>
+        <span class="kit-casilla__sw" aria-hidden="true"></span><span class="kit-casilla__txt"><b>${esc(x.label || x.id)}</b>${x.sub ? `<small>${esc(x.sub)}</small>` : ''}</span></label>`).join('')}</fieldset>` : ''}`;
+  }
+  function partePago(c, conLegend = true) {
+    if (salidas.length < 2) return '';
+    return `<fieldset class="kit-pay">${conLegend ? `<legend>${esc(t('comoPagas'))}</legend>` : `<legend class="kit-sr">${esc(t('comoPagas'))}</legend>`}
+      ${salidas.map(s => { const off = s === 'mercadopago' && c.sinPrecio; return `<label class="kit-pay__opt${off ? ' is-off' : ''}"><input type="radio" name="pago" value="${s}" ${datos.pago === s ? 'checked' : ''} ${off ? 'disabled' : ''}>
+        <span class="kit-pay__card"><b>${esc(t(s === 'whatsapp' ? 'porWhatsapp' : s === 'efectivo' ? 'porEfectivo' : 'porMP'))}</b><small>${esc(off ? t('mpSinPrecio') : s === 'efectivo' ? (pctPago(s) ? t('porEfectivoSub', { pct: pctPago(s) }) : t('porEfectivoSubSin')) : t(s === 'whatsapp' ? 'porWhatsappSub' : 'porMPSub'))}</small></span></label>`; }).join('')}
+    </fieldset>`;
+  }
+  function sumHTML(c) {
+    return `<div class="kit-sum">
+      ${c.envio || c.descuento || (c.ajustes || []).some(a => a.monto) ? `<div><span>${esc(t('subtotal'))}</span><span>${ctx.money(c.subtotal)}</span></div>` : ''}
+      ${c.envio ? `<div><span>${esc(t('envio'))}</span><span>${ctx.money(c.envio)}</span></div>` : ''}
+      ${c.descuento ? `<div class="kit-sum__desc"><span>${esc(t('descEfectivo', { pct: c.descuentoPct }))}</span><span>−${ctx.money(c.descuento)}</span></div>` : ''}
+      ${(c.ajustes || []).filter(a => a.monto).map(a => `<div class="kit-sum__desc"><span>${esc(a.nombre)} (${a.pct}%)</span><span>−${ctx.money(a.monto)}</span></div>`).join('')}
+      ${conSena(c) ? `<div><span>${esc(t('total'))}</span><span>${esc(totalTexto(c, ctx.money))}</span></div>
+      <div class="kit-sum__resto"><span>${esc(t('saldoRetiro'))}</span><span>${ctx.money(c.saldo)}</span></div>
+      <div class="kit-sum__total"><span>${esc(t('hoyPagas'))}</span><b>${ctx.money(c.aPagar)}</b></div>`
+      : `<div class="kit-sum__total"><span>${esc(t('total'))}</span><b>${esc(totalTexto(c, ctx.money))}</b></div>`}
+    </div>`;
+  }
+  function vacioHTML(volver) {
+    return `<div class="kit-empty">${opts.vacioIlustracion || ''}<p class="kit-empty__t">${esc(t('carritoVacio'))}</p><p>${esc(t('carritoVacioSub'))}</p>
+      ${volver ? `<a class="kit-btn" href="${esc(volver)}">${esc(t('seguir'))}</a>` : `<button type="button" class="kit-btn" data-close>${esc(t('seguir'))}</button>`}</div>`;
+  }
+  // eventos del formulario (mismo comportamiento en el panel lateral y en la página)
+  function bindForm(root, c) {
+    const form = root.querySelector('form'); if (!form) return;
+    form.addEventListener('input', (e) => {
+      const f = e.target; if (!f.name) return;
+      if (f.name === 'sucursal') { setSucursal(f.value); return; }
+      datos[f.name] = f.value;
+      if (f.name === 'retiroFecha') { datos.retiroFranja = ''; repintar(); return; }
+      if (f.name === 'retiroFranja') { $$('.kit-franja', root).forEach(l => l.classList.toggle('is-on', l.querySelector('input').checked)); pintarRetiroElegido(); return; }
+      if (f.name === 'retiroHora') { $$('.kit-hora, .kit-rh__asap', root).forEach(l => l.classList.toggle('is-on', l.querySelector('input').checked)); pintarRetiroElegido(); return; }
+      if (f.name === 'casilla') { datos.casillas = $$('input[name="casilla"]', root).filter(x => x.checked).map(x => x.value); pintarTotales(); document.dispatchEvent(new CustomEvent('kit:casillas', { detail: datos.casillas.slice() })); return; }
+      if (f.name === 'tipo') { root.querySelector('[data-dir]').hidden = f.value !== 'delivery'; pintarTotales(); }
+      if (f.name === 'pago') {
+        if (pctPago(f.value) || c.descuento) { pintarTotales(); return; }
+        $$('.kit-pay__opt', root).forEach(l => l.classList.toggle('is-on', l.querySelector('input').checked));
+        const b = root.querySelector('[data-enviar]'); if (b) b.textContent = textoBoton(calc());
+      }
+    });
+    form.addEventListener('submit', (e) => { e.preventDefault(); enviar(); });
+    root.querySelector('[data-enviar]')?.addEventListener('click', enviar);
+    const fila = root.querySelector('.kit-rh__horas'), on = fila?.querySelector('.is-on');
+    if (fila && on) fila.scrollLeft = Math.max(0, on.offsetLeft - fila.offsetLeft - 12);
+  }
+
   function pintarDrawer() {
     const c = calc();
     if (c.sinPrecio && datos.pago === 'mercadopago') datos.pago = salidas.find(s => s !== 'mercadopago') || 'whatsapp';
     const body = pop.body;
-    if (!c.items.length) {
-      body.innerHTML = `<div class="kit-empty">${opts.vacioIlustracion || ''}<p class="kit-empty__t">${esc(t('carritoVacio'))}</p><p>${esc(t('carritoVacioSub'))}</p>
-        <button type="button" class="kit-btn" data-close>${esc(t('seguir'))}</button></div>`;
+    if (!c.items.length) { body.innerHTML = vacioHTML(); return; }
+    const scroll = body.querySelector('.kit-cart__scroll')?.scrollTop || 0;
+    if (PAGINA) {
+      // solo carrito: productos, total y seguir en la página del encargo
+      body.innerHTML = `
+        <div class="kit-cart__scroll">${lineasHTML(c)}</div>
+        <div class="kit-cart__foot">
+          ${sumHTML(c)}
+          <a class="kit-btn kit-btn--block kit-btn--big" href="${esc(ctx.asset(PAGINA))}" data-kit-ir-checkout>${esc(t('continuarEncargo'))}</a>
+          <p class="kit-cart__sig">${esc(t('continuarEncargoSub'))}</p>
+        </div>`;
+      body.querySelector('.kit-cart__scroll').scrollTop = scroll;
       return;
     }
-    const scroll = body.querySelector('.kit-cart__scroll')?.scrollTop || 0;
     body.innerHTML = `
       <div class="kit-cart__scroll">
-        <ul class="kit-lines">${c.items.map(i => {
-          if (i.giftcard) return `<li class="kit-line kit-line--gc">
-            ${opts.giftcardFoto ? `<img src="${esc(ctx.asset(opts.giftcardFoto))}" alt="" class="kit-line__img">` : '<span class="kit-line__img kit-line__img--gc" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M12 7v13M12 7c-1.5-3-6-3-5 0M12 7c1.5-3 6-3 5 0"/></svg></span>'}
-            <div class="kit-line__body"><b>${esc(i.nombre)}</b>${i.nota ? `<em class="kit-line__nota">${esc(i.nota)}${i.giftcard.de ? ` · ${esc(t('gcDe', { de: i.giftcard.de }))}` : ''}</em>` : ''}<span>${ctx.money(i.precio)}</span></div>
-            <div class="kit-qty"><button type="button" class="kit-gc-x" data-kit-gc-quitar="${esc(i.key)}" aria-label="${esc(t('quitar'))} ${esc(i.nombre)}">${esc(t('quitar'))}</button></div>
-          </li>`;
-          const p = productos.find(x => x.id === i.id) || {};
-          return `<li class="kit-line">
-            ${p.foto ? `<img src="${esc(ctx.asset(p.foto))}" alt="" class="kit-line__img">` : '<span class="kit-line__img kit-line__img--na"></span>'}
-            <div class="kit-line__body"><b>${esc(i.nombre)}</b>${i.detalle ? `<em class="kit-line__det">${esc(i.detalle)}</em>` : ''}${i.nota ? `<em class="kit-line__nota">${esc(i.nota)}</em>` : ''}<span>${i.precio != null ? ctx.money(i.precio) : `<span class="kit-price--na">${esc(t('aConfirmar'))}</span>`}${i.sena ? ` <small class="kit-line__sena">${esc(t('senaDe', { pct: Math.round(i.sena * 100) }))}</small>` : ''}</span></div>
-            <div class="kit-qty">${i.nota || i.variante || i.extras || i.opc ? lineaQtyHTML(i) : qtyHTML(i.id)}</div>
-          </li>`;
-        }).join('')}</ul>
-
-        <form class="kit-form" novalidate>
-          ${tipos.length > 1 ? `<fieldset class="kit-seg"><legend class="kit-sr">${esc(t('waEntrega'))}</legend>
-            ${tipos.map(tp => `<label><input type="radio" name="tipo" value="${tp}" ${datos.tipo === tp ? 'checked' : ''}><span>${esc(t(tp))}</span></label>`).join('')}</fieldset>` : ''}
-          ${modoRetiro() === 'encargo' ? encargoHTML(c) : modoRetiro() === 'hoy' ? retiroHoyHTML() : ''}
-          ${pideSucursal(config) ? `<fieldset class="kit-sedes"><legend>${esc(t(datos.tipo === 'delivery' ? 'sedeDelivery' : 'sedeRetiro'))}</legend>
-            <div class="kit-sedes__list">${sedes.map(s => `<label class="kit-sede"><input type="radio" name="sucursal" value="${esc(s.id)}" ${datos.sucursal === s.id ? 'checked' : ''}>
-              <span><b>${esc(s.nombre || s.id)}</b>${s.direccion ? `<small>${esc(s.direccion)}</small>` : ''}</span></label>`).join('')}</div></fieldset>` : ''}
-          <label class="kit-field"><span>${esc(t('nombre'))}</span><input name="nombre" autocomplete="name" required value="${esc(datos.nombre)}"></label>
-          <label class="kit-field"><span>${esc(t('telefono'))}</span><input name="telefono" type="tel" inputmode="tel" autocomplete="tel" required value="${esc(datos.telefono)}"></label>
-          <label class="kit-field" ${datos.tipo === 'delivery' ? '' : 'hidden'} data-dir><span>${esc(t('direccion'))}</span><input name="direccion" autocomplete="street-address" value="${esc(datos.direccion)}"></label>
-          <label class="kit-field"><span>${esc(t('notaPedido'))}</span><textarea name="nota" rows="2" maxlength="280">${esc(datos.nota)}</textarea></label>
-          ${CAS.length ? `<fieldset class="kit-casillas"><legend class="kit-sr">${esc(t('casillasTitulo'))}</legend>${CAS.map(x => `<label class="kit-casilla${datos.casillas.includes(x.id) ? ' is-on' : ''}"><input type="checkbox" name="casilla" value="${esc(x.id)}" ${datos.casillas.includes(x.id) ? 'checked' : ''}>
-            <span class="kit-casilla__sw" aria-hidden="true"></span><span class="kit-casilla__txt"><b>${esc(x.label || x.id)}</b>${x.sub ? `<small>${esc(x.sub)}</small>` : ''}</span></label>`).join('')}</fieldset>` : ''}
-          ${salidas.length > 1 ? `<fieldset class="kit-pay"><legend>${esc(t('comoPagas'))}</legend>
-            ${salidas.map(s => { const off = s === 'mercadopago' && c.sinPrecio; return `<label class="kit-pay__opt${off ? ' is-off' : ''}"><input type="radio" name="pago" value="${s}" ${datos.pago === s ? 'checked' : ''} ${off ? 'disabled' : ''}>
-              <span class="kit-pay__card"><b>${esc(t(s === 'whatsapp' ? 'porWhatsapp' : s === 'efectivo' ? 'porEfectivo' : 'porMP'))}</b><small>${esc(off ? t('mpSinPrecio') : s === 'efectivo' ? (pctPago(s) ? t('porEfectivoSub', { pct: pctPago(s) }) : t('porEfectivoSubSin')) : t(s === 'whatsapp' ? 'porWhatsappSub' : 'porMPSub'))}</small></span></label>`; }).join('')}
-          </fieldset>` : ''}
-        </form>
+        ${lineasHTML(c)}
+        <form class="kit-form" novalidate>${parteRetiro(c)}${parteDatos()}${partePago(c)}</form>
       </div>
       <div class="kit-cart__foot">
-        <div class="kit-sum">
-          ${c.envio || c.descuento || (c.ajustes || []).some(a => a.monto) ? `<div><span>${esc(t('subtotal'))}</span><span>${ctx.money(c.subtotal)}</span></div>` : ''}
-          ${c.envio ? `<div><span>${esc(t('envio'))}</span><span>${ctx.money(c.envio)}</span></div>` : ''}
-          ${c.descuento ? `<div class="kit-sum__desc"><span>${esc(t('descEfectivo', { pct: c.descuentoPct }))}</span><span>−${ctx.money(c.descuento)}</span></div>` : ''}
-          ${(c.ajustes || []).filter(a => a.monto).map(a => `<div class="kit-sum__desc"><span>${esc(a.nombre)} (${a.pct}%)</span><span>−${ctx.money(a.monto)}</span></div>`).join('')}
-          ${conSena(c) ? `<div><span>${esc(t('total'))}</span><span>${esc(totalTexto(c, ctx.money))}</span></div>
-          <div class="kit-sum__resto"><span>${esc(t('saldoRetiro'))}</span><span>${ctx.money(c.saldo)}</span></div>
-          <div class="kit-sum__total"><span>${esc(t('hoyPagas'))}</span><b>${ctx.money(c.aPagar)}</b></div>`
-          : `<div class="kit-sum__total"><span>${esc(t('total'))}</span><b>${esc(totalTexto(c, ctx.money))}</b></div>`}
-        </div>
+        ${sumHTML(c)}
         ${c.sinPrecio ? `<p class="kit-aviso">${esc(t('avisoSinPrecio'))}</p>` : ''}
         <p class="kit-msg" role="alert" hidden></p>
         <button type="button" class="kit-btn kit-btn--block kit-btn--big" data-enviar>${esc(textoBoton(c))}</button>
       </div>`;
     body.querySelector('.kit-cart__scroll').scrollTop = scroll;
-    const form = body.querySelector('form');
-    form.addEventListener('input', (e) => {
-      const f = e.target; if (!f.name) return;
-      if (f.name === 'sucursal') { setSucursal(f.value); return; }
-      datos[f.name] = f.value;
-      if (f.name === 'retiroFecha') { datos.retiroFranja = ''; pintarDrawer(); return; }
-      if (f.name === 'retiroFranja') { $$('.kit-franja', body).forEach(l => l.classList.toggle('is-on', l.querySelector('input').checked)); return; }
-      if (f.name === 'retiroHora') { $$('.kit-hora, .kit-rh__asap', body).forEach(l => l.classList.toggle('is-on', l.querySelector('input').checked)); return; }
-      if (f.name === 'casilla') { datos.casillas = $$('input[name="casilla"]', body).filter(x => x.checked).map(x => x.value); pintarTotales(); document.dispatchEvent(new CustomEvent('kit:casillas', { detail: datos.casillas.slice() })); return; }
-      if (f.name === 'tipo') { body.querySelector('[data-dir]').hidden = f.value !== 'delivery'; pintarTotales(); }
-      if (f.name === 'pago') { if (pctPago(f.value) || c.descuento) { pintarTotales(); return; } body.querySelector('[data-enviar]').textContent = textoBoton(calc()); }
-    });
-    form.addEventListener('submit', (e) => { e.preventDefault(); enviar(); });
-    body.querySelector('[data-enviar]').addEventListener('click', enviar);
-    // la hora elegida a la vista dentro de su fila (sin mover la página)
-    const fila = body.querySelector('.kit-rh__horas'), on = fila?.querySelector('.is-on');
-    if (fila && on) fila.scrollLeft = Math.max(0, on.offsetLeft - fila.offsetLeft - 12);
+    bindForm(body, c);
   }
-  function pintarTotales() { if (pop) pintarDrawer(); }
+
+  // ---------- checkout en página aparte (kit 1.17): <div data-kit="checkout" data-kit-volver="../#tienda"></div>
+  function montarCheckout(el) {
+    pagEl = el; el.classList.add('kit-root', 'kit-co-root');
+    pintarPagina();
+  }
+  function textoRetiroElegido() {
+    const r = retiroElegido();
+    return r ? textoRetiro(r, { dias: t('dias'), hoy: ctx.hoy(), asapTexto: t('asapTexto') }) : '';
+  }
+  function pintarRetiroElegido() {
+    const el = pagEl?.querySelector('[data-kit-retiro-txt]'); if (!el) return;
+    const tx = textoRetiroElegido();
+    el.textContent = tx ? tx.charAt(0).toUpperCase() + tx.slice(1) : t('coElegiDia');
+  }
+  function pintarPagina() {
+    const el = pagEl; if (!el || terminado) return;
+    const volver = el.dataset.kitVolver || '../';
+    const c = calc();
+    if (c.sinPrecio && datos.pago === 'mercadopago') datos.pago = salidas.find(s => s !== 'mercadopago') || 'whatsapp';
+    if (!c.items.length) { el.innerHTML = `<div class="kit-co kit-co--vacio">${vacioHTML(volver)}</div>`; return; }
+    const n = c.items.reduce((a, i) => a + i.cant, 0);
+    const pasos = [];
+    const ret = parteRetiro(c);
+    if (ret.trim()) pasos.push({ t: t(datos.tipo === 'delivery' ? 'coPasoEnvio' : 'coPasoRetiro'), html: ret });
+    pasos.push({ t: t('coPasoDatos'), html: parteDatos() });
+    const pago = partePago(c, false);
+    if (pago) pasos.push({ t: t('comoPagas'), html: pago });
+    el.innerHTML = `
+      <div class="kit-co">
+        <form class="kit-form kit-co__form" novalidate>
+          ${pasos.map((p, i) => `<section class="kit-co__paso" style="--i:${i}"><h2 class="kit-co__t"><span class="kit-co__n">${i + 1}</span>${esc(p.t)}</h2>${p.html}</section>`).join('')}
+        </form>
+        <aside class="kit-co__res" aria-label="${esc(t('tuPedido'))}">
+          <div class="kit-co__box">
+            <h2 class="kit-co__t kit-co__t--res">${esc(t('tuPedido'))} <small>${n} ${esc(t(n === 1 ? 'coProducto' : 'coProductos'))}</small></h2>
+            ${lineasHTML(c)}
+            ${modoRetiro() ? `<p class="kit-co__retiro"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span data-kit-retiro-txt></span></p>` : ''}
+            ${sumHTML(c)}
+            ${c.sinPrecio ? `<p class="kit-aviso">${esc(t('avisoSinPrecio'))}</p>` : ''}
+            <p class="kit-msg" role="alert" hidden></p>
+            <button type="button" class="kit-btn kit-btn--block kit-btn--big" data-enviar>${esc(textoBoton(c))}</button>
+            <a class="kit-co__volver" href="${esc(volver)}">← ${esc(t('coSeguirComprando'))}</a>
+          </div>
+        </aside>
+      </div>`;
+    bindForm(el, c);
+    pintarRetiroElegido();
+  }
+  function pintarTotales() { repintar(); }
   function textoBoton(c) {
     if (datos.pago !== 'mercadopago') return t('enviarPedido');
     return conSena(c) ? `${t('pagarSena')} · ${ctx.money(c.aPagar)}` : t('pagar');
@@ -268,7 +358,7 @@ export function initCarrito(ctx, opts = {}) {
   function setRetiro({ fecha, franja } = {}) {
     if (fecha !== undefined) datos.retiroFecha = fecha || '';
     if (franja !== undefined) datos.retiroFranja = franja || '';
-    if (pop) pintarDrawer();
+    repintar();
   }
 
   // ---------- encargo: día y franja de retiro
@@ -326,7 +416,7 @@ export function initCarrito(ctx, opts = {}) {
     return { fecha: dia.fecha, franja: { id: fr.id, nombre: fr.nombre, desde: fr.desde, hasta: fr.hasta } };
   }
 
-  function error(msg) { const m = pop.body.querySelector('.kit-msg'); m.textContent = msg; m.hidden = false; m.classList.remove('shake'); void m.offsetWidth; m.classList.add('shake'); }
+  function error(msg) { const m = raiz().querySelector('.kit-msg'); m.textContent = msg; m.hidden = false; m.classList.remove('shake'); void m.offsetWidth; m.classList.add('shake'); }
 
   async function enviar() {
     const c = calc();
@@ -342,7 +432,7 @@ export function initCarrito(ctx, opts = {}) {
     if (faltan.length) return error(t('faltan', { campos: faltan.join(', ') }));
     if (P.minimo && !c.sinPrecio && c.subtotal < P.minimo) return error(t('minimo', { monto: ctx.money(P.minimo) }));
     if (c.sinPrecio && datos.pago === 'mercadopago') datos.pago = 'whatsapp';
-    const btn = pop.body.querySelector('[data-enviar]'); btn.disabled = true; btn.classList.add('is-loading');
+    const btn = raiz().querySelector('[data-enviar]'); btn.disabled = true; btn.classList.add('is-loading');
     try {
       const pedido = await store.createPedido({
         items: lineas.map(l => l.gc ? { id: 'giftcard', cant: 1, gc: l.gc } : { id: l.id, cant: l.cant, nota: l.nota, variante: l.variante, extras: l.extras, ...(l.opc ? { opc: l.opc } : {}) }), tipo: datos.tipo,
@@ -380,6 +470,18 @@ export function initCarrito(ctx, opts = {}) {
     if (pop) pop.close();
     const ev = new CustomEvent('kit:exito', { cancelable: true, detail: { titulo, sub, waUrl, tipo, ...extra, codigo: extra.codigo || extra.pedido?.codigo || '' } });
     if (!document.dispatchEvent(ev)) return;
+    if (pagEl) {
+      terminado = true;
+      const volver = pagEl.dataset.kitVolver || '../';
+      pagEl.innerHTML = `<div class="kit-co kit-co--fin"><div class="kit-done kit-done--${tipo}">
+        <div class="kit-done__ico" aria-hidden="true">${tipo === 'ok' ? '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M12 7v6M12 17h.01"/></svg>'}</div>
+        <h3>${esc(titulo)}</h3><p>${esc(sub)}</p>
+        ${extra.pedido?.retiro ? `<p class="kit-co__retiro kit-co__retiro--fin"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>${esc(t('coRetiras'))} ${esc(textoRetiro(extra.pedido.retiro, { dias: t('dias'), hoy: ctx.hoy(), asapTexto: t('asapTexto') }))}</span></p>` : ''}
+        <div class="kit-row kit-row--center">${waUrl ? `<a class="kit-btn" href="${esc(waUrl)}" target="_blank" rel="noopener">${esc(t('abrirWA'))}</a>` : ''}
+        <a class="kit-btn kit-btn--ghost" href="${esc(volver)}">${esc(t('coVolverWeb'))}</a></div></div></div>`;
+      scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     const box = h(`<div class="kit-done kit-done--${tipo}">
       <div class="kit-done__ico" aria-hidden="true">${tipo === 'ok' ? '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M12 7v6M12 17h.01"/></svg>'}</div>
       <h3>${esc(titulo)}</h3><p>${esc(sub)}</p>
@@ -486,17 +588,17 @@ export function initCarrito(ctx, opts = {}) {
       const otras = lineas.filter(x => x !== l && x.id === l.id).reduce((a, x) => a + x.cant, 0); l.cant = Math.max(0, Math.min(l.cant, q - otras)); });
     lineas = lineas.filter(l => l.cant > 0);
     guardar(); sync(); pintarFab();
-    if (pop) pintarDrawer();
+    repintar();
   }
   store.onChange(cargar);
   const listo = cargar().then(revisarRetornoMP);
 
   return {
-    abrir, sync, listo,
+    abrir, sync, listo, montarCheckout, pagina: PAGINA ? ctx.asset(PAGINA) : null,
     agregar: (id, n = 1, o = {}) => cambiar(id, n, o.origen || null, o.nota || '', { variante: o.variante, extras: o.extras, opc: o.opc }),
     setRetiro, get retiro() { return { fecha: datos.retiroFecha, franja: datos.retiroFranja, hora: datos.retiroHora }; },
-    setHora: (h) => { datos.retiroHora = h || ''; if (pop) pintarDrawer(); }, retiroHoyOpciones: opRH,
-    setCasilla: (id, on = true) => { const s = new Set(datos.casillas); on ? s.add(id) : s.delete(id); datos.casillas = [...s].filter(x => CAS.some(c => c.id === x)); pintarFab(); if (pop) pintarDrawer(); document.dispatchEvent(new CustomEvent('kit:casillas', { detail: datos.casillas.slice() })); },
+    setHora: (h) => { datos.retiroHora = h || ''; repintar(); }, retiroHoyOpciones: opRH,
+    setCasilla: (id, on = true) => { const s = new Set(datos.casillas); on ? s.add(id) : s.delete(id); datos.casillas = [...s].filter(x => CAS.some(c => c.id === x)); pintarFab(); repintar(); document.dispatchEvent(new CustomEvent('kit:casillas', { detail: datos.casillas.slice() })); },
     get casillas() { return datos.casillas.slice(); },
     agregarGiftcard: (gc, o = {}) => agregarGiftcard(gc, o.origen || null), quitarGiftcard,
     setSucursal, get sucursal() { return sucursalPorId(config, datos.sucursal); },

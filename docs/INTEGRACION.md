@@ -438,3 +438,17 @@ Para locales que venden en la web **otra cosa que su carta**: la torta entera en
 - Panel → Carta: las secciones aparecen agrupadas en **Tienda online** y **Carta del local**; al crear o renombrar una sección se marca “Va en la tienda online” (con `modulos.tienda` el casillero está aunque todavía no haya secciones de tienda). Los pedidos se ordenan por día de retiro, como los encargos.
 - Producción: correr `supabase/migracion-tienda.sql` (columna `categorias.tienda`).
 - **Demo ya vista por el dueño**: la carta de la demo vive en el navegador de cada visitante. Si la carta cambia mucho (como al sumar la tienda), subí `"demoVersion": 2` en `cliente.json` para que quien ya la había abierto vea la nueva.
+
+## Checkout en página aparte (kit 1.17)
+
+Cuando el encargo tiene mucho para completar (día y franja, datos, forma de pago), el panel lateral queda chico. Con esto el panel lateral es **solo el carrito** (productos, cantidades, total y "Continuar con el encargo") y todo lo demás se completa en una página propia, como en cualquier tienda online. Primer uso: Compadre (`/encargar/`).
+
+```json
+"pedidos": { "checkout": { "pagina": "encargar/" }, … }
+```
+
+- La página (`encargar/index.html` en la demo) carga el kit con `config: '../cliente.json'`, `carrito: { fab: false }` y `badge: false`, y tiene `<div data-kit="checkout" data-kit-volver="../#tienda"></div>`.
+- Arma los pasos numerados (1 ¿Cuándo lo retirás? · 2 Tus datos · 3 ¿Cómo pagás?) y a la derecha el resumen fijo con los productos (se pueden cambiar las cantidades), el retiro elegido, el total y el botón. En el celu el resumen va debajo de los pasos.
+- El pedido enviado, el pago aprobado o rechazado y la vuelta de Mercado Pago se muestran dentro de la misma página, con "Volver a la web".
+- Sin `checkout.pagina` todo sigue como siempre (checkout en el panel lateral).
+- El ancla del resumen fijo se ajusta con `--kit-co-top` (alto de la barra de la demo).

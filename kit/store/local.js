@@ -17,7 +17,9 @@ import { configGiftcards, codigoGiftcard, normalizarCodigo, estadoGiftcard, canj
 const VERSION = 1;
 
 export function createLocalStore(config) {
-  const KEY = `kit:${config.id}:v${VERSION}`;
+  // "demoVersion" en cliente.json: subirlo cuando la carta de la demo cambia mucho (ej. se suma la tienda)
+  // y así quien ya la había abierto ve la nueva y no la vieja guardada en su navegador (kit 1.16).
+  const KEY = `kit:${config.id}:v${VERSION}${config.demoVersion ? ':' + config.demoVersion : ''}`;
   const canal = ('BroadcastChannel' in self) ? new BroadcastChannel(KEY) : null;
   const subs = new Set();
 

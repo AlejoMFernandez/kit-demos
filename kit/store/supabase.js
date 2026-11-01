@@ -16,11 +16,13 @@ const aPedido = (r) => r && ({
   estado: r.estado, creado: r.creado,
 });
 const aReserva = (r) => r && ({ ...r, extras: r.extras || undefined, servicio: r.servicio || undefined });
-const aCategoria = (r) => r && ({ id: r.id, nombre: r.nombre, orden: r.orden, ...(r.temporada !== undefined ? { temporada: r.temporada } : {}), ...(r.especial ? { especial: true, desde: r.desde || '', hasta: r.hasta || '', avisoDias: r.aviso_dias ?? 30, bajada: r.bajada || '' } : {}), ...(r.anticipacion_horas != null ? { anticipacionHoras: r.anticipacion_horas } : {}) });
+const aCategoria = (r) => r && ({ id: r.id, nombre: r.nombre, orden: r.orden, ...(r.temporada !== undefined ? { temporada: r.temporada } : {}), ...(r.especial ? { especial: true, desde: r.desde || '', hasta: r.hasta || '', avisoDias: r.aviso_dias ?? 30, bajada: r.bajada || '' } : {}), ...(r.anticipacion_horas != null ? { anticipacionHoras: r.anticipacion_horas } : {}), ...(r.tienda ? { tienda: true } : {}) });
 // columnas nuevas (kit 1.3) solo si la categoría las usa: así los clientes sin la migración siguen andando
 const extrasCategoria = (c) => ({
   ...(c.especial ? { especial: true, desde: c.desde || null, hasta: c.hasta || null, aviso_dias: Number(c.avisoDias ?? 30), bajada: c.bajada || null } : {}),
-  ...(c.anticipacionHoras != null ? { anticipacion_horas: Number(c.anticipacionHoras) } : {}) });
+  ...(c.anticipacionHoras != null ? { anticipacion_horas: Number(c.anticipacionHoras) } : {}),
+  // tienda online (kit 1.16, supabase/migracion-tienda.sql): solo se manda si la categoría lo define
+  ...(c.tienda !== undefined ? { tienda: !!c.tienda } : {}) });
 const aGiftcard = (r) => {
   if (!r) return null;
   const g = { id: r.id, codigo: r.codigo, pedidoId: r.pedido, pedidoCodigo: r.pedido_codigo, monto: Number(r.monto), saldo: Number(r.saldo), para: r.para || '', de: r.de || '',

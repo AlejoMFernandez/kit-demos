@@ -28,6 +28,7 @@ create table if not exists categorias (
   primary key (negocio, id)
 );
 alter table categorias add column if not exists temporada text;
+alter table categorias add column if not exists tienda boolean not null default false;   -- kit 1.16: sección de la tienda online
 
 create table if not exists productos (
   negocio text not null references negocios on delete cascade,

@@ -416,3 +416,25 @@ Para cocinas que hacen una cantidad fija por noche y se agotan (primer uso: Lumb
 ## Horarios siempre con minutos y "hs" (kit 1.15)
 
 Regla de Alejo para todas las demos: los horarios se escriben **"8:00 a 20:00 hs"**, nunca "8 a 20". El kit ya los muestra así en el retiro de los pedidos, los encargos y el WhatsApp ("Mañana (9:00 a 13:00 hs)", "hoy 29/10 · 10:45 hs"). En el HTML de cada demo (horarios del local, footer, menú, chips de "abierto hasta…") usar el mismo formato.
+
+## Tienda online: productos armados para encargar (kit 1.16)
+
+Para locales que venden en la web **otra cosa que su carta**: la torta entera en vez de la porción, una docena de cruasanes, una caja de chipá, una bolsa de panes, una selección de pastelería. Se encarga con anticipación y se retira en el local (primer uso: Compadre bike & coffee). No es un sistema para pedir desde la mesa: la carta del local sigue siendo solo para mirar.
+
+```json
+"modulos": { "carta": true, "carrito": true, "tienda": true },
+"pedidos": { "salidas": ["mercadopago", "efectivo"], "tipos": ["retiro"],
+  "encargo": { "anticipacionHoras": 24, "diasAdelante": 14, "franjas": [ … ] } },
+"carta": { "categorias": [
+  { "id": "cafes", "nombre": "Cafés" },
+  { "id": "t-dulce", "nombre": "Dulce", "tienda": true },
+  { "id": "t-tortas", "nombre": "Tortas enteras", "tienda": true, "anticipacionHoras": 48 }
+] }
+```
+
+- `"tienda": true` en la sección la saca de la carta del local (`data-kit="carta"`), de la carta del QR (`/carta/`) y de la carta impresa.
+- La tienda se monta con `<div data-kit="carta" data-kit-tienda="true"></div>` (u `initKit({ cartas: { <id>: { tienda: true } } })`). Para la carta del local como vidriera: `data-kit-pedir="false"`.
+- El checkout usa el **encargo** de siempre (día y franja, anticipación por sección) y las salidas que tenga el local.
+- Panel → Carta: las secciones aparecen agrupadas en **Tienda online** y **Carta del local**; al crear o renombrar una sección se marca “Va en la tienda online” (con `modulos.tienda` el casillero está aunque todavía no haya secciones de tienda). Los pedidos se ordenan por día de retiro, como los encargos.
+- Producción: correr `supabase/migracion-tienda.sql` (columna `categorias.tienda`).
+- **Demo ya vista por el dueño**: la carta de la demo vive en el navegador de cada visitante. Si la carta cambia mucho (como al sumar la tienda), subí `"demoVersion": 2` en `cliente.json` para que quien ya la había abierto vea la nueva.

@@ -240,6 +240,10 @@
         "estadias": {
           "type": "boolean",
           "description": "Alojamientos: reservas por noche con habitaciones y tarifas por temporada"
+        },
+        "tienda": {
+          "type": "boolean",
+          "description": "Tienda online (kit 1.16): el panel ofrece marcar secciones como de la tienda."
         }
       }
     },
@@ -686,6 +690,10 @@
               },
               "bajada": {
                 "type": "string"
+              },
+              "tienda": {
+                "type": "boolean",
+                "description": "Sección de la tienda online (kit 1.16): productos armados para encargar. No aparece en la carta del local, la del QR ni la impresa."
               }
             }
           }
@@ -898,6 +906,13 @@
           "type": "boolean"
         }
       }
+    },
+    "demoVersion": {
+      "type": [
+        "integer",
+        "string"
+      ],
+      "description": "Solo demo (kit 1.16): subirlo cuando la carta cambia mucho, así los visitantes que ya habían abierto la demo ven la nueva y no la guardada en su navegador."
     }
   }
 }

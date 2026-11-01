@@ -9,11 +9,12 @@
 //   pedir: false   → vidriera sin botón Agregar (o data-kit-pedir="false" en el contenedor)
 //   filtro(p)      → true para mostrar el producto
 // data-kit-categorias="a,b" en el contenedor: solo esas secciones (ej. carta del mostrador y encargos en la misma página).
+// data-kit-tienda="true" (u opts.tienda): solo las secciones de la tienda online ("tienda": true). Sin eso, la tienda queda afuera (kit 1.16).
 // Opciones distintas por contenedor: initKit({ cartas: { <id del contenedor>: {…} } }).
 import { esc, $$ } from '../core/util.js';
 import { t } from '../core/i18n.js';
 import { tieneVariantes, precioDesde } from '../core/variantes.js';
-import { filtrarCarta } from '../core/temporadas.js';
+import { filtrarCarta, soloCarta, soloTienda } from '../core/temporadas.js';
 
 const ICONOS = {
   picante: '<svg viewBox="0 0 24 24"><path d="M14 6c3 0 6 2 6 6 0 6-8 10-15 10 6-3 7-7 8-11 .4-2 1-5 1-5Z" fill="currentColor"/><path d="M14 6c0-2 1-3 3-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
@@ -100,6 +101,7 @@ export function mountCarta(el, ctx, opts = {}) {
       temporada = tmp; ctx.temporada = tmp;
       ({ cats, prods } = filtrarCarta(c, p, tmp));
       if (soloCats.length) { cats = cats.filter(x => soloCats.includes(x.id)); prods = prods.filter(x => soloCats.includes(x.categoria)); }
+      else ({ cats, prods } = (opts.tienda || el.dataset.kitTienda === 'true') ? soloTienda(cats, prods) : soloCarta(cats, prods));
       if (typeof opts.filtro === 'function') prods = prods.filter(opts.filtro);
       render();
     }

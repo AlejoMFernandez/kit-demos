@@ -14,7 +14,7 @@ import { cargarConfig, crearContexto } from '../kit.js';
 import { esc, $, $$, debounce } from '../core/util.js';
 import { t } from '../core/i18n.js';
 import { tieneVariantes, precioDesde } from '../core/variantes.js';
-import { filtrarCarta } from '../core/temporadas.js';
+import { filtrarCarta, soloCarta } from '../core/temporadas.js';
 import { sucursalPorId } from '../core/sucursales.js';
 import { estadoAbierto } from '../core/turnos.js';
 import { cargadorImagenes } from '../core/imagenes.js';
@@ -205,6 +205,7 @@ export async function initMenu(opts = {}) {
     try {
       const [c, p, tmp] = await Promise.all([store.getCategorias(), store.getProductos(), store.getTemporada ? store.getTemporada() : null]);
       ({ cats, prods } = filtrarCarta(c, p, tmp));
+      ({ cats, prods } = soloCarta(cats, prods));   // la tienda online no va en la carta del QR
       root.removeAttribute('aria-busy');
       render();
     } catch (err) { console.error('[kit] carta', err); main.innerHTML = `<p class="kit-error">${esc(t('error'))}</p>`; }

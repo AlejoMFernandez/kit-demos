@@ -1,6 +1,6 @@
 # kit-demos
 
-Funcionalidades reutilizables para las webs demo de negocios locales: **carta con ABM, reservas (por horario o por servicio y tanda), carrito con salida a WhatsApp o Mercado Pago, gift cards con canje en el panel, carta pública con QR y tarjetas para imprimir, y panel `/admin`** con la identidad de cada cliente.
+Funcionalidades reutilizables para las webs demo de negocios locales: **carta con ABM, reservas (por horario o por servicio y tanda), carrito con salida a WhatsApp o Mercado Pago, gift cards con canje en el panel, carta pública con QR y tarjetas para imprimir, tienda online de productos para encargar, y panel `/admin`** con la identidad de cada cliente.
 
 HTML + CSS + JS puros (módulos ES), sin frameworks y sin build. Se enchufa a la carpeta `web/` de cualquier demo hecha con la skill *demo-web-negocio-local*.
 

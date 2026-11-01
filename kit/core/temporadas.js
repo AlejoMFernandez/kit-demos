@@ -15,6 +15,19 @@ export function temporadaValida(config, guardada) {
   return ts.some(t => t.id === def) ? def : ts[0].id;
 }
 
+// Tienda online (kit 1.16): secciones con "tienda": true son productos armados para encargar
+// (torta entera, docena, caja, bolsa). No aparecen en la carta del local, en la carta del QR ni en la impresa.
+export const esTienda = (cat) => !!cat?.tienda;
+// La carta conserva los productos sin sección ("Otros"); la tienda solo trae los de sus secciones.
+export function soloCarta(cats, prods) {
+  const fuera = new Set(cats.filter(esTienda).map(c => c.id));
+  return { cats: cats.filter(c => !fuera.has(c.id)), prods: prods.filter(p => !fuera.has(p.categoria)) };
+}
+export function soloTienda(cats, prods) {
+  const dentro = new Set(cats.filter(esTienda).map(c => c.id));
+  return { cats: cats.filter(c => dentro.has(c.id)), prods: prods.filter(p => dentro.has(p.categoria)) };
+}
+
 export const seVe = (cat, activa) => !cat?.temporada || !activa || cat.temporada === activa;
 
 // Separa la carta visible: secciones de la temporada activa (o sin temporada) y sus productos.

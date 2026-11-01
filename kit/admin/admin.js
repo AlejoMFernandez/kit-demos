@@ -22,7 +22,7 @@ import { debounce } from '../core/util.js';
 import { crearQR, qrSVG } from '../core/qr.js';
 import { FORMATOS, ESTILOS, PX_MM_IMPRESION, dibujarTarjeta, paletaTarjeta, jpgDe, pdfHoja, pdfPaginas, descargar } from '../core/tarjeta-qr.js';
 import { paginasCarta, HOJA } from '../core/carta-impresa.js';
-import { filtrarCarta } from '../core/temporadas.js';
+import { filtrarCarta, soloCarta, esTienda } from '../core/temporadas.js';
 import { destacadosDe } from '../core/destacados.js';
 import { panelEstadias } from './estadias.js';
 import { panelCanchas } from './canchas.js';
@@ -574,7 +574,9 @@ export async function initAdmin(opts = {}) {
     const nombreTemp = (id) => temps.find(x => x.id === id)?.nombre || id;
     if (!st.cat || (st.cat !== '_sin' && !cats.some(c => c.id === st.cat))) st.cat = cats[0]?.id || '_sin';
     const sueltos = prods.filter(p => !cats.some(c => c.id === p.categoria));
-    const grupos = Array.isArray(config.carta?.grupos) && config.carta.grupos.length ? config.carta.grupos : null;
+    const conTienda = cats.some(esTienda);
+    const grupos = Array.isArray(config.carta?.grupos) && config.carta.grupos.length ? config.carta.grupos
+      : conTienda ? [{ nombre: t('tiendaOnline'), categorias: cats.filter(esTienda).map(c => c.id) }, { nombre: t('cartaLocal'), categorias: cats.filter(c => !esTienda(c)).map(c => c.id) }] : null;
     const n = (id) => prods.filter(p => p.categoria === id).length;
     const li = (c) => `<li data-cat="${esc(c.id)}"${seVe(c, tempActiva) ? '' : ' class="is-guardada"'}><button type="button" data-sec="${esc(c.id)}" aria-current="${st.cat === c.id}"><span>${esc(c.nombre)}${temps.length && c.temporada && !seVe(c, tempActiva) ? ` <em class="kad-temp">${esc(t('guardadaTemp'))}</em>` : ''}</span><small>${n(c.id)}</small></button></li>`;
     let listaSecs;
@@ -773,9 +775,11 @@ export async function initAdmin(opts = {}) {
     });
   }
 
+  const conTiendaCats = (cats) => !!config.modulos?.tienda || cats.some(esTienda);
   function editorCategoria(cat, cats) {
     const temps = temporadasDe(config);
     const f = h(`<form class="kit-form"><label class="kit-field"><span>${esc(t('nombreCategoria'))}</span><input name="nombre" required maxlength="40" value="${esc(cat?.nombre || '')}"></label>
+      ${conTiendaCats(cats) ? `<label class="kit-check"><input type="checkbox" name="tienda" ${(cat ? esTienda(cat) : esTienda(cats.find(c => c.id === st.cat))) ? 'checked' : ''}><span>${esc(t('vaEnTienda'))}</span></label><p class="kad-muted">${esc(t('vaEnTiendaHint'))}</p>` : ''}
       ${temps.length ? `<label class="kit-field"><span>${esc(t('seMuestra'))}</span><select name="temporada"><option value="">${esc(t('siempre'))}</option>${temps.map(x => `<option value="${esc(x.id)}" ${cat?.temporada === x.id ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('')}</select></label>` : ''}
       <div class="kit-row kit-row--end"><button type="button" class="kit-btn kit-btn--ghost" data-close>${esc(t('cancelar'))}</button><button class="kit-btn">${esc(t('guardar'))}</button></div></form>`);
     const p = popup({ titulo: cat ? t('cambiarNombre') : t('nuevaCategoria'), contenido: f, clase: 'kit-pop--sm' });
@@ -783,7 +787,7 @@ export async function initAdmin(opts = {}) {
     f.addEventListener('submit', async (e) => {
       e.preventDefault(); const nombre = f.nombre.value.trim(); if (!nombre) return;
       let id = cat?.id || slug(nombre); while (!cat && cats.some(c => c.id === id)) id += '-2';
-      const extra = f.temporada ? { temporada: f.temporada.value || null } : {};
+      const extra = { ...(f.temporada ? { temporada: f.temporada.value || null } : {}), ...(f.tienda ? { tienda: f.tienda.checked } : {}) };
       await store.saveCategoria({ ...(cat || { orden: cats.length + 1 }), id, nombre, ...extra });
       st.cat = id; p.close(); toast(t('guardado')); render();
     });
@@ -1157,7 +1161,8 @@ export async function initAdmin(opts = {}) {
     if (!ESTILOS.includes(C.estilo)) C.estilo = 'clasico';
     const guardar = () => { pref.qr = Q; guardarPref(); };
     const [todasCats, todosProds, tmp] = await Promise.all([store.getCategorias(), store.getProductos(), store.getTemporada ? store.getTemporada() : null]);
-    const { cats, prods } = filtrarCarta(todasCats, todosProds, tmp);
+    const f0 = filtrarCarta(todasCats, todosProds, tmp);
+    const { cats, prods } = soloCarta(f0.cats, f0.prods);   // la tienda online no va en la carta impresa
     const visibles = ctx.visibles(cats).filter(c => prods.some(p => p.categoria === c.id));
     const ig = String(config.instagram || '').replace(/^@/, '').trim();
     const host = (() => { try { const u = new URL(urlCarta()); return (u.host + u.pathname).replace(/^www\./, '').replace(/\/$/, ''); } catch (_) { return ''; } })();

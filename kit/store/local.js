@@ -11,6 +11,7 @@ import { descuentoEfectivo } from '../core/descuentos.js';
 import { configEstadias, ocupacionDemo, libre, nochesEntre, cotizar, ACTIVA } from '../core/estadias.js';
 import { ahoraEn } from '../core/turnos.js';
 import { mezclarDestacados } from '../core/destacados.js';
+import { eventosDe, limpiarEvento, idEvento } from '../core/eventos.js';
 import { configCanchas, ocupacionDemo as ocupacionDemoCanchas, abonosDemo, ocupacionDia, libre as canchaLibre, ACTIVO as TURNO_ACTIVO, cotizar as cotizarCancha, tarifasDe as tarifasCanchas, ocupaDe, deporteDe } from '../core/canchas.js';
 import { configGiftcards, codigoGiftcard, normalizarCodigo, estadoGiftcard, canjeable, venceDesde } from '../core/giftcards.js';
 
@@ -98,6 +99,19 @@ export function createLocalStore(config) {
     // destacados editables (kit 1.11): { id: { campo: valor } }
     async getDestacados() { return mezclarDestacados(config, leer().destacados || {}); },
     async saveDestacado(id, valores) { return mut(db => { db.destacados = { ...(db.destacados || {}), [id]: { ...valores } }; return mezclarDestacados(config, db.destacados)[id]; }); },
+    // eventos editables (kit 1.18): catas, pop-ups… con fecha, hora y cupo
+    async getEventos() { return eventosDe(config, leer().eventos ?? null); },
+    async saveEvento(ev) {
+      return mut(db => {
+        const lista = eventosDe(config, db.eventos ?? null);
+        const e = limpiarEvento(ev);
+        if (!e.id) e.id = idEvento(e, lista.map(x => x.id));
+        const i = lista.findIndex(x => x.id === e.id);
+        if (i >= 0) lista[i] = e; else lista.push(e);
+        db.eventos = lista; return e;
+      });
+    },
+    async deleteEvento(id) { return mut(db => { db.eventos = eventosDe(config, db.eventos ?? null).filter(x => x.id !== id); }); },
     async setTemporada(id) { return mut(db => { db.temporada = temporadaValida(config, id); return db.temporada; }); },
     async saveProducto(p) {
       return mut(db => {

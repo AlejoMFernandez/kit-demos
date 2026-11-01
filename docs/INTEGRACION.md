@@ -237,6 +237,26 @@ Para catas, shows o talleres en locales que no reservan mesa: un servicio con `f
 - El panel muestra las reservas del evento agrupadas por servicio, con la barra de ocupación.
 - Cambiar la fecha o el cupo por ahora es en `cliente.json` (en producción, en la config del negocio).
 
+## Eventos editables desde el panel (kit 1.18)
+
+Para catas, pop-ups o shows que cambian seguido (primer uso: El Pastificio de Pablos). En `cliente.json`:
+
+```json
+"modulos": { "reservas": true },
+"reservas": { "maxPersonas": 8, "anticipacionMin": 120, "diasAdelante": 90 },
+"eventosTipos": [{ "id": "cata", "nombre": "Cata de vinos" }, { "id": "popup", "nombre": "Pop-up" }],
+"eventos": [
+  { "id": "cata-1112", "tipo": "cata", "nombre": "Cata de vinos naturales", "fecha": "2026-11-12", "hora": "21:00",
+    "cupo": 20, "precio": 50000, "descripcion": "Cuatro etiquetas con menú de pasillo.", "reserva": true },
+  { "id": "popup-1117", "tipo": "popup", "nombre": "Pop-up de burgas", "fecha": "2026-11-17", "hora": "20:00", "cupo": 60, "reserva": false }
+]
+```
+
+- `eventos` es la semilla: en `/admin` → **Eventos** el dueño crea, edita y borra (nombre, tipo, día, hora, cupo, valor por persona, descripción y si lleva inscripción). Demo: localStorage; producción: `negocios.config.eventos` (sin migración).
+- Cada evento con `reserva: true` entra como un servicio con `fechas` (1.14): la inscripción usa el formulario de reservas del kit, respeta el cupo y aparece en Reservas agrupada por evento. Los `reserva: false` son “por orden de llegada” (solo informativos).
+- En la web: `kit.eventos.proximos()` / `kit.eventos.lista()` y el evento `kit:eventos` (`detail.proximos`) para dibujar la agenda con el diseño de la demo; `kit.reservas.turnos(fecha, 1)` da los lugares libres y `kit.reservas.abrir({ fecha, hora, personas })` abre la inscripción con el evento ya elegido.
+- Producción: `crear_reserva` valida el cupo contra la config del negocio; antes de un cliente real, verificar que lea `config.eventos` (hoy valida con `reservas.servicios`).
+
 ## Gift cards (1.4)
 
 ```json

@@ -38,6 +38,7 @@ const BASE_PROD = ['negocio', 'id', 'categoria', 'nombre', 'descripcion', 'preci
 
 import { temporadaValida, temporadasDe } from '../core/temporadas.js';
 import { mezclarDestacados } from '../core/destacados.js';
+import { eventosDe, limpiarEvento, idEvento } from '../core/eventos.js';
 
 const aEstadia = (e) => e && ({ id: e.id, codigo: e.codigo, habitacion: e.habitacion, llegada: e.llegada, salida: e.salida, noches: Math.round((Date.parse(e.salida) - Date.parse(e.llegada)) / 864e5),
   huespedes: e.huespedes, nombre: e.nombre, telefono: e.telefono, email: e.email, horaLlegada: e.hora_llegada, comentario: e.comentario, total: e.total == null ? null : Number(e.total),
@@ -97,6 +98,25 @@ export async function createSupabaseStore(config) {
       const destacados = { ...(r.config?.destacados || {}), [id]: { ...valores } };
       ok(await sb.from('negocios').update({ config: { ...(r.config || {}), destacados } }).eq('id', N));
       emitir(); return mezclarDestacados(config, destacados)[id];
+    },
+    // eventos (kit 1.18): se guardan en negocios.config → "eventos" (sin "eventos" guardados, la semilla de cliente.json)
+    async getEventos() {
+      const r = ok(await sb.from('negocios').select('config').eq('id', N).maybeSingle());
+      return eventosDe(config, r?.config?.eventos ?? null);
+    },
+    async saveEvento(ev) {
+      const r = ok(await sb.from('negocios').select('config').eq('id', N).single());
+      const lista = eventosDe(config, r.config?.eventos ?? null);
+      const e = limpiarEvento(ev); if (!e.id) e.id = idEvento(e, lista.map(x => x.id));
+      const i = lista.findIndex(x => x.id === e.id); if (i >= 0) lista[i] = e; else lista.push(e);
+      ok(await sb.from('negocios').update({ config: { ...(r.config || {}), eventos: lista } }).eq('id', N));
+      emitir(); return e;
+    },
+    async deleteEvento(id) {
+      const r = ok(await sb.from('negocios').select('config').eq('id', N).single());
+      const eventos = eventosDe(config, r.config?.eventos ?? null).filter(x => x.id !== id);
+      ok(await sb.from('negocios').update({ config: { ...(r.config || {}), eventos } }).eq('id', N));
+      emitir();
     },
     async setTemporada(id) {
       const r = ok(await sb.from('negocios').select('config').eq('id', N).single());

@@ -13,6 +13,7 @@
 //   canchas  → complejos deportivos: [data-kit="canchas"], [data-kit-open="canchas"] y kit.canchas.* (turnos por cancha, pico/no pico, seña, abonos)
 //   estadias → alojamientos: [data-kit="estadias"] y [data-kit-open="estadias"] (noches, habitaciones, tarifas por temporada, seña)
 //   giftcards → [data-kit="giftcard"] o kit.giftcards.agregar({ monto, para, de, mensaje }) (necesita carrito)
+//   eventos  → "eventos" en cliente.json: catas / pop-ups editables desde el panel; kit.eventos.lista() + evento kit:eventos
 //   admin    → el panel vive en /admin (ver kit/admin)
 import { createStore } from './store/index.js';
 import { applyTheme } from './core/theme.js';
@@ -32,8 +33,9 @@ import { initGiftcards } from './modules/giftcards.js';
 import { initEstadias } from './modules/estadias.js';
 import { destacadosDe } from './core/destacados.js';
 import { initCanchas } from './modules/canchas.js';
+import { tieneEventos, aplicarEventos, proximos } from './core/eventos.js';
 
-export const VERSION = '1.17.0';
+export const VERSION = '1.18.0';
 
 export { stockDe };
 
@@ -92,6 +94,18 @@ export async function initKit(opts = {}) {
   // checkout en página aparte (kit 1.17): <div data-kit="checkout"></div>
   if (ctx.carrito) document.querySelectorAll('[data-kit="checkout"]').forEach(el => ctx.carrito.montarCheckout(el));
   if (M.carta) ctx.cartas = Array.from(document.querySelectorAll('[data-kit="carta"]')).map(el => mountCarta(el, ctx, (opts.cartas && el.id && opts.cartas[el.id]) || opts.carta));
+  // eventos editables (kit 1.18): se cargan ANTES de las reservas, así la inscripción ya ve sus fechas
+  if (tieneEventos(ctx.config) && ctx.store.getEventos) {
+    let lista = [];
+    const cargar = async (avisar = true) => {
+      try { lista = await ctx.store.getEventos(); } catch (err) { console.warn('[kit] eventos', err); return; }
+      aplicarEventos(ctx.config, lista);
+      if (avisar) document.dispatchEvent(new CustomEvent('kit:eventos', { detail: { eventos: lista, proximos: proximos(lista, ctx.hoy()) } }));
+    };
+    await cargar(false);
+    ctx.eventos = { lista: () => lista.slice(), proximos: () => proximos(lista, ctx.hoy()), recargar: () => cargar() };
+    ctx.store.onChange(() => cargar());
+  }
   if (M.reservas) ctx.reservas = initReservas(ctx);
   if (M.estadias) ctx.estadias = initEstadias(ctx, opts.estadias);
   if (M.canchas) ctx.canchas = initCanchas(ctx, opts.canchas);
@@ -119,6 +133,7 @@ export async function initKit(opts = {}) {
     document.body.appendChild(b);
     requestAnimationFrame(() => setTimeout(() => b.classList.add('is-in'), 1400));
   }
+  if (ctx.eventos) document.dispatchEvent(new CustomEvent('kit:eventos', { detail: { eventos: ctx.eventos.lista(), proximos: ctx.eventos.proximos() } }));
   document.dispatchEvent(new CustomEvent('kit:listo', { detail: ctx }));
   return ctx;
 }

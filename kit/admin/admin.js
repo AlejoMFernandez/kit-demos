@@ -24,6 +24,7 @@ import { FORMATOS, ESTILOS, PX_MM_IMPRESION, dibujarTarjeta, paletaTarjeta, jpgD
 import { paginasCarta, HOJA } from '../core/carta-impresa.js';
 import { filtrarCarta, soloCarta, esTienda } from '../core/temporadas.js';
 import { destacadosDe } from '../core/destacados.js';
+import { tieneEventos, aplicarEventos, PREFIJO_SERVICIO, validarEvento, limpiarEvento } from '../core/eventos.js';
 import { panelEstadias } from './estadias.js';
 import { panelCanchas } from './canchas.js';
 
@@ -36,6 +37,8 @@ export async function initAdmin(opts = {}) {
   try { ctx = await crearContexto(await cargarConfig(opts.config || '../cliente.json')); }
   catch (e) { root.innerHTML = `<p class="kit-error">No se pudo cargar cliente.json</p>`; throw e; }
   const { config, store } = ctx;
+  // eventos (kit 1.18): sus fechas entran como servicios de reservas antes de armar el panel
+  if (tieneEventos(config) && store.getEventos) { try { aplicarEventos(config, await store.getEventos()); } catch (e) { console.warn('[kit] eventos', e); } }
   const sitio = opts.sitio || '../';
   document.documentElement.classList.add('kit-on', `kit-${store.modo}`);
   document.title = `${t('panel')} · ${config.nombre}`;
@@ -46,6 +49,7 @@ export async function initAdmin(opts = {}) {
     config.modulos.carrito && { id: 'pedidos', icono: '<path d="M5 8h14l-1.3 11.1a2 2 0 0 1-2 1.9H8.3a2 2 0 0 1-2-1.9L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>' },
     config.modulos.canchas && { id: 'canchas', icono: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M12 4v16M3 12h18"/><circle cx="12" cy="12" r="2.6"/>' },
     config.modulos.estadias && { id: 'estadias', icono: '<path d="M3 18V8M3 14h18v4M21 18v-6a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="2"/>' },
+    tieneEventos(config) && { id: 'eventos', icono: '<path d="M7 3v3M17 3v3"/><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M8 13.5l2.5 2.5L16 10.5"/>' },
     config.modulos.reservas && { id: 'reservas', icono: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>' },
     config.modulos.carta && { id: 'carta', icono: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/>' },
     config.modulos.carta && (config.modulos.fechas || (config.carta?.categorias || []).some(c => c.especial)) && { id: 'fechas', icono: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m12 12.6.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3Z"/>' },
@@ -270,6 +274,74 @@ export async function initAdmin(opts = {}) {
         o.connect(g).connect(audio.destination); o.start(audio.currentTime + d); o.stop(audio.currentTime + d + .3);
       });
     } catch (_) { /* sin audio */ }
+  }
+
+  // =====================================================================
+  // EVENTOS (kit 1.18): catas, pop-ups… con fecha, hora, cupo e inscripción
+  // =====================================================================
+  async function vistaEventos(main) {
+    const [evs, ress] = await Promise.all([store.getEventos(), config.modulos.reservas ? store.getReservas() : []]);
+    const tipos = Array.isArray(config.eventosTipos) && config.eventosTipos.length ? config.eventosTipos : [{ id: 'evento', nombre: t('evento') }];
+    const tipoNombre = (id) => (tipos.find(x => x.id === id) || {}).nombre || id;
+    const anotados = (ev) => ress.filter(r => r.servicio === PREFIJO_SERVICIO + ev.id && !['cancelada', 'no_vino'].includes(r.estado)).reduce((n, r) => n + (Number(r.personas) || 0), 0);
+    const fila = (ev) => {
+      const n = anotados(ev); const pct = Math.min(100, Math.round(n / ev.cupo * 100));
+      return `<article class="kad-ev${ev.fecha < hoy() ? ' is-pasado' : ''}" data-ev="${esc(ev.id)}">
+        <div class="kad-ev__f"><b>${esc(fechaLarga(ev.fecha))}</b><span>${esc(horaVisible(aMin(ev.hora)))} hs · ${esc(tipoNombre(ev.tipo))}</span></div>
+        <div class="kad-ev__n"><h2>${esc(ev.nombre)}</h2>${ev.descripcion ? `<p class="kad-muted">${esc(ev.descripcion)}</p>` : ''}
+          <span class="kad-muted">${ev.precio != null ? esc(t('eventoPrecio', { monto: ctx.money(ev.precio) })) : ''}${ev.reserva ? '' : `${ev.precio != null ? ' · ' : ''}${esc(t('eventoSinReserva'))}`}</span></div>
+        ${ev.reserva ? `<div class="kad-ev__cupo"><span>${esc(t('eventoAnotados', { n, cupo: ev.cupo }))}</span><i style="--p:${pct}%"></i></div>` : '<div class="kad-ev__cupo"></div>'}
+        <div class="kad-ev__acc">${ev.reserva && config.modulos.reservas ? `<button type="button" class="kit-btn kit-btn--ghost" data-ev-ver="${esc(ev.fecha)}">${esc(t('eventoVerLista'))}</button>` : ''}
+          <button type="button" class="kit-btn kit-btn--ghost" data-ev-editar="${esc(ev.id)}">${esc(t('editar'))}</button>
+          <button type="button" class="kad-link kad-link--peligro" data-ev-borrar="${esc(ev.id)}">${esc(t('borrar'))}</button></div>
+      </article>`;
+    };
+    const prox = evs.filter(e => e.fecha >= hoy()); const pas = evs.filter(e => e.fecha < hoy()).reverse().slice(0, 6);
+    main.innerHTML = `<div class="kad-head kad-head--row"><div><h1>${esc(t('eventos'))}</h1><p class="kad-muted">${esc(t('eventosSub'))}</p></div>
+      <button type="button" class="kit-btn" data-ev-nuevo>+ ${esc(t('eventoNuevo'))}</button></div>
+      <div class="kad-evs">${prox.length ? prox.map(fila).join('') : `<p class="kad-vacio">${esc(t('eventosVacio'))}</p>`}</div>
+      ${pas.length ? `<h2 class="kad-evs__t">${esc(t('eventosPasados'))}</h2><div class="kad-evs">${pas.map(fila).join('')}</div>` : ''}`;
+    main.onclick = async (e) => {
+      if (e.target.closest('[data-ev-nuevo]')) return editarEvento(null, tipos);
+      const ed = e.target.closest('[data-ev-editar]'); if (ed) return editarEvento(evs.find(x => x.id === ed.dataset.evEditar), tipos);
+      const ver = e.target.closest('[data-ev-ver]'); if (ver) { st.fecha = ver.dataset.evVer; st.mes = st.fecha.slice(0, 7); st.resVista = 'lista'; location.hash = 'reservas'; vista = 'reservas'; return render(); }
+      const bo = e.target.closest('[data-ev-borrar]');
+      if (bo) {
+        const ev = evs.find(x => x.id === bo.dataset.evBorrar);
+        if (!(await confirmar(t('eventoBorrarSeguro', { nombre: ev.nombre }), { ok: t('borrar'), peligro: true }))) return;
+        try { await store.deleteEvento(ev.id); toast(t('guardado')); render(); } catch (err) { console.error('[kit] evento', err); toast(t('error'), 'warn'); }
+      }
+    };
+  }
+
+  function editarEvento(ev, tipos) {
+    const e0 = ev || { tipo: tipos[0].id, nombre: '', fecha: '', hora: '21:00', cupo: 20, precio: null, descripcion: '', reserva: true };
+    const f = h(`<form class="kit-root kad-form" novalidate>
+      <div class="kit-field-row">
+        <label class="kit-field"><span>${esc(t('eventoTipo'))}</span><select name="tipo">${tipos.map(x => `<option value="${esc(x.id)}" ${x.id === e0.tipo ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('')}</select></label>
+        <label class="kit-field"><span>${esc(t('eventoCupo'))}</span><input type="number" name="cupo" min="1" max="999" inputmode="numeric" value="${esc(e0.cupo)}"></label>
+      </div>
+      <label class="kit-field"><span>${esc(t('nombre'))}</span><input name="nombre" maxlength="90" required value="${esc(e0.nombre)}"></label>
+      <div class="kit-field-row">
+        <label class="kit-field"><span>${esc(t('dia'))}</span><input type="date" name="fecha" min="${hoy()}" required value="${esc(e0.fecha)}"></label>
+        <label class="kit-field"><span>${esc(t('hora'))}</span><input type="time" name="hora" step="900" required value="${esc(e0.hora)}"></label>
+      </div>
+      <label class="kit-field"><span>${esc(t('eventoPrecioLbl'))}</span><input type="number" name="precio" min="0" step="500" inputmode="numeric" value="${e0.precio == null ? '' : esc(e0.precio)}" placeholder="${esc(t('eventoPrecioPh'))}"></label>
+      <label class="kit-field"><span>${esc(t('eventoDesc'))}</span><textarea name="descripcion" rows="3" maxlength="400">${esc(e0.descripcion)}</textarea></label>
+      <label class="kit-check"><input type="checkbox" name="reserva" ${e0.reserva ? 'checked' : ''}><span>${esc(t('eventoConReserva'))}</span></label>
+      <p class="kit-msg" role="alert" hidden></p>
+      <div class="kit-row kit-row--end"><button type="button" class="kit-btn kit-btn--ghost" data-close>${esc(t('cancelar'))}</button><button class="kit-btn">${esc(t('guardar'))}</button></div></form>`);
+    const pop = popup({ titulo: ev ? ev.nombre : t('eventoNuevo'), contenido: f, clase: 'kit-pop--sm' });
+    f.querySelector('[data-close]').addEventListener('click', () => pop.close());
+    setTimeout(() => f.nombre.focus(), 80);
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nuevo = limpiarEvento({ id: ev?.id, tipo: f.tipo.value, nombre: f.nombre.value, fecha: f.fecha.value, hora: f.hora.value, cupo: f.cupo.value, precio: f.precio.value, descripcion: f.descripcion.value, reserva: f.reserva.checked });
+      const faltan = validarEvento(nuevo); const msg = $('.kit-msg', f);
+      if (faltan.length) { msg.textContent = t('faltan', { campos: faltan.map(k => t(k === 'fecha' ? 'dia' : k).toLowerCase()).join(', ') }); msg.hidden = false; return; }
+      try { await store.saveEvento(nuevo); pop.close(); toast(t('guardado')); render(); }
+      catch (err) { console.error('[kit] evento', err); msg.textContent = t('error'); msg.hidden = false; }
+    });
   }
 
   // =====================================================================
@@ -1308,6 +1380,7 @@ export async function initAdmin(opts = {}) {
     const y = scrollY;
     main.onclick = null; main.onsubmit = null; main.oninput = null; main.onchange = null;
     try {
+      if (tieneEventos(config) && store.getEventos) aplicarEventos(config, await store.getEventos());
       if (vista === 'pedidos') await vistaPedidos(main);
       else if (vista === 'canchas') { PC = PC || panelCanchas(ctx, { hoy, render }); await PC.vista(main); }
       else if (vista === 'estadias') { PE = PE || panelEstadias(ctx, { hoy, render }); await PE.vista(main); }
@@ -1317,6 +1390,7 @@ export async function initAdmin(opts = {}) {
       else if (vista === 'giftcards') await vistaGiftcards(main);
       else if (vista === 'qr') await vistaQR(main);
       else if (vista === 'destacados') await vistaDestacados(main);
+      else if (vista === 'eventos') await vistaEventos(main);
     } catch (err) { console.error('[kit] panel', err); main.innerHTML = `<p class="kit-error">${esc(t('error'))}</p>`; }
     if (Math.abs(scrollY - y) > 2) scrollTo({ top: y });
     contadores();

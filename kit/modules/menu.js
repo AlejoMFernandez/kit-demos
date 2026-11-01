@@ -105,7 +105,8 @@ export async function initMenu(opts = {}) {
     return ICONOS[tag] ? `<span class="kit-tag kit-tag--${esc(tag)}" title="${esc(lab)}" aria-label="${esc(lab)}">${ICONOS[tag]}</span>` : `<span class="kit-tag kit-tag--txt">${esc(lab)}</span>`;
   };
   function precioHTML(p) {
-    if (tieneVariantes(p)) return `<span class="kmn-precio">${esc(t('desdePrecio', { precio: ctx.money(precioDesde(p)) }))}</span>`;
+    // un solo tamaño ("Caja"): su precio con la unidad, sin "desde" (kit 1.19)
+    if (tieneVariantes(p)) { const vs = p.variantes.filter(v => v && v.precio != null); return `<span class="kmn-precio">${esc(vs.length === 1 ? `${ctx.money(vs[0].precio)} · ${vs[0].nombre}` : t('desdePrecio', { precio: ctx.money(precioDesde(p)) }))}</span>`; }
     const m = ctx.money(p.precio);
     return m ? `<span class="kmn-precio">${esc(m)}</span>` : `<span class="kmn-precio kmn-precio--na">${esc(ctx.pedible(p) ? t('aConfirmar') : t('sinPrecio'))}</span>`;
   }

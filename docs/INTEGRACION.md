@@ -472,3 +472,26 @@ Cuando el encargo tiene mucho para completar (día y franja, datos, forma de pag
 - El pedido enviado, el pago aprobado o rechazado y la vuelta de Mercado Pago se muestran dentro de la misma página, con "Volver a la web".
 - Sin `checkout.pagina` todo sigue como siempre (checkout en el panel lateral).
 - El ancla del resumen fijo se ajusta con `--kit-co-top` (alto de la barra de la demo).
+
+## Promos fijas por día y pedidos solo al panel (kit 1.19)
+
+Para locales con promos de calendario (“miércoles 20% en fideos”, “el 29, ñoquis”). Primer uso: San Jorge · Fábrica de Pastas.
+
+```json
+"pedidos": {
+  "aviso": "panel",
+  "promos": [
+    { "id": "mie-fideos", "nombre": "Miércoles −20% fideos y ñoquis", "dias": ["mie"], "pct": 20, "categorias": ["fideos", "noquis"], "destacado": "promos.mieFideos" },
+    { "id": "29-noquis", "nombre": "29 de ñoquis", "diasMes": [29], "pct": 15, "categorias": ["noquis"], "destacado": "promos.d29" }
+  ]
+},
+"destacados": [{ "id": "promos", "nombre": "Promos", "ayuda": "% de cada promo. 0 = apagada.",
+  "campos": [{ "id": "mieFideos", "label": "Miércoles · % en fideos y ñoquis" }, { "id": "d29", "label": "Día 29 · % en ñoquis" }],
+  "valores": { "mieFideos": "20", "d29": "15" } }]
+```
+
+- Se aplican solas en el carrito, el checkout y el pedido guardado (`ajustes` con `promo: true`), según el día de hoy en la zona del negocio. Cada producto toma **la mejor** promo del día: no se suman.
+- `destacado` liga el % a un campo de **Destacados** del panel: el dueño cambia el % o pone 0 para apagarla.
+- En la web: `kit.promosHoy()` y `kit.promoDe(categoria)` para marcar “−20% hoy” en la carta. Para mostrarlas en un pitch cualquier día: `initKit({ fechaPromo: '2026-11-04' })` (las demos lo leen de `?dia=miercoles` / `?dia=29`).
+- `"aviso": "panel"`: el pedido entra solo al panel, sin abrir WhatsApp (para locales que no atienden mensajes). La confirmación dice que el local ya lo tiene en su panel.
+- **Producción**: falta sumar las promos a `crear_pedido` en Supabase (como casillas y tamaños: hoy solo modo demo).

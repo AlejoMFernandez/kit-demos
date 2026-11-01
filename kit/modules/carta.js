@@ -49,7 +49,8 @@ export function mountCarta(el, ctx, opts = {}) {
 
   function itemHTML(p, i) {
     if (opts.template) return opts.template(p, { ...ctx, index: i, etiquetaHTML });
-    const precio = tieneVariantes(p) ? esc(t('desdePrecio', { precio: ctx.money(precioDesde(p)) })) : ctx.money(p.precio) ?? `<span class="kit-price--na">${esc(ctx.pedible(p) ? t('aConfirmar') : t('sinPrecio'))}</span>`;
+    const vs1 = tieneVariantes(p) ? p.variantes.filter(v => v && v.precio != null) : [];
+    const precio = vs1.length === 1 ? esc(`${ctx.money(vs1[0].precio)} · ${vs1[0].nombre}`) : tieneVariantes(p) ? esc(t('desdePrecio', { precio: ctx.money(precioDesde(p)) })) : ctx.money(p.precio) ?? `<span class="kit-price--na">${esc(ctx.pedible(p) ? t('aConfirmar') : t('sinPrecio'))}</span>`;
     return `
       ${p.foto ? `<img class="kit-item__foto" src="${esc(ctx.asset(p.foto))}" alt="" loading="lazy">` : ''}
       <div class="kit-item__body">

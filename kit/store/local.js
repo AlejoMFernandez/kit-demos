@@ -256,7 +256,7 @@ export function createLocalStore(config) {
     // ---- pedidos
     async createPedido(data) {
       return mut(db => {
-        const calc = armarPedido(db.productos.filter(p => p.precio != null || tieneVariantes(p) || config.pedidos?.sinPrecio === 'a_confirmar'), data.items, { tipo: data.tipo, pedidos: config.pedidos, descuentoPct: data.pago === 'efectivo' ? descuentoEfectivo(config) : 0, giftcards: GC, categorias: db.categorias, casillas: data.casillas || [] });
+        const calc = armarPedido(db.productos.filter(p => p.precio != null || tieneVariantes(p) || config.pedidos?.sinPrecio === 'a_confirmar'), data.items, { tipo: data.tipo, pedidos: config.pedidos, descuentoPct: data.pago === 'efectivo' ? descuentoEfectivo(config) : 0, giftcards: GC, categorias: db.categorias, casillas: data.casillas || [], fecha: data.fechaPromo || ahoraEn(config.zonaHoraria).fecha });
         if (!calc.items.length) throw Object.assign(new Error('vacio'), { code: 'vacio' });
         // stock del día: si no alcanza, no entra; si alcanza, se descuenta (y vuelve si el pedido se cancela)
         const conStock = !!config.carta?.stock;

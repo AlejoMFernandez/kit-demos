@@ -2,6 +2,7 @@
 import { t } from './i18n.js';
 import { montoValido } from './giftcards.js';
 import { precioLinea, pctSena } from './variantes.js';
+import { ajustesPromos } from './promos.js';
 
 // Recalcula el pedido con los precios de la carta (nunca confía en el precio que trae el carrito).
 // Las gift cards (líneas con "gc") se validan contra los montos de cliente.json → giftcards.
@@ -10,7 +11,7 @@ import { precioLinea, pctSena } from './variantes.js';
 // Casillas del checkout (kit 1.11): "pedidos.casillas": [{ "id": "vaso", "label": "Traigo mi vaso térmico",
 //   "descuentoPct": 10, "categorias": ["cafe"] }] → si el cliente la marca, descuenta ese % de los productos de
 //   esas categorías (sin "categorias": de todo el pedido). Sin "descuentoPct" es solo un aviso para el local.
-export function armarPedido(productos, lineas, { tipo = 'retiro', pedidos = {}, descuentoPct = 0, giftcards = null, categorias = [], casillas = [] } = {}) {
+export function armarPedido(productos, lineas, { tipo = 'retiro', pedidos = {}, descuentoPct = 0, giftcards = null, categorias = [], casillas = [], fecha = '' } = {}) {
   const porId = new Map(productos.map(p => [p.id, p]));
   const items = [];
   for (const l of lineas) {
@@ -48,6 +49,8 @@ export function armarPedido(productos, lineas, { tipo = 'retiro', pedidos = {}, 
     const monto = pc ? Math.round(base * (1 - pct / 100) * pc / 100) : 0;
     ajustes.push({ id: cfg.id, nombre: cfg.label || cfg.id, pct: pc, monto });
   }
+  // promos fijas del día (kit 1.18): miércoles, día 29… cada producto toma la mejor (no se suman)
+  if (fecha) ajustes.push(...ajustesPromos(pedidos, fecha, items, (id) => porId.get(id)?.categoria, 1 - pct / 100));
   const descCasillas = ajustes.reduce((s, a) => s + a.monto, 0);
   const out = { items, subtotal, envio, descuentoPct: pct, descuento, total: subtotal + envio - descuento - descCasillas, sinPrecio: items.some(i => i.precio == null),
     ...(ajustes.length ? { ajustes } : {}) };

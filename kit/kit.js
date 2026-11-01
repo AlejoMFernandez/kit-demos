@@ -32,10 +32,11 @@ import { initReservas } from './modules/reservas.js';
 import { initGiftcards } from './modules/giftcards.js';
 import { initEstadias } from './modules/estadias.js';
 import { destacadosDe } from './core/destacados.js';
+import { aplicarPromosDestacadas, promosDelDia, mejorPromo } from './core/promos.js';
 import { initCanchas } from './modules/canchas.js';
 import { tieneEventos, aplicarEventos, proximos } from './core/eventos.js';
 
-export const VERSION = '1.18.0';
+export const VERSION = '1.19.0';
 
 export { stockDe };
 
@@ -73,6 +74,10 @@ export async function crearContexto({ config, base }) {
     agotado: (p) => stockDe(config, p) === 0,
     stockAviso: Number(config.carta?.stockAviso ?? 6),
     hoy: () => ahoraEn(config.zonaHoraria).fecha,
+    fechaPromo: null,                                       // fecha forzada para las promos (pitch: ?dia=miercoles)
+    // promos fijas del día (kit 1.19): [{ id, nombre, pct, categorias }] y la mejor para una categoría
+    promosHoy() { return promosDelDia(config.pedidos, this.fechaPromo || this.hoy()); },
+    promoDe(categoria) { return mejorPromo(config.pedidos, this.fechaPromo || this.hoy(), categoria); },
     forzarEspecial: null,                                   // id de fecha especial a mostrar sí o sí (pitch: ?sala=pascuas)
     visibles(cats) { return categoriasVisibles(cats, this.hoy(), this.forzarEspecial); },
     especiales(cats) { return this.visibles(cats).filter(c => c.especial); },
@@ -86,6 +91,7 @@ export async function initKit(opts = {}) {
   const loaded = await cargarConfig(opts.config);
   const ctx = await crearContexto(loaded);
   if (opts.fechaEspecial) ctx.forzarEspecial = opts.fechaEspecial;
+  if (opts.fechaPromo) ctx.fechaPromo = opts.fechaPromo;
   const M = ctx.config.modulos;
   document.documentElement.classList.add('kit-on', `kit-${ctx.store.modo}`);
   ctx.imagenes = imagenes;
@@ -116,6 +122,7 @@ export async function initKit(opts = {}) {
     ctx.destacado = (id) => ctx.destacados[id] || {};
     const pintar = async () => {
       try { ctx.destacados = await ctx.store.getDestacados(); } catch (err) { console.warn('[kit] destacados', err); return; }
+      aplicarPromosDestacadas(ctx.config, ctx.destacados);
       document.querySelectorAll('[data-kit-destacado]').forEach(el => {
         const [d, c] = el.dataset.kitDestacado.split('.');
         const v = ctx.destacados[d]?.[c]; if (v != null && el.textContent !== v) el.textContent = v;

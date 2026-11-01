@@ -70,7 +70,8 @@ export function initCarrito(ctx, opts = {}) {
   const cantDe = (id) => lineas.filter(l => l.id === id).reduce((s, l) => s + l.cant, 0);
   const pctPago = (pago) => pago === 'efectivo' ? descuentoEfectivo(config) : 0;
   const GC = configGiftcards(config);
-  const calc = () => armarPedido(productos, lineas, { tipo: datos.tipo, pedidos: P, descuentoPct: pctPago(datos.pago), giftcards: GC, categorias, casillas: datos.casillas });
+  const fechaPromo = () => ctx.fechaPromo || ctx.hoy();
+  const calc = () => armarPedido(productos, lineas, { tipo: datos.tipo, pedidos: P, descuentoPct: pctPago(datos.pago), giftcards: GC, categorias, casillas: datos.casillas, fecha: fechaPromo() });
   // ¿el pedido va con día y franja (encargo) o con hora de hoy? Un encargo con anticipación siempre gana.
   const pideEncargo = () => lineas.some(l => { const c = categorias.find(x => x.id === productos.find(p => p.id === l.id)?.categoria); return c && (c.especial || Number(c.anticipacionHoras) > 0); });
   const modoRetiro = () => (E && (!RH || pideEncargo())) ? 'encargo' : RH && datos.tipo !== 'delivery' ? 'hoy' : null;
@@ -89,7 +90,7 @@ export function initCarrito(ctx, opts = {}) {
     const c = calc(); const n = c.items.reduce((s, i) => s + i.cant, 0);
     fab.hidden = n === 0;
     fab.querySelector('.kit-fab__n').textContent = n;
-    fab.querySelector('.kit-fab__total').textContent = c.sinPrecio ? totalTexto(c, ctx.money) : (ctx.money(c.subtotal) || '');
+    fab.querySelector('.kit-fab__total').textContent = c.sinPrecio ? totalTexto(c, ctx.money) : (ctx.money(c.total - (c.envio || 0)) || '');  // con promos/casillas ya descontadas
     if (bump) { fab.classList.remove('bump'); void fab.offsetWidth; fab.classList.add('bump'); }
     document.documentElement.classList.toggle('kit-has-cart', n > 0);
   }
@@ -234,7 +235,7 @@ export function initCarrito(ctx, opts = {}) {
       ${c.envio || c.descuento || (c.ajustes || []).some(a => a.monto) ? `<div><span>${esc(t('subtotal'))}</span><span>${ctx.money(c.subtotal)}</span></div>` : ''}
       ${c.envio ? `<div><span>${esc(t('envio'))}</span><span>${ctx.money(c.envio)}</span></div>` : ''}
       ${c.descuento ? `<div class="kit-sum__desc"><span>${esc(t('descEfectivo', { pct: c.descuentoPct }))}</span><span>−${ctx.money(c.descuento)}</span></div>` : ''}
-      ${(c.ajustes || []).filter(a => a.monto).map(a => `<div class="kit-sum__desc"><span>${esc(a.nombre)} (${a.pct}%)</span><span>−${ctx.money(a.monto)}</span></div>`).join('')}
+      ${(c.ajustes || []).filter(a => a.monto).map(a => `<div class="kit-sum__desc${a.promo ? ' kit-sum__promo' : ''}"><span>${esc(a.nombre)}${/%/.test(a.nombre) ? '' : ` (${a.pct}%)`}</span><span>−${ctx.money(a.monto)}</span></div>`).join('')}
       ${conSena(c) ? `<div><span>${esc(t('total'))}</span><span>${esc(totalTexto(c, ctx.money))}</span></div>
       <div class="kit-sum__resto"><span>${esc(t('saldoRetiro'))}</span><span>${ctx.money(c.saldo)}</span></div>
       <div class="kit-sum__total"><span>${esc(t('hoyPagas'))}</span><b>${ctx.money(c.aPagar)}</b></div>`
@@ -438,7 +439,7 @@ export function initCarrito(ctx, opts = {}) {
         items: lineas.map(l => l.gc ? { id: 'giftcard', cant: 1, gc: l.gc } : { id: l.id, cant: l.cant, nota: l.nota, variante: l.variante, extras: l.extras, ...(l.opc ? { opc: l.opc } : {}) }), tipo: datos.tipo,
         ...(datos.casillas.length ? { casillas: datos.casillas.slice() } : {}),
         cliente: { nombre: datos.nombre.trim(), telefono: datos.telefono.trim(), direccion: datos.tipo === 'delivery' ? datos.direccion.trim() : '' },
-        nota: datos.nota.trim(), pago: datos.pago, ...(retiro ? { retiro } : {}),
+        nota: datos.nota.trim(), pago: datos.pago, fechaPromo: fechaPromo(), ...(retiro ? { retiro } : {}),
         ...(sedes.length ? { sucursal: resumenSucursal(sucursalPorId(config, datos.sucursal)) } : {}),
       });
       document.dispatchEvent(new CustomEvent('kit:pedido', { detail: pedido }));
@@ -453,6 +454,8 @@ export function initCarrito(ctx, opts = {}) {
   }
 
   async function salirPorWhatsApp(pedido) {
+    // "pedidos.aviso": "panel" (kit 1.19): el pedido queda solo en el panel del local, sin abrir WhatsApp
+    if (P.aviso === 'panel') { vaciar(); exito(t('pedidoListo'), t('pedidoListoPanel', { codigo: pedido.codigo }), null, 'ok', { pedido, estado: 'enviado' }); return; }
     const texto = mensajePedido(pedido, { negocio: config.nombre, money: ctx.money, retiroTexto: textoRetiro(pedido.retiro, { dias: t('dias'), hoy: ctx.hoy(), asapTexto: t('asapTexto') }) });
     const sede = pedido.sucursal ? sucursalPorId(config, pedido.sucursal.id) : null;
     const { url, soloLink } = linkWhatsApp(sede?.whatsapp || config.whatsapp, texto);

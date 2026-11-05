@@ -77,15 +77,24 @@ html.kit-lock body { overflow: hidden; touch-action: none; }
 .kit-item__side { display: flex; flex-direction: column; align-items: flex-end; gap: .45rem; }
 .kit-price { font: 700 1.05rem/1 var(--kit-font-body); white-space: nowrap; }
 .kit-price--na { font-size: .85rem; color: var(--kit-muted); font-weight: 600; }
+/* botón de sumar (kit 1.20): "+" redondo que se abre en "− n +" dentro de un lugar fijo.
+   El hueco [data-kit-qty] siempre mide lo mismo, así sumar nunca mueve ni estira la carta. */
+[data-kit-qty] { --kq-h: var(--kit-qty-h, 44px); --kq-w: var(--kit-qty-w, 116px); position: relative; flex: none; display: inline-flex; align-items: center; justify-content: flex-end; width: var(--kq-w); height: var(--kq-h); }
+@media (hover: hover) and (pointer: fine) { [data-kit-qty] { --kq-h: var(--kit-qty-h, 38px); --kq-w: var(--kit-qty-w, 104px); } }
 .kit-add {
-  appearance: none; min-height: 40px; padding: .45em .9em; border: var(--kit-border-w) solid var(--kit-primary); border-radius: var(--kit-radius-btn);
-  background: var(--kit-surface); color: var(--kit-primary); font: 800 .85rem/1 var(--kit-font-body); cursor: pointer; white-space: nowrap;
-  transition: background .2s, color .2s, transform .12s;
+  appearance: none; flex: none; width: var(--kq-h, 40px); height: var(--kq-h, 40px); padding: 0; display: grid; place-items: center;
+  border: var(--kit-border-w) solid var(--kit-primary); border-radius: 50%; background: var(--kit-surface); color: var(--kit-primary);
+  cursor: pointer; touch-action: manipulation; transition: background .2s, color .2s, transform .15s var(--kit-ease);
 }
+.kit-add svg { width: 46%; height: 46%; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
 .kit-add:hover { background: var(--kit-primary); color: var(--kit-on-primary); }
-.kit-add:active { transform: scale(.94); }
+.kit-add:active { transform: scale(.88); }
 .kit-step { display: inline-flex; align-items: center; border: var(--kit-border-w) solid var(--kit-primary); border-radius: var(--kit-radius-btn); background: var(--kit-primary); color: var(--kit-on-primary); overflow: hidden; animation: kit-pop .25s var(--kit-ease); }
 .kit-step button { appearance: none; width: 38px; height: 38px; border: 0; background: transparent; color: inherit; font: 800 1.15rem/1 var(--kit-font-body); cursor: pointer; }
+[data-kit-qty] > .kit-step { width: 100%; height: 100%; justify-content: space-between; border-radius: 999px; animation: kit-qty-in .32s var(--kit-ease); }
+[data-kit-qty] > .kit-step button { width: var(--kq-h); height: 100%; flex: none; font-size: 1.1rem; touch-action: manipulation; }
+[data-kit-qty] > .kit-step output { flex: 1; min-width: 0; font-variant-numeric: tabular-nums; }
+@keyframes kit-qty-in { from { clip-path: inset(0 0 0 calc(100% - var(--kq-h)) round 999px); } to { clip-path: inset(0 0 0 0 round 999px); } }
 .kit-step button:disabled { opacity: .35; cursor: default; }
 .kit-step output { min-width: 1.6em; text-align: center; font-weight: 800; }
 .kit-step--lg button { width: 46px; height: 46px; }

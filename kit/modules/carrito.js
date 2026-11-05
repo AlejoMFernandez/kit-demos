@@ -100,7 +100,7 @@ export function initCarrito(ctx, opts = {}) {
     const n = cantDe(id);
     const q = ctx.stockDe(productos.find(x => x.id === id));
     const tope = q != null && n >= q;
-    if (!n) return `<button type="button" class="kit-add" data-kit-add="${esc(id)}"><span aria-hidden="true">+</span> ${esc(t('agregar'))}</button>`;
+    if (!n) { const pn = productos.find(x => x.id === id)?.nombre || ''; return `<button type="button" class="kit-add" data-kit-add="${esc(id)}" aria-label="${esc(t('agregar'))}${pn ? ' ' + esc(pn) : ''}" title="${esc(t('agregar'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>`; }
     return `<div class="kit-step" role="group" aria-label="${esc(t('tuPedido'))}">
       <button type="button" data-kit-dec="${esc(id)}" aria-label="${esc(t('quitar'))}">−</button>
       <output aria-live="polite">${n}</output>
@@ -113,7 +113,19 @@ export function initCarrito(ctx, opts = {}) {
       <output aria-live="polite">${i.cant}</output>
       <button type="button" data-kit-linea="${k}" data-delta="1" aria-label="${esc(t('agregar'))}">+</button></div>`;
   }
-  function sync(root = document) { $$('[data-kit-qty]', root).forEach(el => { el.innerHTML = qtyHTML(el.dataset.kitQty); }); }
+  // si ya está abierto el "− n +", solo cambia el número (no se vuelve a armar ni a animar)
+  function sync(root = document) {
+    $$('[data-kit-qty]', root).forEach(el => {
+      const id = el.dataset.kitQty, n = cantDe(id), step = el.querySelector(':scope > .kit-step');
+      if (n && step) {
+        const out = step.querySelector('output'); if (out.textContent !== String(n)) out.textContent = n;
+        const q = ctx.stockDe(productos.find(x => x.id === id)); const mas = step.querySelector('[data-kit-add]');
+        const tope = q != null && n >= q; mas.disabled = tope; tope ? mas.setAttribute('aria-disabled', 'true') : mas.removeAttribute('aria-disabled');
+        return;
+      }
+      el.innerHTML = qtyHTML(id);
+    });
+  }
 
   function cambiar(id, delta, origen, nota = '', opc = {}) {
     const p = productos.find(x => x.id === id);

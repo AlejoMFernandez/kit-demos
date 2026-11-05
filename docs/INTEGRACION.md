@@ -495,3 +495,11 @@ Para locales con promos de calendario (“miércoles 20% en fideos”, “el 29,
 - En la web: `kit.promosHoy()` y `kit.promoDe(categoria)` para marcar “−20% hoy” en la carta. Para mostrarlas en un pitch cualquier día: `initKit({ fechaPromo: '2026-11-04' })` (las demos lo leen de `?dia=miercoles` / `?dia=29`).
 - `"aviso": "panel"`: el pedido entra solo al panel, sin abrir WhatsApp (para locales que no atienden mensajes). La confirmación dice que el local ya lo tiene en su panel.
 - **Producción**: falta sumar las promos a `crear_pedido` en Supabase (como casillas y tamaños: hoy solo modo demo).
+
+## Botón de sumar redondo y sin saltos (kit 1.20)
+
+- `[data-kit-qty]` es ahora un **hueco de tamaño fijo** (`--kit-qty-w` × `--kit-qty-h`; por defecto 116 × 44 px en el celu y 104 × 38 px con mouse). Adentro va un **"+" redondo** que, al sumar, se abre en "− n +" ocupando el mismo hueco: sumar nunca cambia el alto ni el ancho de la fila, ni mueve la carta.
+- Al cambiar la cantidad solo se actualiza el número (no se vuelve a armar el control ni a animar).
+- `textos.agregar` queda como `aria-label`/`title` del "+" (no se ve escrito).
+- En las demos: no pisar `padding`, `min-height` ni `border-radius` de `.kit-add`; solo colores (`border-color`, `color`, `background`). Para otro tamaño, cambiar `--kit-qty-w` / `--kit-qty-h` en el contenedor.
+- Los botones para pasar de sección (anterior/siguiente) no usan el mismo estilo que el "+": van como texto con flecha.

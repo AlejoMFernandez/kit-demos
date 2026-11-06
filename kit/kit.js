@@ -36,7 +36,7 @@ import { aplicarPromosDestacadas, promosDelDia, mejorPromo } from './core/promos
 import { initCanchas } from './modules/canchas.js';
 import { tieneEventos, aplicarEventos, proximos } from './core/eventos.js';
 
-export const VERSION = '1.19.0';
+export const VERSION = '1.21.0';
 
 export { stockDe };
 

@@ -6,6 +6,7 @@
 //   kit.canchas.estado(fecha, desde, hasta)             { p1: true, f1: false… }  (true = libre)
 //   kit.canchas.cotizar('padel', fecha, desde, { paleta: 2 })
 //   kit.canchas.abrir({ deporte, unidad, fecha, desde, extras })   popup del checkout
+//   kit.canchas.reservar({ deporte, unidad, fecha, desde, extras }, { nombre, telefono, pago })   sin popup (formulario propio)
 //   kit.canchas.onCambio(fn)                            se llama cuando cambia la ocupación (otra reserva, el panel…)
 //
 // Sin JS propio: <div data-kit="canchas"></div> dibuja un selector simple con la marca del cliente.
@@ -56,7 +57,7 @@ export function initCanchas(ctx, opts = {}) {
     cotizar: (depId, fecha, desde, extras) => cotizar(C, tarifas, depId, fecha, desde, extras),
     tarifas: () => tarifas,
     onCambio(fn) { subs.add(fn); return () => subs.delete(fn); },
-    abrir, titulo,
+    abrir, reservar, titulo,
   };
 
   // ---------- checkout
@@ -111,25 +112,45 @@ export function initCanchas(ctx, opts = {}) {
       if (!st.nombre.trim()) faltan.push(t('nombre').toLowerCase());
       if (!telValido(st.telefono)) faltan.push(t('telefono').toLowerCase());
       if (faltan.length) return error(t('faltan', { campos: faltan.join(', ') }));
-      if (!api.libre(sel.deporte, sel.unidad, sel.fecha, sel.desde)) return error(t('canOcupado'));
       const btns = $$('[type=submit]', el); btns.forEach(b => { b.disabled = true; }); e.submitter?.classList.add('is-loading');
       try {
-        const tn = await store.createTurnoCancha({ deporte: sel.deporte, unidad: sel.unidad, fecha: sel.fecha, desde: sel.desde, extras: st.extras, nombre: st.nombre.trim(), telefono: st.telefono.trim(), pago, origen: 'web' });
-        document.dispatchEvent(new CustomEvent('kit:cancha', { detail: tn }));
-        cargar();
-        const r = resumenDe(tn);
-        if (pago === 'mercadopago' && tn.sena) { await pagarMP(tn, r); return; }
-        const { url } = linkWhatsApp(config.whatsapp, mensajeWA(r, pago));
-        listo(tn, r, 'complejo', url);
-        onDone && onDone(tn);
+        const tn = await reservar({ ...sel, extras: st.extras }, { nombre: st.nombre, telefono: st.telefono, pago });
+        if (!(pago === 'mercadopago' && tn.sena)) onDone && onDone(tn);
       } catch (err) {
         btns.forEach(b => { b.disabled = false; b.classList.remove('is-loading'); });
-        if (err.code === 'sin_lugar' || /sin_lugar/.test(err.message)) { error(t('canOcupado')); cargar(); }
-        else { console.error('[kit] cancha', err); error(t('error')); }
+        error(err.message);
       }
     });
     pintar();
     return el;
+  }
+
+  // Reserva sin el popup: la demo arma su propio formulario (pasos, boleto…) y llama a esto.
+  // Valida, crea el turno y sigue igual que el checkout: seña con Mercado Pago o confirmación (evento kit:cancha-lista).
+  // Si algo falla tira un Error con un mensaje listo para mostrar (err.code: 'faltan' | 'sin_lugar' | 'error').
+  async function reservar(sel, datos = {}) {
+    const falla = (code, msg) => Object.assign(new Error(msg), { code });
+    const d = dep(sel.deporte); const pago = datos.pago || 'complejo';
+    const nombre = String(datos.nombre || '').trim(); const telefono = String(datos.telefono || '').trim();
+    const faltan = [];
+    if (!nombre) faltan.push(t('nombre').toLowerCase());
+    if (!telValido(telefono)) faltan.push(t('telefono').toLowerCase());
+    if (faltan.length) throw falla('faltan', t('faltan', { campos: faltan.join(', ') }));
+    if (!d || !sel.fecha || sel.desde == null || !sel.unidad || !api.libre(d.id, sel.unidad, sel.fecha, sel.desde)) throw falla('sin_lugar', t('canOcupado'));
+    let tn;
+    try {
+      tn = await store.createTurnoCancha({ deporte: d.id, unidad: sel.unidad, fecha: sel.fecha, desde: sel.desde, extras: sel.extras || {}, nombre, telefono, pago, origen: 'web' });
+    } catch (err) {
+      if (err.code === 'sin_lugar' || /sin_lugar/.test(err.message)) { cargar(); throw falla('sin_lugar', t('canOcupado')); }
+      console.error('[kit] cancha', err); throw falla('error', t('error'));
+    }
+    document.dispatchEvent(new CustomEvent('kit:cancha', { detail: tn }));
+    cargar();
+    const r = resumenDe(tn);
+    if (pago === 'mercadopago' && tn.sena && config.pagos?.mercadopago) { await pagarMP(tn, r); return tn; }
+    const { url } = linkWhatsApp(config.whatsapp, mensajeWA(r, pago));
+    listo(tn, r, 'complejo', url);
+    return tn;
   }
 
   function abrir(sel = {}) {

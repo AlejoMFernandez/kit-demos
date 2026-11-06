@@ -503,3 +503,17 @@ Para locales con promos de calendario (“miércoles 20% en fideos”, “el 29,
 - `textos.agregar` queda como `aria-label`/`title` del "+" (no se ve escrito).
 - En las demos: no pisar `padding`, `min-height` ni `border-radius` de `.kit-add`; solo colores (`border-color`, `color`, `background`). Para otro tamaño, cambiar `--kit-qty-w` / `--kit-qty-h` en el contenedor.
 - Los botones para pasar de sección (anterior/siguiente) no usan el mismo estilo que el "+": van como texto con flecha.
+
+## Canchas: reservar sin popup (kit 1.21)
+
+Para demos que arman su propio flujo de reserva por pasos (por ejemplo, un "boleto" en pantalla en vez del popup del checkout):
+
+```js
+const K = kit.canchas;
+try {
+  await K.reservar({ deporte: 'padel', unidad: 'p2', fecha: '2026-11-06', desde: 1200, extras: { paleta: 2 } },
+                   { nombre: 'Ana', telefono: '11 5555-5555', pago: 'mercadopago' }); // o 'complejo'
+} catch (err) { mostrarError(err.message); } // err.code: 'faltan' | 'sin_lugar' | 'error'
+```
+
+Valida nombre y teléfono, vuelve a chequear que la cancha siga libre, crea el turno y sigue igual que el checkout: con `mercadopago` va a pagar la seña; con `complejo` dispara `kit:cancha-lista` (la demo puede dibujar su confirmación). El popup `K.abrir()` ahora usa esta misma función.

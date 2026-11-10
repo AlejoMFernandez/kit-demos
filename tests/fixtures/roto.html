@@ -1,0 +1,23 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Página rota a propósito (prueba del linter visual)</title>
+<style>
+body{margin:0;font:16px/1.5 system-ui,sans-serif;color:#222;background:#f4efe6}
+section{padding:60px 24px}h2{font-size:30px;margin:0 0 16px}
+.pisa{position:relative;height:90px}.pisa p{position:absolute;left:0;top:10px;margin:0;font-size:22px}.pisa p+p{top:22px;left:30px}
+.corta{width:150px;height:22px;overflow:hidden;white-space:nowrap;font-size:18px}
+.foto{background:linear-gradient(90deg,#e9e2d2,#fff);padding:30px}.foto p{color:#fff;margin:0;font-size:16px}
+.ancho{width:560px;background:#c33;color:#fff;padding:12px}
+.caja{background:#2b211c;color:#f2e8d5;padding:14px 0;width:260px}
+.chico{display:inline-block;width:24px;height:24px;background:#333;color:#fff;font-size:12px;text-align:center}
+#b{padding-top:0}#a{padding-bottom:6px}
+input{font-size:13px}
+</style></head><body><main>
+<section id="hero" style="min-height:60vh"><h1>Hero de prueba</h1><a class="btn" href="#a" style="display:inline-block;padding:14px 22px;background:#222;color:#fff">Ver la carta</a></section>
+<section><h2>Superpuestos</h2><div class="pisa"><p>Milanesa napolitana con fritas</p><p>Provoleta al oregano y aceite</p></div></section>
+<section><h2>Cortado</h2><div class="corta">Este texto es mucho mas largo que su caja y se corta</div></section>
+<section><h2>No se lee</h2><div class="foto"><p>Texto blanco sobre un fondo casi blanco que nadie lee</p></div></section>
+<section><h2>Desborde</h2><div class="ancho">Una caja de 560 px en un celu de 390</div></section>
+<section><h2>Sin aire</h2><div class="caja">Texto pegado al borde de su caja oscura</div><a class="chico" href="#">x</a> <input placeholder="tu nombre"></section>
+<section id="a"><h2>Sección A</h2><p>Último renglón de la sección A.</p></section>
+<section id="b"><h2>Sección B pegada</h2><p>Arranca sin aire arriba.</p><img src="no-existe.jpg" width="200" height="100" alt=""></section>
+</main></body></html>

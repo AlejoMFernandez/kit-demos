@@ -652,6 +652,38 @@
     "visitanos"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "malcriada",
+   "url": "https://malcriada.vercel.app/",
+   "hero": {
+    "arquetipo": "diario-o-carta-impresa",
+    "detalle": "el hero es la carta impresa: marcos de doble línea con diamantes, la mascota y el nombre en script al centro, 3 productos con etiqueta y precio",
+    "mascara_foto": "marco-doble-de-la-carta",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "cintas que cuelgan del borde superior (como la cinta 'Menú' de la carta), sin barra",
+   "botones_estilo": "cinta con muescas + subrayado que se recoge",
+   "firma": "trazo: la intro dibuja la cara y el nombre, los marcos de doble línea se dibujan, los diamantes titilan, los títulos se entintan",
+   "wow": "la lata de colección que se destapa (arrastrar o tocar la tapa) con 7 productos en pirotines, popup de tamaño fijo",
+   "fuentes": {
+    "titulos": "Great Vibes",
+    "cuerpo": "Outfit"
+   },
+   "fondo": "rgb(251, 246, 234)",
+   "piezas": "la lata malcriada · tortas por encargo con seña · relicario de corazones · carta vidriera",
+   "secciones": [
+    "heroA",
+    "lata",
+    "tortas",
+    "alfajores",
+    "carta",
+    "historia",
+    "eventos",
+    "visitanos"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

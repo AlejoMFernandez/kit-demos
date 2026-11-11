@@ -18,7 +18,8 @@ Qué revisa en cada pantalla (celu 390, android 360, notebook 1366, desktop 1440
     - botones y links chicos para el dedo, inputs que hacen zoom en iPhone
     - imágenes pixeladas (estiradas por encima de su tamaño real)
     - el botón principal del hero queda fuera de la primera pantalla
-    - saltos de layout al cargar (CLS), intro ausente o más larga que el máximo (1,8 s celu / 2,6 s desktop)
+    - formularios desplegados en la página (van en popup) y secciones de más de 2,3 pantallas (3,2 en celu)
+    - saltos de layout al cargar (CLS), intro más larga que el máximo (1,8 s celu / 2,6 s desktop)
 
 Salida: <carpeta>/informe.json, <pantalla>-pagina.png (página con los hallazgos marcados) y
 <pantalla>-hallazgos.png (recortes numerados para mirar rápido), <pantalla>-intro.png (tira de cuadros
@@ -69,7 +70,7 @@ async ([vw, vh, raizSel]) => {
       deco: p.deco || el.getAttribute('aria-hidden') === 'true',
       oculto: p.oculto || cs.display === 'none' || cs.visibility !== 'visible' };
     if (cs.overflowX !== 'visible' || cs.overflowY !== 'visible') { const r = el.getBoundingClientRect();
-      c.clips = p.clips.concat([{ el, r, scroller: (/auto|scroll/.test(cs.overflowX + cs.overflowY) && (el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2)) || el.scrollWidth > el.clientWidth * 1.5 || (el.scrollWidth > el.clientWidth + 24 && el.children.length > 2) }]); }
+      c.clips = p.clips.concat([{ el, r, scroller: (/auto|scroll/.test(cs.overflowX + cs.overflowY) && (el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2)) || el.scrollWidth > el.clientWidth * 1.5 || (el.scrollWidth > el.clientWidth + 24 && el.children.length >= 2) }]); if (el === document.body || el.tagName === 'MAIN') c.clips[c.clips.length - 1].scroller = false; }
     ctxCache.set(el, c); return c; };
 
   // bloques de texto: elementos con texto propio
@@ -84,7 +85,8 @@ async ([vw, vh, raizSel]) => {
     if (r <= l || b <= t) continue; const rect = { left: l, top: t, right: r, bottom: b, width: r - l, height: b - t };
     const cs = CS(el); const clampP = cs.textOverflow === 'ellipsis' || (cs.webkitLineClamp && cs.webkitLineClamp !== 'none');
     let v = rect, scroller = false; for (const k of c.clips) { if (k.scroller) scroller = true; v = v && inter(v, k.r); }
-    const frac = area(v) / area(rect);
+    if (!scroller && !c.fijo && v) v = inter(v, { left: 0, right: vw, top: -1e9, bottom: 1e9 });
+    const frac = area(v) / area(rect); if (!v) continue;
     T.push({ el, elTop: el.getBoundingClientRect().top, rect, vis: v, frac, c, cs, scroller, clampP, txt: nodos.map(n => n.nodeValue.trim()).join(' ').slice(0, 60), fs: parseFloat(cs.fontSize), fw: parseInt(cs.fontWeight) || 400 });
   }
   const visibles = T.filter(t => t.frac > 0.5 || (t.clampP && t.frac > 0.15));
@@ -157,6 +159,11 @@ async ([vw, vh, raizSel]) => {
     const g = tB - tA; if (tA < -1e8 || tB > 1e8) continue; huecos.push(g); const min = celu ? 40 : 56;
     if (g < min && g > -200) add('secciones-pegadas', 'aviso', b.b, { left: 0, top: tA, width: vw, height: Math.max(8, g) }, `solo ${Math.round(g)} px entre el contenido de "${sel(a.b)}" y el de "${sel(b.b)}"`); }
 
+  // 8b. formularios desplegados en la página y secciones eternas (reglas de Alejo)
+  for (const e of ext) { const campos = [...e.b.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select, textarea')].filter(c => { const k = ctx(c), r = c.getBoundingClientRect(); return !k.oculto && k.op > 0.2 && r.width > 20 && r.height > 10; });
+    if (campos.length >= 3) add('formulario-desplegado', 'aviso', e.b, campos[0].getBoundingClientRect(), `"${sel(e.b)}" muestra un formulario de ${campos.length} campos en la página: va un CTA que abre el popup`);
+    const tope = celu ? 3.2 : 2.3; if (e !== ext[ext.length - 1] && e.r.height > vh * tope) H.push({ tipo: 'seccion-eterna', nivel: 'aviso', sel: sel(e.b), msg: `"${sel(e.b)}" mide ${(e.r.height / vh).toFixed(1)} pantallas de alto (máximo ${tope})`, x: 0, y: Math.round(e.r.top + scrollY), w: 0, h: 0 }); }
+
   // 9. hero: botón principal dentro de la primera pantalla
   const hero = ext[0] && ext[0].b; if (hero) { const cta = [...hero.querySelectorAll('a[class], button')].filter(e => { const c = ctx(e), r = e.getBoundingClientRect(); return !c.oculto && c.op > 0.2 && !c.fijo && r.width > 60 && r.height > 28 && (e.textContent || '').trim().length > 2; })[0];
     if (cta) { const r = cta.getBoundingClientRect(); if (r.bottom + scrollY > vh) add('hero-cta-afuera', 'aviso', cta, r, `el botón "${cta.textContent.trim().slice(0, 30)}" queda ${Math.round(r.bottom + scrollY - vh)} px debajo de la primera pantalla`); }
@@ -168,10 +175,10 @@ async ([vw, vh, raizSel]) => {
 
 SIN_TEXTO = "*,*::before,*::after{-webkit-text-fill-color:transparent!important;text-shadow:none!important;transition:none!important;caret-color:transparent!important}"
 
-TAPA = """() => { if (!document.body) return null; let f0 = null;
+TAPA = """() => { if (!document.body) return null;
   for (const [fx, fy] of [[.5,.5],[.1,.1],[.9,.9],[.5,.15],[.5,.85]]) { const e = document.elementFromPoint(innerWidth * fx, innerHeight * fy); if (!e) return false;
     let f = e; while (f && getComputedStyle(f).position !== 'fixed') f = f.parentElement; if (!f) return false;
-    const r = f.getBoundingClientRect(); if (r.width < innerWidth * .95 || r.height < innerHeight * .9) return false; if (f0 && f0 !== f) return false; f0 = f; }
+    const r = f.getBoundingClientRect(); if (r.width < innerWidth * .45 || r.height < innerHeight * .45 || (r.width < innerWidth * .95 && r.height < innerHeight * .9)) return false; }
   return true; }"""
 
 TOCAR = """(sel) => { for (const e of document.querySelectorAll(sel)) { const r = e.getBoundingClientRect(), c = getComputedStyle(e);
@@ -241,6 +248,8 @@ async def revisar(browser, nombre, w, h, tactil):
     consola, fallidos = [], []
     pg.on('pageerror', lambda e: consola.append(str(e)[:200]))
     pg.on('console', lambda m: consola.append(m.text[:200]) if m.type == 'error' and 'Failed to load resource' not in m.text else None)
+    sin_fuente = []
+    pg.on('requestfailed', lambda r: sin_fuente.append(r.url) if ('fonts.g' in r.url or r.resource_type == 'font') else None)
     pg.on('response', lambda r: fallidos.append(f'{r.status} {r.url[:120]}') if r.status >= 400 and 'fonts.g' not in r.url else None)
     await pg.add_init_script("window.__cls=0;try{new PerformanceObserver(l=>{for(const e of l.getEntries())if(!e.hadRecentInput)window.__cls+=e.value}).observe({type:'layout-shift',buffered:true})}catch(e){}")
 
@@ -268,7 +277,7 @@ async def revisar(browser, nombre, w, h, tactil):
     H0 = []
     if ESPERA >= 3000:
         lim = 1.8 if tactil else 2.6
-        if ini is None: H0.append(suelto('sin-intro', 'aviso', 'no se detectó una intro que tape la pantalla al abrir'))
+        if ini is None: pass  # la intro no siempre es una capa detectable: se mira en la tira <pantalla>-intro.png
         elif fin is None: H0.append(suelto('intro-larga', 'aviso', 'una capa fija tapa la pantalla durante más de 4 s (¿intro que no termina?)'))
         elif fin - ini > lim + 0.5: H0.append(suelto('intro-larga', 'aviso', f'la intro dura {fin - ini:.1f} s (máximo {lim} s en esta pantalla)'))
     if cuadros:
@@ -328,6 +337,11 @@ async def revisar(browser, nombre, w, h, tactil):
     hs = [g for g in data['huecos'] if g > 0]
     if len(hs) >= 4 and max(hs) > 4 * max(1, min(hs)):
         H.append(suelto('ritmo-desparejo', 'aviso', f'espacios entre secciones muy distintos: de {min(hs)} a {max(hs)} px ({hs})'))
+    if sin_fuente:
+        for x in H:
+            if x['tipo'] in ('texto-recortado', 'texto-cortado', 'textos-superpuestos', 'scroll-horizontal') and x['nivel'] == 'error':
+                x['nivel'] = 'aviso'; x['msg'] += ' (medido sin las fuentes reales: confirmar)'
+        H.append(suelto('fuentes-no-cargaron', 'error', f'{len(sin_fuente)} pedidos de fuentes fallaron ({sin_fuente[0][:60]}…): los textos se midieron con la fuente de reemplazo; alojar las fuentes en la demo (web/fonts) o habilitar el dominio'))
     H.sort(key=lambda x: (x['nivel'] != 'error', x.get('estado') or '', x['y']))
     for i, x in enumerate(H, 1):
         x['n'] = i

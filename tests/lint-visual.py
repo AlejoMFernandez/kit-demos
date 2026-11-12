@@ -19,6 +19,8 @@ Qué revisa en cada pantalla (celu 390, android 360, notebook 1366, desktop 1440
     - imágenes pixeladas (estiradas por encima de su tamaño real)
     - el botón principal del hero queda fuera de la primera pantalla
     - formularios desplegados en la página (van en popup) y secciones de más de 2,3 pantallas (3,2 en celu)
+    - rendimiento en un celu lento: primera pantalla a más de 2,5 s, carga de más de 2,5 MB, fotos de más de
+      400 KB, sobredimensionadas, sin medidas, sin lazy o sin vista previa, fuentes pedidas a terceros
     - saltos de layout al cargar (CLS), intro más larga que el máximo (1,8 s celu / 2,6 s desktop)
 
 Salida: <carpeta>/informe.json, <pantalla>-pagina.png (página con los hallazgos marcados) y
@@ -374,6 +376,52 @@ async def revisar(browser, nombre, w, h, tactil):
                 estados=[e for e in fuentes if e], huecos=data['huecos'], hallazgos=H)
 
 
+PERF = r"""() => { const vh = innerHeight, out = { sin_medidas: [], sin_lazy: [], desperdicio: [] };
+  for (const im of document.images) { const r = im.getBoundingClientRect(); if (r.width < 40 || !im.currentSrc || im.currentSrc.startsWith('data:') || /\.svg/.test(im.currentSrc)) continue;
+    const n = im.currentSrc.split('/').pop().split('?')[0].slice(0, 40), cs = getComputedStyle(im), top = r.top + scrollY;
+    if (!(im.getAttribute('width') && im.getAttribute('height')) && cs.aspectRatio === 'auto' && !/px/.test(im.style.height || '')) out.sin_medidas.push(n);
+    if (top > vh * 1.5 && im.loading !== 'lazy') out.sin_lazy.push(n);
+    if (im.naturalWidth > r.width * devicePixelRatio * 2.2 && im.naturalWidth > 900) out.desperdicio.push(`${n} (${im.naturalWidth} px para mostrarse a ${Math.round(r.width)})`); }
+  out.kit = !!document.querySelector('[data-kit], link[href*="kit.css"]'); return out; }"""
+
+
+async def rendimiento(browser):
+    """Carga en un celu lento (CPU ×4, 4G lenta): peso, fotos pesadas o sin optimizar, fuentes de terceros, LCP."""
+    ctx = await browser.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, device_scale_factor=2)
+    pg = await ctx.new_page(); cdp = await ctx.new_cdp_session(pg)
+    await cdp.send('Network.enable'); await cdp.send('Network.emulateNetworkConditions', dict(offline=False, latency=150, downloadThroughput=1.6e6 / 8, uploadThroughput=750e3 / 8))
+    await cdp.send('Emulation.setCPUThrottlingRate', dict(rate=4))
+    pesos = {}; urls = []
+    async def fin(req):
+        try:
+            z = await req.sizes(); pesos[req.url] = (z['responseBodySize'], req.resource_type)
+        except Exception:
+            pass
+    pg.on('requestfinished', lambda r: asyncio.ensure_future(fin(r))); pg.on('request', lambda r: urls.append(r.url))
+    await pg.add_init_script("window.__lcp=0;try{new PerformanceObserver(l=>{for(const e of l.getEntries())window.__lcp=e.startTime}).observe({type:'largest-contentful-paint',buffered:true})}catch(e){}")
+    t0 = time.time(); await pg.goto(URL, wait_until='load', timeout=120000); carga = time.time() - t0
+    await pg.wait_for_timeout(3000)
+    inicial = dict(pesos)
+    await pg.evaluate("async () => { for (let y = 0; y < document.documentElement.scrollHeight; y += innerHeight * 0.7) { scrollTo(0, y); await new Promise(r => setTimeout(r, 250)); } scrollTo(0, 0); }")
+    await pg.wait_for_timeout(2500)
+    lcp = await pg.evaluate('window.__lcp') / 1000; d = await pg.evaluate(PERF); await ctx.close()
+    kb = lambda b: f'{b / 1024:.0f} KB' if b < 1024 * 1024 else f'{b / 1048576:.1f} MB'
+    H = []; tot_ini = sum(v[0] for v in inicial.values()); tot = sum(v[0] for v in pesos.values()); img = sum(v[0] for v in pesos.values() if v[1] == 'image')
+    local = 'localhost' in URL or '127.0.0.1' in URL
+    if lcp > 2.5: H.append(suelto('lcp-lento', 'error' if (lcp > 4 and local) else 'aviso', f'lo principal de la primera pantalla aparece a los {lcp:.1f} s en un celu lento (objetivo: 2,5 s)' + ('' if local else '; medido a través de la red de pruebas, confirmar en local')))
+    if tot_ini > 2.5 * 1048576: H.append(suelto('carga-pesada', 'error' if tot_ini > 5 * 1048576 else 'aviso', f'la primera carga baja {kb(tot_ini)} (objetivo: menos de 2,5 MB)'))
+    for u, (b, t) in sorted(pesos.items(), key=lambda x: -x[1][0])[:40]:
+        if t == 'image' and b > 400 * 1024: H.append(suelto('foto-pesada', 'aviso', f'{u.split("/")[-1].split("?")[0][:50]} pesa {kb(b)} (máximo 400 KB)'))
+    terceros = sorted({u.split('/')[2] for u in urls if 'fonts.googleapis' in u or 'fonts.gstatic' in u or 'use.typekit' in u})
+    if terceros: H.append(suelto('fuentes-de-terceros', 'aviso', f'las fuentes se piden a {", ".join(terceros)}: alojarlas en web/fonts'))
+    if d['sin_medidas']: H.append(suelto('foto-sin-medidas', 'aviso', f'{len(d["sin_medidas"])} fotos sin width/height ni aspect-ratio (la página salta al cargar): {", ".join(d["sin_medidas"][:5])}'))
+    if d['sin_lazy']: H.append(suelto('foto-sin-lazy', 'aviso', f'{len(d["sin_lazy"])} fotos debajo de la primera pantalla sin loading="lazy": {", ".join(d["sin_lazy"][:5])}'))
+    for x in d['desperdicio'][:8]: H.append(suelto('foto-sobredimensionada', 'aviso', x))
+    if d['kit'] and not any('lqip.json' in u for u in urls): H.append(suelto('sin-vistas-previas', 'aviso', 'no se pidió img/lqip.json: las fotos cargan sin vista previa borrosa (python3 scripts/lqip.py web)'))
+    for i, x in enumerate(H, 1): x['n'] = i
+    return dict(pantalla='rendimiento', ancho=390, alto=844, alto_pagina=0, lcp_s=round(lcp, 2), carga_s=round(carga, 1), peso_inicial=kb(tot_ini), peso_total=kb(tot), peso_fotos=kb(img), pedidos=len(pesos), estados=[], huecos=[], intro_s=None, hallazgos=H)
+
+
 async def main():
     async with async_playwright() as p:
         proxy = os.environ.get('HTTPS_PROXY') or os.environ.get('https_proxy')
@@ -387,6 +435,11 @@ async def main():
             print(f"\n== {nombre} {w}×{h} · {len(err)} errores · {len(av)} avisos · página de {r['alto_pagina']} px · intro {r['intro_s']} s · estados revisados: {', '.join(r['estados']) or 'ninguno'}")
             for x in r['hallazgos']:
                 print(f"  {'✗' if x['nivel'] == 'error' else '!'} {x['n']:>2} [{x['tipo']}]" + (f" ({x['estado']})" if x.get('estado') else '') + f" {x['msg']}" + (f"\n        {x['sel']} @ y={x['y']}" if x['sel'] else ''))
+        if 'solo' not in opts or 'rendimiento' in opts['solo']:
+            r = await rendimiento(browser); informe['pantallas'].append(r)
+            print(f"\n== rendimiento (celu lento) · LCP {r['lcp_s']} s · carga completa {r['carga_s']} s · primera carga {r['peso_inicial']} · total {r['peso_total']} ({r['peso_fotos']} en fotos) · {r['pedidos']} pedidos")
+            for x in r['hallazgos']:
+                print(f"  {'✗' if x['nivel'] == 'error' else '!'} {x['n']:>2} [{x['tipo']}] {x['msg']}")
         await browser.close()
     json.dump(informe, open(f'{OUT}/informe.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     total = sum(1 for r in informe['pantallas'] for x in r['hallazgos'] if x['nivel'] == 'error')

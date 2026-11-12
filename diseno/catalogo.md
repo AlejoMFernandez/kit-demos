@@ -95,6 +95,14 @@ Sin usar todavía (prioridad para las próximas):
 - Pestañas con una sección por vez (la actual del kit): para cartas largas.
 - La página `/carta` del QR siempre existe; la carta de la landing puede ser un recorte con lo mejor.
 
+## Ubicación y horarios
+
+La sección "cómo llegar" tiene dos protagonistas y nada más: el **mapa** (grande, con zoom para que se vean
+la cuadra y los alrededores) y los **horarios** bien explícitos, con el estado de ahora (abierto o cerrado),
+la dirección y los botones de cómo llegar y contacto. **Sin fotos**: las del local ya se mostraron más arriba
+y acá sobran y le sacan lugar al mapa. En desktop, mapa y horarios se reparten todo el ancho; en el celu,
+horarios arriba y mapa debajo.
+
 ## Formularios
 
 Nunca desplegados en la página. Reservas, eventos, encargos y gift cards van como una sección con un buen CTA que

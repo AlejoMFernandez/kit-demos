@@ -44,6 +44,8 @@ Contestá sí o no, con una línea de porqué. Un "no" en 1 a 4 es rechazo.
    funcionando igual? Si sí, es genérica.
 5. **Carta**: ¿es la forma más corta posible? ¿Podía ser vidriera? ¿Todo lleva carrito sin necesidad?
 6. **Formularios**: ¿alguno desplegado en la página en vez de CTA + popup?
+   **Ubicación y horarios**: ¿el mapa es el protagonista y los horarios están explícitos, sin fotos ni información de más?
+   En cada sección: ¿hay algún elemento que sobra (repite lo de otra sección o le saca lugar a lo principal)?
 7. **Movimiento**: ¿hay una firma de movimiento reconocible o son las mismas entradas de siempre?
 8. **Datos**: ¿carta, precios, horarios y WhatsApp están, con su fuente? ¿Algún placeholder evitable?
 
@@ -69,3 +71,4 @@ Si algo vuelve, después del arreglo **se corre todo de nuevo**, no solo lo que 
 - Componentes que cambian de tamaño o empujan el layout al interactuar.
 - Desktop que parece un celu estirado; carruseles que no se arrastran bien con el mouse.
 - Imágenes en gris mientras cargan, o una foto anterior que aparece un instante.
+- Una foto ocupando lugar en la sección del mapa y los horarios (Malcriada, primera demo V2).

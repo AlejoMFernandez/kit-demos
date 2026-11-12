@@ -32,6 +32,7 @@ No escribís la web: definís qué se va a ver y lo dejás probado en chico.
 
 - Las de `diseno/catalogo.md` (vetos y no repetición). El revisor las verifica.
 - Una sola firma de movimiento por demo, declarada.
+- Cada sección muestra una sola cosa. Ubicación y horarios: mapa grande + horarios explícitos, sin fotos (ver catálogo). Si un elemento "sobra" en una sección, se saca.
 - El WOW es protagonista: grande, centrado, se juega, tamaño fijo, info en el propio objeto.
 - Más fotos y mejor usadas: si hay 40 fotos buenas, la página no puede usar 12. Recortes, stickers, collages,
   secuencias. Nunca una foto mala para llenar.

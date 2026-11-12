@@ -373,6 +373,32 @@ img.kit-ph--ok { animation: kit-ph-in .6s cubic-bezier(.2, .7, .2, 1); }
 @keyframes kit-ph-in { from { filter: blur(14px) saturate(1.2); opacity: .55; } to { filter: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { img.kit-ph.kit-ph { animation: none; } img.kit-ph--ok { animation: none; } }
 
+/* ---------- esqueletos (2.0): mientras llegan los datos se ve la forma de lo que viene, nunca un hueco ---------- */
+/* La carta vacía (antes de que cargue cliente.json) reserva su lugar y muestra renglones: título, descripción y precio. */
+[data-kit="carta"]:empty, .kit-sk--lista {
+  --kit-sk: color-mix(in srgb, var(--kit-text, #3a3330) 11%, transparent);
+  display: block; min-height: var(--kit-sk-alto, 26rem); border-radius: var(--kit-radius, 12px);
+  background:
+    linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--kit-bg, #fff) 75%, transparent) 50%, transparent 70%) 0 0 / 250% 100% no-repeat,
+    repeating-linear-gradient(to bottom, var(--kit-sk) 0 1.05rem, transparent 1.05rem 5.2rem) 0 .6rem / 46% 100% no-repeat,
+    repeating-linear-gradient(to bottom, transparent 0 1.75rem, var(--kit-sk) 1.75rem 2.45rem, transparent 2.45rem 5.2rem) 0 .6rem / 72% 100% no-repeat,
+    repeating-linear-gradient(to bottom, var(--kit-sk) 0 1.05rem, transparent 1.05rem 5.2rem) 100% .6rem / 3.6rem 100% no-repeat;
+  animation: kit-sk 1.3s linear infinite;
+}
+/* Piezas sueltas para las demos: <span class="kit-sk kit-sk--texto"></span>, <div class="kit-sk" style="height:12rem"></div> */
+.kit-sk {
+  --kit-sk: color-mix(in srgb, var(--kit-text, #3a3330) 11%, transparent);
+  display: block; border-radius: var(--kit-radius, 12px); color: transparent !important; user-select: none; pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--kit-bg, #fff) 75%, transparent) 50%, transparent 70%) 0 0 / 250% 100% no-repeat, var(--kit-sk);
+  animation: kit-sk-b 1.3s linear infinite;
+}
+.kit-sk--texto { height: 1em; width: 62%; border-radius: 999px; margin: .35em 0; }
+.kit-sk--corto { width: 34%; }
+.kit-sk--redondo { border-radius: 50%; aspect-ratio: 1; }
+@keyframes kit-sk { from { background-position: 130% 0, 0 .6rem, 0 .6rem, 100% .6rem; } to { background-position: -30% 0, 0 .6rem, 0 .6rem, 100% .6rem; } }
+@keyframes kit-sk-b { from { background-position: 130% 0, 0 0; } to { background-position: -30% 0, 0 0; } }
+@media (prefers-reduced-motion: reduce) { [data-kit="carta"]:empty, .kit-sk, .kit-sk--lista { animation: none; } }
+
 /* ---------- estadías (alojamientos) ---------- */
 .kit-est { container-type: inline-size; }
 .kit-est__in { display: grid; gap: 22px; }

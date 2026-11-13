@@ -27,6 +27,7 @@ import { destacadosDe } from '../core/destacados.js';
 import { tieneEventos, aplicarEventos, PREFIJO_SERVICIO, validarEvento, limpiarEvento } from '../core/eventos.js';
 import { panelEstadias } from './estadias.js';
 import { panelCanchas } from './canchas.js';
+import { VISTAS2, panel2, sembrarDemo } from './panel2.js';
 
 const ACTIVOS = ['pendiente', 'confirmado', 'listo'];
 const PAGADO = ['aprobado', 'cobrado'];
@@ -58,6 +59,9 @@ export async function initAdmin(opts = {}) {
     config.modulos.carrito && config.giftcards && { id: 'giftcards', icono: '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 12h18M12 8v12M12 8c-1.5-3.5-6.5-3.5-5 0M12 8c1.5-3.5 6.5-3.5 5 0"/>' },
   ].filter(Boolean);
   const GC = configGiftcards(config);
+  // panel 2.0: Inicio adelante; Clientes y Números antes de los impresos (solo si hay pedidos por la web)
+  if (config.modulos.carrito) { vistas.unshift(VISTAS2[0]); const iq = vistas.findIndex(v => v.id === 'qr'); vistas.splice(iq < 0 ? vistas.length : iq, 0, VISTAS2[1], VISTAS2[2]); }
+  let P2 = null;
   let vista = (location.hash.slice(1) && vistas.some(v => v.id === location.hash.slice(1))) ? location.hash.slice(1) : vistas[0]?.id;
   const KEY = `kit:${config.id}:panel`;
   const pref = (() => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (_) { return {}; } })();
@@ -176,7 +180,7 @@ export async function initAdmin(opts = {}) {
     if (a) { e.preventDefault(); ir(a.dataset.vista); return; }
     if (e.target.closest('[data-salir]')) { await store.logout(); pantallaLogin(); return; }
     if (e.target.closest('[data-reset]')) {
-      if (await confirmar(t('reiniciarSeguro'), { ok: t('reiniciar'), peligro: true })) { await store.reset(); toast(t('guardado')); render(); }
+      if (await confirmar(t('reiniciarSeguro'), { ok: t('reiniciar'), peligro: true })) { await store.reset(); await sembrarDemo(ctx).catch(() => {}); toast(t('guardado')); render(); }
       return;
     }
     const son = e.target.closest('[data-sonido]');
@@ -1381,7 +1385,8 @@ export async function initAdmin(opts = {}) {
     main.onclick = null; main.onsubmit = null; main.oninput = null; main.onchange = null;
     try {
       if (tieneEventos(config) && store.getEventos) aplicarEventos(config, await store.getEventos());
-      if (vista === 'pedidos') await vistaPedidos(main);
+      if (VISTAS2.some(v => v.id === vista)) { P2 = P2 || panel2(ctx, { hoy, render, root }); await P2[vista](main); }
+      else if (vista === 'pedidos') await vistaPedidos(main);
       else if (vista === 'canchas') { PC = PC || panelCanchas(ctx, { hoy, render }); await PC.vista(main); }
       else if (vista === 'estadias') { PE = PE || panelEstadias(ctx, { hoy, render }); await PE.vista(main); }
       else if (vista === 'reservas') await vistaReservas(main);
@@ -1414,6 +1419,6 @@ export async function initAdmin(opts = {}) {
     $$('.kad-reloj', root).forEach(el => { el.textContent = relativo(el.getAttribute('datetime')); });
   }, 30_000);
 
-  async function arrancar() { layout(); entrar(); render(); }
+  async function arrancar() { await sembrarDemo(ctx).catch((e) => console.warn('[kit] día de ejemplo', e)); layout(); entrar(); render(); }
   if (await store.getSession()) arrancar(); else pantallaLogin();
 }

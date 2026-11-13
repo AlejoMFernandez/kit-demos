@@ -117,7 +117,7 @@ async def flujo(browser, nombre, w, h):
         await cerrar_popup_de_3_formas(pg, lambda: pg.locator('[data-kit-open="reservas"]').first.click())
 
     # ---- panel
-    await pg.goto(BASE + 'admin/'); await pg.wait_for_selector('.kit-login')
+    await pg.goto(BASE + 'admin/?sinejemplo#pedidos'); await pg.wait_for_selector('.kit-login')   # sin el día de ejemplo del panel 2.0, en Pedidos
     await pg.screenshot(path=f'{SHOTS}/{nombre}-6-login.png')
     await pg.click('.kit-login button'); await pg.wait_for_selector('.kad-card')
     await pg.wait_for_timeout(500)

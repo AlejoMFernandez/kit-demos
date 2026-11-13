@@ -34,14 +34,15 @@ export async function sembrarDemo(ctx) {
   if (new URLSearchParams(location.search).has('sinejemplo')) return false;   // admin/?sinejemplo abre el panel vacío (pruebas)
   const ya = await store.getPedidos();
   if (ya.some(p => p.demo)) return false;
-  const prods = (await store.getProductos()).filter(p => p.precio != null && p.disponible !== false && !(Array.isArray(p.variantes) && p.variantes.length) && !p.opciones && !p.adicionales && !p.giftcard).slice(0, 24);
+  const prods = (await store.getProductos()).filter(p => p.precio != null && p.disponible !== false && !(Array.isArray(p.variantes) && p.variantes.length) && !p.opciones && !p.adicionales && !p.giftcard).slice(0, 40).sort((a, b) => a.precio - b.precio).slice(0, 24);   // de más barato a más caro: lo chico se pide más
+  const mediana = prods.length ? prods[Math.floor(prods.length / 2)].precio : 0;
   if (prods.length < 3) return false;
-  const r = azar(config.id || config.nombre || 'kit'); const elegir = (a, sesgo = 1.8) => a[Math.floor(Math.pow(r(), sesgo) * a.length)];
+  const r = azar(config.id || config.nombre || 'kit'); const elegir = (a, sesgo = 1.6) => a[Math.floor(Math.pow(r(), sesgo) * a.length)];
   const tipo = (config.pedidos?.tipos || ['retiro'])[0]; const pago = (config.pedidos?.pagos || config.pagos?.medios || ['whatsapp'])[0] || 'whatsapp';
   const clientes = NOMBRES.map((n, i) => ({ nombre: n, telefono: `+54 9 11 5550-${String(1000 + i * 37).slice(-4)}` }));
   const crear = async (cli, cuando, estado) => {
     const n = 1 + Math.floor(r() * 2.4); const items = []; const usados = new Set();
-    for (let i = 0; i < n; i++) { const p = elegir(prods); if (usados.has(p.id)) continue; usados.add(p.id); items.push({ id: p.id, cant: 1 + Math.floor(Math.pow(r(), 2.2) * 3) }); }
+    for (let i = 0; i < n; i++) { const p = elegir(prods); if (usados.has(p.id)) continue; usados.add(p.id); items.push({ id: p.id, cant: p.precio > mediana * 1.5 ? 1 : 1 + Math.floor(Math.pow(r(), 2.2) * 3) }); }
     try {
       const p = await store.createPedido({ items, tipo, pago, cliente: { ...cli, direccion: '' }, nota: '' });
       await store.updatePedido(p.id, { creado: cuando.toISOString(), estado, demo: true, ...(estado === 'entregado' ? { pagoEstado: 'cobrado' } : {}) });

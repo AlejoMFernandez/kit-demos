@@ -904,6 +904,36 @@
     "llegar"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "casa-roti",
+   "url": "https://casa-roti.vercel.app/",
+   "hero": {
+    "arquetipo": "el-wow-es-el-hero",
+    "detalle": "fondo negro con la luz naranja de la lámpara; CASA ROTI gigante con el cuadrillé del gorrito adentro de las letras (celu: una línea arriba; desktop: CASA y ROTI a los costados) y el spiedo vertical colgando en el medio, con 8 platos que giran",
+    "mascara_foto": "plato-redondo-de-su-vajilla",
+    "botones": 1,
+    "animado": true
+   },
+   "nav": "sin barra en el hero; después barra inferior tipo app en el celu (Spiedo · Hoy · Carta · Fiestas · Pedido) e índice vertical de puntos en desktop",
+   "botones_estilo": "ticket de comanda: recto, troquel a los costados, línea punteada y número (01, 02…)",
+   "firma": "giro sobre el eje: la intro es una moneda (logo / cuadrillé) que gira, el spiedo, las entradas con rotateY y el plato del día que gira al entrar",
+   "wow": "el spiedo vivo: varilla, campana con resistencia, coronas y horquillas con 8 platos colgados en dos pisos; se arrastra, banderita con nombre y precio (cinta HOY en el plato del día), popup de tamaño fijo con Sumar",
+   "fuentes": {
+    "titulos": "Bebas Neue",
+    "cuerpo": "Plus Jakarta Sans"
+   },
+   "fondo": "rgb(20, 20, 20)",
+   "piezas": "el spiedo vivo · pizarra de letras del plato del día · carta vidriera El mostrador (6 familias × 5) · mesa de fiestas en popup · canal + cuenta regresiva al 29",
+   "secciones": [
+    "spiedo",
+    "hoy",
+    "mostrador",
+    "fiestas",
+    "novedades",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

@@ -692,7 +692,7 @@ body { margin: 0; background: var(--kit-bg); color: var(--kit-text); font-family
 .p2-barra.is-on .p2-barra__l { color: var(--kit-text); font-weight: 700; }
 @media (max-width: 599px) { .p2-barra__v { visibility: hidden; font-size: .68rem; } .p2-barra.is-on .p2-barra__v { visibility: visible; } }
 .p2-tabla { position: relative; overflow-x: auto; }
-@media (max-width: 520px) { .p2-tabla th:nth-child(3), .p2-tabla td:nth-child(3) { display: none; } }
+@media (max-width: 520px) { .p2-tabla th:nth-child(2), .p2-tabla td:nth-child(2), .p2-tabla th:nth-child(3), .p2-tabla td:nth-child(3) { display: none; } .p2-tabla td:first-child { white-space: normal; } .p2-tabla .kit-btn { padding-inline: 12px; } }
 .p2-tabla table { width: 100%; border-collapse: collapse; font-size: .95rem; }
 .p2-tabla th { text-align: left; padding: 0 12px 10px 0; font-size: .82rem; font-weight: 600; color: var(--kit-muted); white-space: nowrap; }
 .p2-tabla td { padding: 12px 12px 12px 0; border-top: 1px solid var(--kit-border); white-space: nowrap; }

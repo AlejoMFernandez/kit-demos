@@ -15,7 +15,7 @@ import { esc, $, $$, debounce } from '../core/util.js';
 import { t } from '../core/i18n.js';
 import { tieneVariantes, precioDesde } from '../core/variantes.js';
 import { filtrarCarta, soloCarta } from '../core/temporadas.js';
-import { sucursalPorId } from '../core/sucursales.js';
+import { sucursalPorId, sucursales, preciosPorSucursal, conPreciosSede } from '../core/sucursales.js';
 import { estadoAbierto } from '../core/turnos.js';
 import { cargadorImagenes } from '../core/imagenes.js';
 import { initCarrito } from './carrito.js';
@@ -43,6 +43,13 @@ export async function initMenu(opts = {}) {
   const CQ = config.cartaQR || {};
   const params = new URLSearchParams(location.search);
   const sede = sucursalPorId(config, params.get('sede'));
+  // precio por sucursal (kit 1.22): la sede del QR (?sede=) o la última elegida en la web; si no, la primera
+  if (preciosPorSucursal(config)) {
+    let guardada = ''; try { guardada = localStorage.getItem(`kit:${config.id}:sede`) || ''; } catch (_) { /* sin storage */ }
+    const sedeP = sede?.id || (sucursalPorId(config, guardada) ? guardada : sucursales(config)[0].id);
+    const base = store.getProductos.bind(store);
+    store.getProductos = async (...a) => conPreciosSede(await base(...a), sedeP);
+  }
   const horarios = sede ? sede.horarios : config.horarios;
   document.documentElement.lang = ctx.lang;
   document.documentElement.classList.add('kit-on', `kit-${store.modo}`);

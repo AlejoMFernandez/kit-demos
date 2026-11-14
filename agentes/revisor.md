@@ -37,6 +37,9 @@ Contestá sí o no, con una línea de porqué. Un "no" en 1 a 4 es rechazo.
 
 1. **Hero**: ¿es de un arquetipo permitido por `diseno/catalogo.md` y distinto a las últimas 5 del registro?
    ¿Tiene algo propio de la marca en movimiento? ¿La intro desemboca en él?
+   Achicá la captura del hero a 300 px y comparala con las de las últimas 10 del registro: ¿se parece a alguna?
+   ¿Es una superficie realista simulada (madera, mármol) con objetos apoyados? Cualquiera de las dos es rechazo.
+   ¿La pantalla la domina el lenguaje gráfico de la marca, con una sola idea que se entiende en un segundo?
 2. **WOW**: ¿hay una pieza protagonista, grande, atada al nombre o la marca, que no esté en el registro?
    ¿Se juega (tocar, girar, arrastrar) y se entiende sin instrucciones? ¿Tamaño fijo al cambiar de ítem?
 3. **Identidad**: tapando el logo, ¿se reconoce de qué local es? (colores, tipografía, recursos, tono de los textos)

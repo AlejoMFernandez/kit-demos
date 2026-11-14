@@ -13,6 +13,9 @@ No escribís la web: definís qué se va a ver y lo dejás probado en chico.
 3. Escribí en una frase qué tiene este local que no tiene ningún otro del registro (nombre, objeto, historia,
    cartel, ritual, producto). De ahí sale el WOW y, si se puede, el hero.
 
+4. Hacé `git pull` del repo y mirá en el registro también las demos "en curso": otro chat puede estar armando
+   una en paralelo. Leé en `diseno/catalogo.md` "Lo que distingue a las mejores" y "Familias visuales".
+
 ## Qué entregás (moodboard V2)
 
 1. **Tabla "ya se hizo / esto es nuevo"** contra el registro: hero, navegación, botones, movimiento, WOW, tipografía.
@@ -37,6 +40,12 @@ No escribís la web: definís qué se va a ver y lo dejás probado en chico.
 - Más fotos y mejor usadas: si hay 40 fotos buenas, la página no puede usar 12. Recortes, stickers, collages,
   secuencias. Nunca una foto mala para llenar.
 - Aire generoso. Si dudás entre dos tamaños de margen, el más grande.
+
+## Con el moodboard aprobado
+
+Reservá el lugar antes de construir: sumá la demo a `diseno/registro.json` con `"estado": "en curso"`, arquetipo,
+familia visual, firma de movimiento y WOW, y subilo (commit + push). Al publicar, completá la entrada y sacale
+el estado.
 
 ## Al terminar la demo
 

@@ -25,6 +25,44 @@ Sale de medir 22 demos publicadas (`diseno/registro.json`, noviembre 2026). El d
    otra demo (brújula, armá tu X, mitad y mitad) solo si el negocio la pide a gritos, y con otra forma.
 8. Toda propuesta de moodboard arranca con una tabla "esto ya se hizo / esto es nuevo" contra el registro.
 
+## Lo que distingue a las mejores (tanda de noviembre 2026, 7 demos V2)
+
+Tres salieron excelentes y cuatro no. Mirándolas juntas, la diferencia no está en el arquetipo sino en esto:
+
+1. **La pantalla la domina el lenguaje gráfico de la marca**, plano y contundente: su patrón, su logo, su
+   tipografía, sus colores a pleno. El mantel cuadrillé de un bodegón, el logo gigante hecho ventana, la carta
+   impresa con sus marcos. No una escena realista armada con objetos apoyados.
+2. **Una sola idea que se entiende en un segundo y tiene actitud**: una frase con gracia atada a lo que el local
+   tiene de único, no una descripción del rubro.
+3. **Fotos reales, grandes y recortadas con forma** (papel recortado, bordes irregulares, dentro de letras).
+   Nunca muchas fotos chicas repartidas.
+4. **La marca aparece también en lo funcional**: el pin del mapa con su isotipo, los botones, los estados.
+
+Y lo que tuvieron en común las que no convencieron:
+
+- **Superficies fotorrealistas simuladas** (mesa de madera vista desde arriba con tazas y platos apoyados): se ve
+  armado y viejo, y salió tres veces en siete demos. **Vetado**: nada de madera, mármol ni manteles imitados con
+  degradés. Si hay textura, es la de la marca y es plana.
+- **Muchas piezas chicas compitiendo** (tazas sueltas, platos colgados, etiquetas con flechas) en vez de una
+  grande.
+- **Composición de siempre con otro disfraz**: texto a un lado y una pieza al otro sigue siendo el molde vetado
+  aunque la pieza sea una ventana o una puerta.
+- **Fondo oscuro con elementos chicos**: pierde fuerza. Oscuro solo si la marca es así y la pieza es enorme.
+
+### Familias visuales (la repetición se mide por lo que se ve, no por el nombre)
+
+Dos demos son "la misma" si una captura del hero achicada a 300 px se parece, aunque el registro las llame
+distinto. Familias ya usadas: `mesa vista desde arriba con objetos` (4 usos: agotada), `título + pieza al costado`
+(agotada), `foto de fondo completa`, `logo o nombre gigante como ventana`, `patrón de marca a pantalla completa`,
+`impreso de la casa`. Una familia no se repite dentro de las últimas 10 demos.
+
+### Reservar antes de construir
+
+Varias demos se arman en paralelo y cada chat no ve a las otras hasta que se publican: así salieron tres mesas.
+Apenas Alejo aprueba un moodboard, se suma la demo a `diseno/registro.json` con `"estado": "en curso"`, su
+arquetipo, su familia visual, su firma de movimiento y su WOW, con commit y push. Y antes de proponer, se hace
+`git pull` y se leen también las que están en curso.
+
 ## Arquetipos de hero
 
 Usados (ver el registro para dónde):

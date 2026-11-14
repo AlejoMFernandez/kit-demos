@@ -609,7 +609,7 @@ export function initCarrito(ctx, opts = {}) {
   const listo = cargar().then(revisarRetornoMP);
 
   return {
-    abrir, sync, listo, montarCheckout, pagina: PAGINA ? ctx.asset(PAGINA) : null,
+    abrir, sync, listo, montarCheckout, recargar: () => cargar(), pagina: PAGINA ? ctx.asset(PAGINA) : null,
     agregar: (id, n = 1, o = {}) => cambiar(id, n, o.origen || null, o.nota || '', { variante: o.variante, extras: o.extras, opc: o.opc }),
     setRetiro, get retiro() { return { fecha: datos.retiroFecha, franja: datos.retiroFranja, hora: datos.retiroHora }; },
     setHora: (h) => { datos.retiroHora = h || ''; repintar(); }, retiroHoyOpciones: opRH,

@@ -793,6 +793,16 @@
                     }
                   }
                 }
+              },
+              "preciosSucursal": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "description": "Kit 1.22: precio en cada sede distinta de la primera (con carta.preciosPorSucursal)."
               }
             }
           }
@@ -804,6 +814,10 @@
         "stockAviso": {
           "type": "integer",
           "description": "Desde cuántas unidades la carta muestra 'Últimas N' (por defecto 6)."
+        },
+        "preciosPorSucursal": {
+          "type": "boolean",
+          "description": "Kit 1.22: cada sede tiene sus precios. El producto lleva 'precio' (el de la primera sede) y 'preciosSucursal': { '<id de sede>': número }. La carta y el carrito muestran los de la sede elegida; el panel edita uno por sede."
         }
       }
     },

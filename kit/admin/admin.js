@@ -14,7 +14,7 @@ import { ahoraEn, horaVisible, aMin, diaSemana, diaNum, fechaDeNum, franjas, gen
 import { configGiftcards, estadoGiftcard, canjeable, normalizarCodigo } from '../core/giftcards.js';
 import { tieneVariantes, precioDesde } from '../core/variantes.js';
 import { linkWhatsApp } from '../core/pedidos.js';
-import { sucursales } from '../core/sucursales.js';
+import { sucursales, preciosPorSucursal } from '../core/sucursales.js';
 import { temporadasDe, seVe } from '../core/temporadas.js';
 import { estadoEspecial, textoRetiro, diasPara } from '../core/encargos.js';
 import { totalTexto } from '../core/pedidos.js';
@@ -728,7 +728,8 @@ export async function initAdmin(opts = {}) {
         if (!(await confirmar(t('confirmaPct', { pct: v, n: items.length, cat: cat.nombre }), { ok: `+${v}%` }))) return;
         const red = ctx.pais.decimales ? 1 : 100;
         const sube = (n) => n == null ? n : Math.round(n * (1 + v / 100) / red) * red;
-        for (const p of items) await store.saveProducto({ ...p, precio: sube(p.precio), ...(tieneVariantes(p) ? { variantes: p.variantes.map(x => ({ ...x, precio: sube(x.precio) })) } : {}) });
+        for (const p of items) await store.saveProducto({ ...p, precio: sube(p.precio), ...(tieneVariantes(p) ? { variantes: p.variantes.map(x => ({ ...x, precio: sube(x.precio) })) } : {}),
+          ...(p.preciosSucursal ? { preciosSucursal: Object.fromEntries(Object.entries(p.preciosSucursal).map(([k, n]) => [k, sube(n)])) } : {}) });
         toast(t('guardado')); render();
       }
     };
@@ -873,6 +874,7 @@ export async function initAdmin(opts = {}) {
   //   "carta": { "campos": [{ "id": "link", "label": "Link de compra", "tipo": "url" }, { "id": "destacada", "label": "Destacada", "tipo": "check" }],
   //              "sinPrecio": true, "sinEtiquetas": true, "campoFila": "funciones" }
   const CC = config.carta || {};
+  const PXS = preciosPorSucursal(config);
   const CAMPOS = Array.isArray(CC.campos) ? CC.campos : [];
   const STOCK = !!CC.stock;
   function camposExtraHTML(p0) {
@@ -905,7 +907,8 @@ export async function initAdmin(opts = {}) {
       ${tieneVariantes(p0) ? `<fieldset class="kad-vars"><legend>${esc(t('tamanos'))} (${esc(ctx.pais.moneda)})</legend><div class="kit-field-row">
         ${p0.variantes.map(v => `<label class="kit-field"><span>${esc(v.nombre)}</span><input data-var="${esc(v.id)}" type="number" inputmode="decimal" min="0" step="${ctx.pais.decimales ? '0.01' : '1'}" value="${v.precio ?? ''}"></label>`).join('')}</div></fieldset>` : ''}
       <div class="kit-field-row">
-        ${tieneVariantes(p0) || CC.sinPrecio ? '<input name="precio" type="hidden" value="">' : `<label class="kit-field"><span>${esc(t('precio'))} (${esc(ctx.pais.moneda)})</span><input name="precio" type="number" inputmode="decimal" min="0" step="${ctx.pais.decimales ? '0.01' : '1'}" value="${p0.precio ?? ''}"></label>`}
+        ${tieneVariantes(p0) || CC.sinPrecio ? '<input name="precio" type="hidden" value="">' : `<label class="kit-field"><span>${esc(t('precio'))} (${esc(ctx.pais.moneda)})${PXS ? ` · ${esc(sucursales(config)[0].nombre)}` : ''}</span><input name="precio" type="number" inputmode="decimal" min="0" step="${ctx.pais.decimales ? '0.01' : '1'}" value="${p0.precio ?? ''}"></label>`}
+        ${PXS && !tieneVariantes(p0) && !CC.sinPrecio ? sucursales(config).slice(1).map(sd => `<label class="kit-field"><span>${esc(t('precio'))} · ${esc(sd.nombre)}</span><input data-ps="${esc(sd.id)}" type="number" inputmode="decimal" min="0" step="${ctx.pais.decimales ? '0.01' : '1'}" value="${p0.preciosSucursal?.[sd.id] ?? ''}" placeholder="${esc(t('igualPrimera') || '')}"></label>`).join('') : ''}
         <label class="kit-field"><span>${esc(t('categoria'))}</span><select name="categoria">${cats.map(c => `<option value="${esc(c.id)}" ${c.id === p0.categoria ? 'selected' : ''}>${esc(c.nombre)}</option>`).join('')}<option value="" ${!p0.categoria ? 'selected' : ''}>${esc(t('sinCategoria'))}</option></select></label>
       </div>
       <label class="kit-field"><span>${esc(t('descripcion'))}</span><textarea name="descripcion" rows="${CC.sinPrecio ? 6 : 3}" maxlength="${CC.descripcionMax || 400}">${esc(p0.descripcion)}</textarea></label>
@@ -947,6 +950,7 @@ export async function initAdmin(opts = {}) {
         await store.saveProducto({
           ...(prod || {}), id, nombre, descripcion: f.descripcion.value.trim(),
           precio: f.precio.value === '' ? null : Number(f.precio.value), categoria: f.categoria.value || null,
+          ...(PXS && f.querySelector('[data-ps]') ? { preciosSucursal: Object.fromEntries([...f.querySelectorAll('[data-ps]')].filter(i => i.value !== '').map(i => [i.dataset.ps, Number(i.value)])) } : {}),
           ...(tieneVariantes(p0) ? { variantes: p0.variantes.map(v => { const inp = f.querySelector(`[data-var="${CSS.escape(String(v.id))}"]`); return { ...v, precio: inp && inp.value !== '' ? Number(inp.value) : null }; }) } : {}),
           etiquetas: f.etiquetas.value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
           disponible: f.disponible.checked, foto, orden: prod?.orden ?? (Math.max(0, ...enCat.map(x => x.orden || 0)) + 1),

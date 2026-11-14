@@ -517,3 +517,18 @@ try {
 ```
 
 Valida nombre y teléfono, vuelve a chequear que la cancha siga libre, crea el turno y sigue igual que el checkout: con `mercadopago` va a pagar la seña; con `complejo` dispara `kit:cancha-lista` (la demo puede dibujar su confirmación). El popup `K.abrir()` ahora usa esta misma función.
+
+### Precio por sucursal (kit 1.22)
+
+Para cadenas con la misma carta y precios distintos en cada local (ej. Hobby: Malabia y Guevara):
+
+```json
+"carta": { "preciosPorSucursal": true, "categorias": [...], "productos": [
+  { "id": "avocado", "nombre": "Avocado toast", "precio": 15000, "preciosSucursal": { "guevara": 13500 } }
+]}
+```
+
+- `precio` es el de la **primera** sede de `sucursales`; `preciosSucursal` solo lleva las otras (si falta, usa `precio`; `null` = consultar en esa sede).
+- La sede de precios es la elegida en el carrito (`kit.carrito.setSucursal(id)` o `data-kit-sucursal`): la carta y el carrito se recalculan solos y se dispara `kit:precios`.
+- En la demo: `kit.precio(p)` devuelve el precio de la sede actual (para WOWs propios).
+- El panel muestra un campo de precio por sede y el “subir %” sube todas.

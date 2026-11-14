@@ -35,8 +35,9 @@ import { destacadosDe } from './core/destacados.js';
 import { aplicarPromosDestacadas, promosDelDia, mejorPromo } from './core/promos.js';
 import { initCanchas } from './modules/canchas.js';
 import { tieneEventos, aplicarEventos, proximos } from './core/eventos.js';
+import { sucursales, preciosPorSucursal, precioEnSede, conPreciosSede } from './core/sucursales.js';
 
-export const VERSION = '1.21.0';
+export const VERSION = '1.22.0';
 
 export { stockDe };
 
@@ -95,6 +96,24 @@ export async function initKit(opts = {}) {
   const M = ctx.config.modulos;
   document.documentElement.classList.add('kit-on', `kit-${ctx.store.modo}`);
   ctx.imagenes = imagenes;
+
+  // precio por sucursal (kit 1.22): la carta y el carrito leen los precios de la sede elegida
+  if (preciosPorSucursal(ctx.config)) {
+    const sedes = sucursales(ctx.config);
+    const KEY = `kit:${ctx.config.id}:sede`;
+    try { ctx.sedePrecios = localStorage.getItem(KEY) || ''; } catch (_) { ctx.sedePrecios = ''; }
+    if (!sedes.some(s => s.id === ctx.sedePrecios)) ctx.sedePrecios = sedes[0].id;
+    const base = ctx.store.getProductos.bind(ctx.store);
+    ctx.store.getProductos = async (...a) => conPreciosSede(await base(...a), ctx.sedePrecios);
+    ctx.precio = (p) => precioEnSede(p, ctx.sedePrecios);
+    document.addEventListener('kit:sucursal', (e) => {
+      const id = e.detail?.id; if (!id || id === ctx.sedePrecios) return;
+      ctx.sedePrecios = id;
+      (ctx.cartas || []).forEach(c => c.recargar());
+      ctx.carrito?.recargar?.();
+      document.dispatchEvent(new CustomEvent('kit:precios', { detail: { sede: id } }));
+    });
+  } else ctx.precio = (p) => p?.precio ?? null;
 
   if (M.carrito) ctx.carrito = initCarrito(ctx, opts.carrito);
   // checkout en página aparte (kit 1.17): <div data-kit="checkout"></div>

@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-13",
+ "actualizado": "2026-11-14",
  "nota": "Registro de diseño de las demos publicadas: solo datos de diseño (qué hero, navegación, tipografía y piezas usó cada una). Antes de proponer un moodboard, leerlo y cumplir diseno/catalogo.md. Al publicar una demo, sumar su entrada (scripts/ficha-diseno.py da los datos). La valoración de cada demo está en la rúbrica del proyecto DEMOS, no acá.",
  "demos": [
   {
@@ -808,6 +808,37 @@
     "promos",
     "llevate",
     "llegar"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "hobby-cafe",
+   "url": "https://hobby-cafe.vercel.app/",
+   "hero": {
+    "arquetipo": "letras-ventana",
+    "detalle": "el logo HobbY gigante de papel recortado: cada letra es una ventana (clipPath) a fotos que rotan; al tocar o pasar una letra aparece la etiqueta con el nombre y el precio en el local elegido. Intro: las letras caen como papel y se abren en fotos",
+    "mascara_foto": "las letras del logo",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "barra inferior en el celu + índice vertical sobre papel en desktop (aparece después del hero); selector de local Malabia/Guevara fijo",
+   "botones_estilo": "recorte de papel (clip-path irregular) + tira de papel",
+   "firma": "papel que se apoya: secciones, fichas y vasos entran como recortes que caen y se asientan con una leve rotación",
+   "wow": "armá la ronda: pila de vasos de papel, uno por amigo (hasta 6); se tocan o arrastran las bebidas a la pila, la info aparece pegada al vaso y 'Pedir la ronda' manda todo al carrito con retiro en el local elegido",
+   "fuentes": {
+    "titulos": "Bricolage Grotesque",
+    "cuerpo": "Hanken Grotesk"
+   },
+   "fondo": "#F2EDEB",
+   "piezas": "letras-ventana · la ronda de vasos · vidriera de 8 platos · collage de fotos con forma de grano de café (Malabia) · eventos con dos papeles-CTA y popup · market en estantes de madera · mapa con los dos locales",
+   "secciones": [
+    "hero-letras",
+    "ronda",
+    "lo-que-mas-sale",
+    "la-casa-de-palermo",
+    "eventos",
+    "market",
+    "locales"
    ],
    "formularios_en_pagina": []
   }

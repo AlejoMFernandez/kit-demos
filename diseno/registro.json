@@ -780,6 +780,36 @@
     "como-llegar"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "kaldi-cafe",
+   "url": "https://kaldi-cafe-soho.vercel.app/",
+   "hero": {
+    "arquetipo": "cartel-o-marquesina",
+    "detalle": "las letras corpóreas KALDI sobre la piedra de la fachada, con espesor y sombra que sigue la luz (mouse, dedo o sol automático); tecla de luz que prende el cartel en bronce (modo noche, también según la hora real)",
+    "mascara_foto": "sin foto en el hero",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "barra inferior tipo app en el celu (con la bolsita) + índice numerado al costado en desktop, sin barra superior",
+   "botones_estilo": "recto que se llena de color cereza desde la izquierda + flecha que se estira",
+   "firma": "luz: la intro arranca de noche con el cartel prendido y amanece; las secciones y fotos entran prendiéndose con un parpadeo corto",
+   "wow": "el cafeto de Kaldi: rama con 6 cerezas y la cabra de la leyenda; tocar o arrastrar una cereza hasta la cabra, que salta, y aparece la bebida en una ficha de tamaño fijo con Sumar",
+   "fuentes": {
+    "titulos": "Gilda Display",
+    "cuerpo": "Hanken Grotesk"
+   },
+   "fondo": "rgb(233, 226, 214)",
+   "piezas": "el cartel con luz · el cafeto y la cabra · estantes de madera de la vidriera · tickets de promos con la del momento · encargos con popup",
+   "secciones": [
+    "cartel",
+    "leyenda-cafeto",
+    "vidriera",
+    "promos",
+    "llevate",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

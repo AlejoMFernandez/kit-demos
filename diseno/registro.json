@@ -939,9 +939,9 @@
    "slug": "sabores-de-hogar",
    "url": "https://saboresdehogar.vercel.app/",
    "hero": {
-    "arquetipo": "objeto-o-escena-interactiva",
-    "detalle": "la mesa de la merienda: madera vista desde arriba con tazas, tostados y tartas reales recortadas que se arrastran (vapor en las tazas, etiqueta con precio al tocar) y un individual de papel con la marca en el centro; la intro dibuja el logo y lo apoya en el individual",
-    "mascara_foto": "ninguna (recortes sueltos sobre textura de madera)",
+    "arquetipo": "mesa-desde-arriba",
+    "detalle": "la mesa de la merienda: madera vista desde arriba con la vajilla real del local recortada entera (latte en platito azul, bandeja con capuccino y exprimido, roll y tarta de frutillas en platos negros, tostados), estática, con vapor en las tazas y un individual de papel con la marca en el centro; la mesa sigue sin corte en la sección de la carta y los platos de abajo cruzan el borde; la intro dibuja el logo y lo apoya en el individual",
+    "mascara_foto": "ninguna (vajilla recortada con borde ajustado a la forma del plato, una sola sombra con luz desde arriba a la izquierda)",
     "botones": 2,
     "animado": true
    },
@@ -955,11 +955,11 @@
     "nombre": "Sacramento"
    },
    "fondo": "rgb(251, 246, 242)",
-   "piezas": "mesa con cosas arrastrables · individual de papel con el logo · empapelado de mariposas · hoja de carta con señaladores y plato en hover · estante iluminado con tortas por encargo · servilletas con reseñas",
+   "piezas": "mesa continua hero → carta con vajilla real · individual de papel con el logo · empapelado de mariposas · hoja de carta con señaladores y plato en hover · estante iluminado con tortas por encargo · servilletas con reseñas",
    "secciones": [
     "inicio",
-    "mariposas",
     "carta",
+    "mariposas",
     "encargos",
     "casa",
     "resenas",

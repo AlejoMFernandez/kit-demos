@@ -1,1002 +1,1002 @@
 {
-  "actualizado": "2026-11-14",
-  "nota": "Registro de diseño de las demos publicadas: solo datos de diseño (qué hero, navegación, tipografía y piezas usó cada una). Antes de proponer un moodboard, leerlo y cumplir diseno/catalogo.md. Al publicar una demo, sumar su entrada (scripts/ficha-diseno.py da los datos). La valoración de cada demo está en la rúbrica del proyecto DEMOS, no acá.",
-  "demos": [
-    {
-      "slug": "anippe",
-      "url": "https://anippe.vercel.app/",
-      "hero": {
-        "arquetipo": "texto-izq-foto-der",
-        "detalle": "título serif + pan en círculo con sellos, fondo terracota con trazo",
-        "mascara_foto": "circulo",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Fraunces",
-        "cuerpo": "Jost"
-      },
-      "fondo": "rgb(246, 235, 223)",
-      "piezas": "panes de hoy · ruleta · box de regalo · gift card",
-      "secciones": [
-        "hero",
-        "ahora",
-        "panes",
-        "tortas",
-        "box",
-        "regala",
-        "carta",
-        "casa",
-        "visitanos"
-      ],
-      "formularios_en_pagina": [
-        "regala"
-      ]
-    },
-    {
-      "slug": "bandini-pizzas",
-      "url": "https://bandini-pizzas.vercel.app/",
-      "hero": {
-        "arquetipo": "objeto-grafico-propio",
-        "detalle": "abanico de afiches de la marca sobre rayos, tipografía slab",
-        "mascara_foto": "ninguna",
-        "botones": 2,
-        "animado": false
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Alfa Slab One",
-        "cuerpo": "Courier Prime"
-      },
-      "fondo": "rgb(244, 242, 226)",
-      "piezas": "mitad y mitad · los afiches",
-      "secciones": [
-        "hero",
-        "pasos",
-        "carta",
-        "mitad",
-        "horno",
-        "afiches",
-        "resenas",
-        "donde"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "fornole-urquiza",
-      "url": "https://fornole-urquiza.vercel.app/",
-      "hero": {
-        "arquetipo": "partido-color-foto",
-        "detalle": "mitad rojo pleno con título condensado, mitad foto a sangre",
-        "mascara_foto": "ninguna",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Instrument Serif",
-        "cuerpo": "Instrument Sans"
-      },
-      "fondo": "rgb(250, 247, 238)",
-      "piezas": "los ídolos · cava",
-      "secciones": [
-        "inicio",
-        "idolos",
-        "carta",
-        "panaderia",
-        "cava",
-        "reservas",
-        "historia",
-        "local",
-        "visitanos"
-      ],
-      "formularios_en_pagina": [
-        "reservas"
-      ]
-    },
-    {
-      "slug": "mila-patisserie",
-      "url": "https://mila-patisserie.vercel.app/",
-      "hero": {
-        "arquetipo": "texto-izq-ilustracion-der",
-        "detalle": "ilustración de la marca en vez de foto, cinta de texto abajo",
-        "mascara_foto": "ninguna",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Unbounded",
-        "cuerpo": "Zen Maru Gothic"
-      },
-      "fondo": "rgb(243, 230, 210)",
-      "piezas": "tortas por encargo",
-      "secciones": [
-        "hero",
-        "encargos",
-        "sec",
-        "local",
-        "tienda",
-        "sec",
-        "localcito",
-        "visitanos"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "rosie-cafe",
-      "url": "https://rosie-cafe.vercel.app/",
-      "hero": {
-        "arquetipo": "texto-izq-foto-der",
-        "detalle": "título condensado + torta en óvalo con sellos, fondo rosa con patrón",
-        "mascara_foto": "ovalo",
-        "botones": 2,
-        "animado": false
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Barlow Condensed",
-        "cuerpo": "Archivo"
-      },
-      "fondo": "rgb(255, 246, 241)",
-      "piezas": "armá tu torta (juego por pasos)",
-      "secciones": [
-        "inicio",
-        "ahora",
-        "carta",
-        "tortas",
-        "llevar",
-        "saber",
-        "cosas",
-        "galeria",
-        "visitanos"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "bien-etre-cafe",
-      "url": "https://bien-etre-cafe.vercel.app/",
-      "hero": {
-        "arquetipo": "texto-izq-foto-der",
-        "detalle": "foto del jardín con borde de ondas de la marca y movimiento",
-        "mascara_foto": "forma-de-marca",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "DM Serif Display",
-        "cuerpo": "Josefin Sans"
-      },
-      "fondo": "rgb(237, 235, 221)",
-      "piezas": "el pasaje · agenda",
-      "secciones": [
-        "inicio",
-        "pasaje",
-        "carta",
-        "agenda",
-        "almuerzos",
-        "jardin",
-        "reglas",
-        "visitanos"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "bodegon-lacade",
-      "url": "https://bodegon-lacade.vercel.app/",
-      "hero": {
-        "arquetipo": "partido-color-foto",
-        "detalle": "celeste a rayas + foto del salón, sello que gira, la web cambia según la hora",
-        "mascara_foto": "ninguna",
-        "botones": 4,
-        "animado": true
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Big Shoulders Display",
-        "cuerpo": "Adventor"
-      },
-      "fondo": "rgb(232, 232, 232)",
-      "piezas": "ídolos · la sede · reloj día/noche",
-      "secciones": [
-        "inicio",
-        "sede",
-        "idolos",
-        "carta",
-        "ejecutivo",
-        "reservas",
-        "regala",
-        "ustedes",
-        "cumple",
-        "llegar"
-      ],
-      "formularios_en_pagina": [
-        "reservas",
-        "regala"
-      ]
-    },
-    {
-      "slug": "mundolococgi",
-      "url": "https://mundolococgi.vercel.app/",
-      "hero": {
-        "arquetipo": "escena-interactiva",
-        "detalle": "globo en canvas con las producciones orbitando, se arrastra",
-        "mascara_foto": "ninguna",
-        "botones": 3,
-        "animado": true
-      },
-      "nav": "mínima",
-      "fuentes": {
-        "titulos": "Schibsted Grotesk",
-        "cuerpo": "Instrument Sans"
-      },
-      "fondo": "rgb(3, 5, 10)",
-      "piezas": "el globo es el hero",
-      "secciones": [
-        "hero",
-        "next"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "paozito",
-      "url": "https://paozito.vercel.app/",
-      "hero": {
-        "arquetipo": "tipografia-gigante-sobre-foto",
-        "detalle": "título manuscrito enorme que pisa la foto de la calle, polaroid y stickers",
-        "mascara_foto": "ninguna",
-        "botones": 2,
-        "animado": false
-      },
-      "nav": "píldora flotante",
-      "fuentes": {
-        "titulos": "Just Another Hand",
-        "cuerpo": "Montserrat"
-      },
-      "fondo": "rgb(251, 247, 240)",
-      "piezas": "saquinho (armar pedido con física) · carta vidriera",
-      "secciones": [
-        "hero",
-        "tape",
-        "sabores",
-        "saquinho",
-        "tape",
-        "galeria",
-        "cardapio",
-        "lojas"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "compadre-bike-and-coffee",
-      "url": "https://compadre-bike-and-coffee.vercel.app/",
-      "hero": {
-        "arquetipo": "marca-centrada-objetos-alrededor",
-        "detalle": "nombre espaciado al centro con platos alrededor sobre granito, logo que gira en el plato",
-        "mascara_foto": "ninguna",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "píldora flotante",
-      "fuentes": {
-        "titulos": "Antonio",
-        "cuerpo": "Instrument Sans"
-      },
-      "fondo": "rgb(255, 255, 249)",
-      "piezas": "logo que avanza con el scroll · armá tu caja",
-      "secciones": [
-        "inicio",
-        "tienda",
-        "caja",
-        "esquina",
-        "carta",
-        "compadres",
-        "llegar"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "bodegon-devoto",
-      "url": "https://bodegon-devoto.vercel.app/",
-      "hero": {
-        "arquetipo": "texto-izq-foto-der",
-        "detalle": "título serif + plato en arco, sticker del mozo que se mueve",
-        "mascara_foto": "arco",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Instrument Serif",
-        "cuerpo": "Hanken Grotesk"
-      },
-      "fondo": "rgb(255, 247, 240)",
-      "piezas": "elegí tu mila · armá la mesa",
-      "secciones": [
-        "hero",
-        "hoy",
-        "carta",
-        "mila",
-        "mesa",
-        "mesas",
-        "reservar",
-        "llegar"
-      ],
-      "formularios_en_pagina": [
-        "reservar"
-      ]
-    },
-    {
-      "slug": "bodegon-parque",
-      "url": "https://bodegon-parque.vercel.app/",
-      "hero": {
-        "arquetipo": "collage-de-fotos",
-        "detalle": "banderines + polaroids inclinadas sobre rojo, tipografía de cancha",
-        "mascara_foto": "polaroid",
-        "botones": 3,
-        "animado": false
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Anton",
-        "cuerpo": "Montserrat"
-      },
-      "fondo": "rgb(14, 13, 12)",
-      "piezas": "la formación (fútbol)",
-      "secciones": [
-        "inicio",
-        "historia",
-        "formacion",
-        "carta",
-        "ejecutivo",
-        "show",
-        "llevar",
-        "salon",
-        "donde"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "rumbo-cafeteria",
-      "url": "https://rumbo-cafeteria.vercel.app/",
-      "hero": {
-        "arquetipo": "texto-izq-foto-der",
-        "detalle": "cartel luminoso del local + dos fotos en arco, fondo oscuro",
-        "mascara_foto": "arco",
-        "botones": 4,
-        "animado": true
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Playfair Display",
-        "cuerpo": "Onest"
-      },
-      "fondo": "rgb(251, 246, 239)",
-      "piezas": "la brújula de bebidas",
-      "secciones": [
-        "hero",
-        "brujula",
-        "carta",
-        "promos",
-        "local",
-        "donde"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "ciciliano",
-      "url": "https://ciciliano.vercel.app/",
-      "hero": {
-        "arquetipo": "texto-izq-foto-der",
-        "detalle": "título serif + medialunas en arco, fondo crema",
-        "mascara_foto": "arco",
-        "botones": 2,
-        "animado": false
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Fraunces",
-        "cuerpo": "Figtree"
-      },
-      "fondo": "rgb(242, 232, 213)",
-      "piezas": "hoy en la bandeja · tortas",
-      "secciones": [
-        "hero",
-        "hoy",
-        "carta",
-        "tortas",
-        "capas",
-        "resenas",
-        "visitanos"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "amasadero",
-      "url": "https://amasadero.vercel.app/",
-      "hero": {
-        "arquetipo": "foto-de-fondo-completa",
-        "detalle": "foto oscura a pantalla completa con título en mayúsculas y tarjetas de sucursal",
-        "mascara_foto": "ninguna",
-        "botones": 1,
-        "animado": false
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Montserrat",
-        "cuerpo": "Montserrat"
-      },
-      "fondo": "rgb(247, 245, 241)",
-      "piezas": "armá tu caja",
-      "secciones": [
-        "hero",
-        "ahora",
-        "proceso",
-        "carta",
-        "caja",
-        "brunch",
-        "prov",
-        "mostrador",
-        "sucursales"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "la-cana-vermuteria",
-      "url": "https://la-cana-vermuteria.vercel.app/",
-      "hero": {
-        "arquetipo": "texto-izq-foto-der",
-        "detalle": "título condensado + tres fotos rectas",
-        "mascara_foto": "rectangulo",
-        "botones": 2,
-        "animado": false
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Anton",
-        "cuerpo": "Archivo"
-      },
-      "fondo": "rgb(239, 230, 210)",
-      "piezas": "vermú propio",
-      "secciones": [
-        "hero",
-        "hora",
-        "vermu",
-        "carta",
-        "reservar",
-        "llevar",
-        "lugar",
-        "extras",
-        "donde"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "lombardi-vermuteria",
-      "url": "https://lombardi-vermuteria.vercel.app/",
-      "hero": {
-        "arquetipo": "texto-izq-foto-der",
-        "detalle": "título serif + tres fotos rectas, fondo verde",
-        "mascara_foto": "rectangulo",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Fraunces",
-        "cuerpo": "Archivo"
-      },
-      "fondo": "rgb(239, 234, 226)",
-      "piezas": "la semana · agenda",
-      "secciones": [
-        "inicio",
-        "semana",
-        "historia",
-        "carta",
-        "vermu",
-        "agenda",
-        "mesa",
-        "sec",
-        "llegar"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "lumbre-empanadas",
-      "url": "https://lumbre-empanadas.vercel.app/",
-      "hero": {
-        "arquetipo": "texto-izq-foto-der",
-        "detalle": "título en versales + empanadas en arco, chispas en canvas",
-        "mascara_foto": "arco",
-        "botones": 3,
-        "animado": true
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Cinzel",
-        "cuerpo": "Manrope"
-      },
-      "fondo": "rgb(14, 4, 3)",
-      "piezas": "armá tu docena · el fuego",
-      "secciones": [
-        "inicio",
-        "carta",
-        "caja",
-        "fuego",
-        "historia",
-        "eventos",
-        "como-pedir"
-      ],
-      "formularios_en_pagina": [
-        "eventos"
-      ]
-    },
-    {
-      "slug": "mercado-de-helados",
-      "url": "https://mercado-de-helados.vercel.app/",
-      "hero": {
-        "arquetipo": "texto-izq-foto-der",
-        "detalle": "título serif + helado en arco con logo encima, fondo crema",
-        "mascara_foto": "arco",
-        "botones": 3,
-        "animado": false
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Libre Caslon Display",
-        "cuerpo": "Jost"
-      },
-      "fondo": "rgb(252, 247, 241)",
-      "piezas": "armá tu kilo",
-      "secciones": [
-        "hero",
-        "estrella",
-        "sabores",
-        "kilo",
-        "carta",
-        "nosotros",
-        "sucursales",
-        "franquicias"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "barile-di-pizza-devoto",
-      "url": "https://barile-di-pizza-devoto.vercel.app/",
-      "hero": {
-        "arquetipo": "foto-de-fondo-completa",
-        "detalle": "foto de la fachada enmarcada con texto encima y pizarra",
-        "mascara_foto": "ninguna",
-        "botones": 2,
-        "animado": false
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Marcellus",
-        "cuerpo": "Work Sans"
-      },
-      "fondo": "rgb(234, 223, 203)",
-      "piezas": "el horno",
-      "secciones": [
-        "inicio",
-        "horno",
-        "carta",
-        "caja",
-        "familia",
-        "momentos",
-        "festeja",
-        "vereda"
-      ],
-      "formularios_en_pagina": [
-        "festeja"
-      ]
-    },
-    {
-      "slug": "casa-de-la-villa",
-      "url": "https://casa-de-la-villa.vercel.app/",
-      "hero": {
-        "arquetipo": "foto-de-fondo-completa",
-        "detalle": "foto del salón a pantalla completa con el nombre abajo",
-        "mascara_foto": "ninguna",
-        "botones": 1,
-        "animado": true
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Cormorant Garamond",
-        "cuerpo": "Jost"
-      },
-      "fondo": "rgb(22, 17, 14)",
-      "piezas": "el fuego",
-      "secciones": [
-        "inicio",
-        "casa",
-        "fuego",
-        "carta",
-        "reservar",
-        "eventos",
-        "visitanos"
-      ],
-      "formularios_en_pagina": [
-        "reservar",
-        "eventos"
-      ]
-    },
-    {
-      "slug": "las-buenas-artes",
-      "url": "https://las-buenas-artes.vercel.app/",
-      "hero": {
-        "arquetipo": "texto-izq-foto-der",
-        "detalle": "título serif + torta en arco con etiquetas, fondo crema",
-        "mascara_foto": "arco",
-        "botones": 2,
-        "animado": false
-      },
-      "nav": "barra: logo izquierda, links al centro, acción a la derecha",
-      "fuentes": {
-        "titulos": "Cormorant Garamond",
-        "cuerpo": "Figtree"
-      },
-      "fondo": "rgb(248, 241, 236)",
-      "piezas": "la vitrina · armá tu docena",
-      "secciones": [
-        "hero",
-        "vitrina",
-        "docena",
-        "sala",
-        "familia",
-        "encargar",
-        "galeria",
-        "visitanos"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "malcriada",
-      "url": "https://malcriada.vercel.app/",
-      "hero": {
-        "arquetipo": "diario-o-carta-impresa",
-        "detalle": "el hero es la carta impresa: marcos de doble línea con diamantes, la mascota y el nombre en script al centro, 3 productos con etiqueta y precio",
-        "mascara_foto": "marco-doble-de-la-carta",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "cintas que cuelgan del borde superior (como la cinta 'Menú' de la carta), sin barra",
-      "botones_estilo": "cinta con muescas + subrayado que se recoge",
-      "firma": "trazo: la intro dibuja la cara y el nombre, los marcos de doble línea se dibujan, los diamantes titilan, los títulos se entintan",
-      "wow": "la lata de colección que se destapa (arrastrar o tocar la tapa) con 7 productos en pirotines, popup de tamaño fijo",
-      "fuentes": {
-        "titulos": "Great Vibes",
-        "cuerpo": "Outfit"
-      },
-      "fondo": "rgb(251, 246, 234)",
-      "piezas": "la lata malcriada · tortas por encargo con seña · relicario de corazones · carta vidriera",
-      "secciones": [
-        "heroA",
-        "lata",
-        "tortas",
-        "alfajores",
-        "carta",
-        "historia",
-        "eventos",
-        "visitanos"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "ru-pasteleria",
-      "url": "https://ru-pasteleria.vercel.app/",
-      "hero": {
-        "arquetipo": "ventana-al-local",
-        "detalle": "la fachada de madera blanca reconstruida con la puerta de vidrio repartido (la mesa larga con flores del otro lado), cartel RU y rótulos con hilo; al scrollear se entra por la puerta",
-        "mascara_foto": "reja-de-la-puerta",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "sin barra en el hero; al pasar la puerta, barra inferior tipo app en celu e índice vertical numerado en desktop",
-      "botones_estilo": "rótulo con hilo (etiqueta blanca con línea fina, como las historias de su carta) que se llena de salvia",
-      "firma": "vidrio repartido: la intro es la puerta esmerilada que se achica hasta la del hero; fotos y fichas se despejan paño por paño",
-      "wow": "la mesa larga: talleres y cenas como lugares (plato + tarjetita de mesa) en una mesa vista de arriba; la ficha de tamaño fijo se abre sobre la mesa con cupos (sillas) y reserva del kit",
-      "fuentes": {
-        "titulos": "Gloock",
-        "cuerpo": "Albert Sans"
-      },
-      "fondo": "rgb(244, 242, 238)",
-      "piezas": "la puerta · la mesa larga · vitrina rotulada · tortas y boxes por encargo con seña · la casa nueva · tres hermanas",
-      "secciones": [
-        "heroA",
-        "casa",
-        "vitrina",
-        "encargos",
-        "mesa",
-        "brunch",
-        "hermanas",
-        "llegar"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "bodegon-nunez",
-      "url": "https://bodegonnunez.vercel.app/",
-      "hero": {
-        "arquetipo": "mesa-desde-arriba",
-        "detalle": "mantel cuadrillé + la fuente de aluminio con una milanesa gigante que asoma desde abajo y no entra en la pantalla; el cartel del logo y el papel de la carta caen",
-        "mascara_foto": "fuente-de-aluminio",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "sin barra en el hero; barra que aparece al pasar la primera pantalla (desktop) y barra inferior tipo app (celu)",
-      "botones_estilo": "etiqueta de la casa (rectángulo rojo con filete blanco) + subrayado con flecha que se estira",
-      "firma": "peso: el cartel, las fuentes y los carteles de promos caen y rebotan al apoyarse; el sello de personas golpea",
-      "wow": "¿Para cuántos?: la Mila-grosa en la fuente con 12 sillas alrededor; tocar sillas = personas, la mila se corta en porciones, dos mitades con gusto propio y 'Reservar mesa para N' (reserva del kit)",
-      "fuentes": {
-        "titulos": "Big Shoulders Display (+ Inline)",
-        "cuerpo": "Barlow"
-      },
-      "fondo": "rgb(246, 242, 234)",
-      "piezas": "fuente que no entra · ¿para cuántos? · ticket del menú ejecutivo · cazuelas del Rincón Español · tira de fotos arrastrable · carteles de promos colgados · ñoquis del 29 con cuenta regresiva",
-      "secciones": [
-        "heroA",
-        "mila",
-        "carta",
-        "mediodia",
-        "rincon",
-        "salon",
-        "promos",
-        "sedes"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "terra-soho",
-      "url": "https://terra-soho.vercel.app/",
-      "hero": {
-        "arquetipo": "mesa-desde-arriba",
-        "detalle": "su mesa de madera vista desde arriba con el logo-taza al centro (se llena de café) y 6 tazas y platos reales recortados en círculo con asa y etiqueta a mano con precio; el título en una nota de papel con un grano de café de chinche",
-        "mascara_foto": "circulo-con-asa (la forma del logo)",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "índice de tazas al costado en desktop (la de la sección se llena) + barra inferior tipo app en el celu, sin barra superior",
-      "botones_estilo": "sello redondo con asa (el logo como botón) + subrayado que se recoge",
-      "firma": "se sirve: la intro barre el logo-taza y la página se abre desde el centro; platos, café y latte art se llenan desde el centro como una taza servida",
-      "wow": "Serví tu taza: arrastrar o tocar una bebida y se sirve en la taza vista desde arriba (cambia de taza, el café se llena y el latte art se dibuja), etiqueta de tamaño fijo colgada de la taza",
-      "fuentes": {
-        "titulos": "Gloock",
-        "cuerpo": "Urbanist"
-      },
-      "fondo": "rgb(241, 232, 214)",
-      "piezas": "Serví tu taza · carta vidriera en 4 tableros (pizarra, vitrina, cocina, para tomar) · bolsas de café en grano con molienda · tote bag que se dibuja (talleres) · reseñas en servilletas",
-      "secciones": [
-        "hero-mesa",
-        "servi-tu-taza",
-        "carta-tableros",
-        "cafe-en-grano",
-        "talleres",
-        "el-lugar",
-        "resenas",
-        "como-llegar"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "kaldi-cafe",
-      "url": "https://kaldi-cafe-soho.vercel.app/",
-      "hero": {
-        "arquetipo": "cartel-o-marquesina",
-        "detalle": "las letras corpóreas KALDI sobre la piedra de la fachada, arrancan prendidas en bronce (como el cartel de noche) con sombra que sigue la luz; tecla para apagarlo; placa con el estado abajo a la izquierda, sin botones",
-        "mascara_foto": "sin foto en el hero",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "barra inferior tipo app en el celu (con la bolsita) + índice numerado al costado en desktop, sin barra superior",
-      "botones_estilo": "recto que se llena de color cereza desde la izquierda + flecha que se estira",
-      "firma": "luz: la intro arranca de noche con el cartel prendido y amanece; las secciones y fotos entran prendiéndose con un parpadeo corto",
-      "wow": "el cartel: se prende en la intro, la luz sigue al mouse o al dedo y la tecla lo apaga y pasa el muro a día (el cafeto con la cabra se probó y Alejo lo sacó: 'raro, no copado')",
-      "fuentes": {
-        "titulos": "Gilda Display",
-        "cuerpo": "Hanken Grotesk"
-      },
-      "fondo": "rgb(233, 226, 214)",
-      "piezas": "el cartel con luz · estantes de madera de la vidriera con el + sobre la foto · tickets de promos con la del momento · bolsa y caja de cookies dibujadas · historia con foto de la puerta",
-      "secciones": [
-        "cartel",
-        "vidriera",
-        "promos",
-        "llevate",
-        "historia",
-        "llegar"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "hobby-cafe",
-      "url": "https://hobby-cafe.vercel.app/",
-      "hero": {
-        "arquetipo": "letras-ventana",
-        "detalle": "el logo HobbY gigante de papel recortado: cada letra es una ventana (clipPath) a fotos que rotan; al tocar o pasar una letra aparece la etiqueta con el nombre y el precio en el local elegido. Intro: las letras caen como papel y se abren en fotos",
-        "mascara_foto": "las letras del logo",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "barra inferior en el celu + índice vertical sobre papel en desktop (aparece después del hero); selector de local Malabia/Guevara fijo",
-      "botones_estilo": "recorte de papel (clip-path irregular) + tira de papel",
-      "firma": "papel que se apoya: secciones, fichas y vasos entran como recortes que caen y se asientan con una leve rotación",
-      "wow": "armá la ronda: pila de vasos de papel, uno por amigo (hasta 6); se tocan o arrastran las bebidas a la pila, la info aparece pegada al vaso y 'Pedir la ronda' manda todo al carrito con retiro en el local elegido",
-      "fuentes": {
-        "titulos": "Bricolage Grotesque",
-        "cuerpo": "Hanken Grotesk"
-      },
-      "fondo": "#F2EDEB",
-      "piezas": "letras-ventana · la ronda de vasos · vidriera de 8 platos · collage de fotos con forma de grano de café (Malabia) · eventos con dos papeles-CTA y popup · market en estantes de madera · mapa con los dos locales",
-      "secciones": [
-        "hero-letras",
-        "ronda",
-        "lo-que-mas-sale",
-        "la-casa-de-palermo",
-        "eventos",
-        "market",
-        "locales"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "signos-cafe",
-      "url": "https://signos-cafe.vercel.app/",
-      "hero": {
-        "arquetipo": "afiche-texto-detras",
-        "detalle": "los afiches de su Instagram hechos web: el nombre del producto en Anton marrón gigante DETRÁS del recorte (roll, avocado toast, flat white), nota manuscrita lima con flecha, descripción y precio en óvalo; los afiches se despegan y se pegan uno atrás del otro. Intro: el logo se estampa en el centro y vuela a su lugar",
-        "mascara_foto": "recorte del producto sin fondo",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "barra inferior en el celu + píldora inferior centrada en desktop (aparece después del hero)",
-      "botones_estilo": "óvalo dibujado a mano (trazo irregular alrededor del texto)",
-      "firma": "se pegan como afiches: secciones y fichas entran con un leve giro, como un papel que se pega y se alisa",
-      "wow": "la máquina de los signos: una expendedora retro con Apuki arriba; se elige el signo (o sale el del día), se tira de la palanca y se imprime un ticket-afiche con el café o plato del signo que se suma al pedido",
-      "fuentes": {
-        "titulos": "Anton",
-        "cuerpo": "DM Sans"
-      },
-      "fondo": "#F0EADE",
-      "piezas": "afiche texto-detrás · máquina de los signos con palanca y ticket · carta-afiche con foto que cambia por categoría · agenda de noches con fechas en bloque terracota · Apuki que se toca y cambia de pose · mapa protagonista con horarios",
-      "secciones": [
-        "hero-afiche",
-        "maquina-signos",
-        "carta",
-        "noches",
-        "el-jefe",
-        "como-llegar"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "parrilla-el-potrero",
-      "url": "https://parrilla-el-potrero.vercel.app/",
-      "hero": {
-        "arquetipo": "cartel-o-marquesina",
-        "detalle": "su pizarra a tiza (marco de madera, fondo azul pizarra) centrada sobre la foto del salón en sepia, con horarios y el estado de hoy en vivo; la intro (la llama del logo) vuela al logo",
-        "mascara_foto": "ninguna (foto a sangre detrás de la pizarra)",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "celu: barra inferior tipo app (Parrilla · Carta · Comanda · Llegar); desktop: sin barra en el hero, barra opaca que baja al pasarlo",
-      "botones_estilo": "rectos que se llenan de brasa desde la izquierda + link con subrayado oro; sumar = + redondo ladrillo",
-      "firma": "brasa: todo entra apagado y se enciende con un brillo naranja corto; títulos letra por letra, cortes que se calientan al caer, fotos que se prenden de sepia oscuro a color",
-      "wow": "¿Cuántos son?: parrilla cenital con cortes dibujados que se llena con la parrillada justa según la cantidad de personas (platos en la mesa), ficha de tamaño fijo al tocar cada corte, suma al carrito",
-      "fuentes": {
-        "titulos": "Big Shoulders Display",
-        "cuerpo": "DM Sans",
-        "acento": "Cabin Sketch (tiza)",
-        "nombre": "Alegreya SC"
-      },
-      "fondo": "rgb(20, 16, 12)",
-      "piezas": "la parrilla ¿Cuántos son? · pizarra con estado en vivo · comanda de papel (carta vidriera) · el 4501-4400 gigante sobre ladrillo · ticket de comanda",
-      "secciones": [
-        "heroPizarra",
-        "parrilla",
-        "oficio",
-        "carta",
-        "pedidos",
-        "salon",
-        "llegar"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "casa-roti",
-      "url": "https://casa-roti.vercel.app/",
-      "hero": {
-        "arquetipo": "el-wow-es-el-hero",
-        "detalle": "fondo negro con la luz naranja de la lámpara; CASA ROTI gigante con el cuadrillé del gorrito adentro de las letras (celu: una línea arriba; desktop: CASA y ROTI a los costados) y el spiedo vertical colgando en el medio, con 8 platos que giran",
-        "mascara_foto": "plato-redondo-de-su-vajilla",
-        "botones": 1,
-        "animado": true
-      },
-      "nav": "sin barra en el hero; después barra inferior tipo app en el celu (Spiedo · Hoy · Carta · Fiestas · Pedido) e índice vertical de puntos en desktop",
-      "botones_estilo": "ticket de comanda: recto, troquel a los costados, línea punteada y número (01, 02…)",
-      "firma": "giro sobre el eje: la intro es una moneda (logo / cuadrillé) que gira, el spiedo, las entradas con rotateY y el plato del día que gira al entrar",
-      "wow": "el spiedo vivo: varilla, campana con resistencia, coronas y horquillas con 8 platos colgados en dos pisos; se arrastra, banderita con nombre y precio (cinta HOY en el plato del día), popup de tamaño fijo con Sumar",
-      "fuentes": {
-        "titulos": "Bebas Neue",
-        "cuerpo": "Plus Jakarta Sans"
-      },
-      "fondo": "rgb(20, 20, 20)",
-      "piezas": "el spiedo vivo · pizarra de letras del plato del día · carta vidriera El mostrador (6 familias × 5) · mesa de fiestas en popup · canal + cuenta regresiva al 29",
-      "secciones": [
-        "spiedo",
-        "hoy",
-        "mostrador",
-        "fiestas",
-        "novedades",
-        "llegar"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "sabores-de-hogar",
-      "url": "https://saboresdehogar.vercel.app/",
-      "hero": {
-        "arquetipo": "mesa-desde-arriba",
-        "detalle": "la mesa de la merienda: madera vista desde arriba con la vajilla real del local recortada entera (latte en platito azul, bandeja con capuccino y exprimido, roll y tarta de frutillas en platos negros, tostados), estática, con vapor en las tazas y un individual de papel con la marca en el centro; la mesa sigue sin corte en la sección de la carta y los platos de abajo cruzan el borde; la intro dibuja el logo y lo apoya en el individual",
-        "mascara_foto": "ninguna (vajilla recortada con borde ajustado a la forma del plato, una sola sombra con luz desde arriba a la izquierda)",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "celu: barra inferior tipo app (Carta · Dulces · Tortas · Pedido); desktop: índice vertical de mariposas a la derecha; ambas aparecen al pasar la mesa",
-      "botones_estilo": "sello redondo con texto girando en el anillo + link con subrayado que se dibuja; sumar = + redondo rosa",
-      "firma": "hojas: los bloques entran girados -7° y se asientan como una hoja que cae",
-      "wow": "Atrapá una mariposa: el empapelado de selva real del salón con 8 mariposas que se llevaron algo de la vitrina; al tocar una vuela y se posa en una tarjeta de tamaño fijo con el producto, sumar o encargar; contador de atrapadas",
-      "fuentes": {
-        "titulos": "Bricolage Grotesque",
-        "cuerpo": "Rethink Sans",
-        "nombre": "Sacramento"
-      },
-      "fondo": "rgb(251, 246, 242)",
-      "piezas": "mesa continua hero → carta con vajilla real · individual de papel con el logo · empapelado de mariposas · hoja de carta con señaladores y plato en hover · estante iluminado con tortas por encargo · servilletas con reseñas",
-      "secciones": [
-        "inicio",
-        "carta",
-        "mariposas",
-        "encargos",
-        "casa",
-        "resenas",
-        "llegar"
-      ],
-      "formularios_en_pagina": []
-    },
-    {
-      "slug": "buna-cafe",
-      "url": "https://buna-cafe.vercel.app/",
-      "hero": {
-        "arquetipo": "ventana-al-local",
-        "detalle": "fachada real dibujada a línea (ventanal con reja + ventana de take away); la intro estampa el grano-B y lo hace volar al vidrio como vinilo; el scroll hace un zoom continuo y entra por el ventanal al salón real",
-        "mascara_foto": "ventanal de la fachada",
-        "botones": 2,
-        "animado": true
-      },
-      "nav": "celu: barra inferior tipo app (Carta, Tarjeta, Locales, Panel, Pedido n); desktop: índice vertical de granos + pill 'Tu pedido' arriba a la derecha",
-      "botones_estilo": "sello redondo inclinado ('Pedí take away') + links con trazo a mano; '+' redondos del kit en hoja",
-      "firma": "sello: las fichas y tarjetas entran estampándose (escala + giro que se asienta)",
-      "wow": "la tarjeta de sellos de Buna: 9 cafés en círculos; tocar uno lo sella y la ficha de tamaño fijo muestra foto, precio y Sumar; al 9/9 se estampa el décimo y cae el sello '¡Llegaste al café gratis!'",
-      "fuentes": {
-        "titulos": "Quicksand",
-        "cuerpo": "DM Sans",
-        "acento": "Caveat"
-      },
-      "fondo": "rgb(238, 237, 233)",
-      "piezas": "fachada dibujada · tarjeta de sellos · vidriera en dos hojas (desktop) / chips (celu) · estante de café en grano con moliendas · mural del barrio con mosaico + popup de la feria · mapa con pines-grano",
-      "secciones": [
-        "hero",
-        "tarjeta",
-        "carta",
-        "grano",
-        "barrio",
-        "locales"
-      ],
-      "formularios_en_pagina": []
-    }
-  ]
+ "actualizado": "2026-11-14",
+ "nota": "Registro de diseño de las demos publicadas: solo datos de diseño (qué hero, navegación, tipografía y piezas usó cada una). Antes de proponer un moodboard, leerlo y cumplir diseno/catalogo.md. Al publicar una demo, sumar su entrada (scripts/ficha-diseno.py da los datos). La valoración de cada demo está en la rúbrica del proyecto DEMOS, no acá.",
+ "demos": [
+  {
+   "slug": "anippe",
+   "url": "https://anippe.vercel.app/",
+   "hero": {
+    "arquetipo": "texto-izq-foto-der",
+    "detalle": "título serif + pan en círculo con sellos, fondo terracota con trazo",
+    "mascara_foto": "circulo",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Fraunces",
+    "cuerpo": "Jost"
+   },
+   "fondo": "rgb(246, 235, 223)",
+   "piezas": "panes de hoy · ruleta · box de regalo · gift card",
+   "secciones": [
+    "hero",
+    "ahora",
+    "panes",
+    "tortas",
+    "box",
+    "regala",
+    "carta",
+    "casa",
+    "visitanos"
+   ],
+   "formularios_en_pagina": [
+    "regala"
+   ]
+  },
+  {
+   "slug": "bandini-pizzas",
+   "url": "https://bandini-pizzas.vercel.app/",
+   "hero": {
+    "arquetipo": "objeto-grafico-propio",
+    "detalle": "abanico de afiches de la marca sobre rayos, tipografía slab",
+    "mascara_foto": "ninguna",
+    "botones": 2,
+    "animado": false
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Alfa Slab One",
+    "cuerpo": "Courier Prime"
+   },
+   "fondo": "rgb(244, 242, 226)",
+   "piezas": "mitad y mitad · los afiches",
+   "secciones": [
+    "hero",
+    "pasos",
+    "carta",
+    "mitad",
+    "horno",
+    "afiches",
+    "resenas",
+    "donde"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "fornole-urquiza",
+   "url": "https://fornole-urquiza.vercel.app/",
+   "hero": {
+    "arquetipo": "partido-color-foto",
+    "detalle": "mitad rojo pleno con título condensado, mitad foto a sangre",
+    "mascara_foto": "ninguna",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Instrument Serif",
+    "cuerpo": "Instrument Sans"
+   },
+   "fondo": "rgb(250, 247, 238)",
+   "piezas": "los ídolos · cava",
+   "secciones": [
+    "inicio",
+    "idolos",
+    "carta",
+    "panaderia",
+    "cava",
+    "reservas",
+    "historia",
+    "local",
+    "visitanos"
+   ],
+   "formularios_en_pagina": [
+    "reservas"
+   ]
+  },
+  {
+   "slug": "mila-patisserie",
+   "url": "https://mila-patisserie.vercel.app/",
+   "hero": {
+    "arquetipo": "texto-izq-ilustracion-der",
+    "detalle": "ilustración de la marca en vez de foto, cinta de texto abajo",
+    "mascara_foto": "ninguna",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Unbounded",
+    "cuerpo": "Zen Maru Gothic"
+   },
+   "fondo": "rgb(243, 230, 210)",
+   "piezas": "tortas por encargo",
+   "secciones": [
+    "hero",
+    "encargos",
+    "sec",
+    "local",
+    "tienda",
+    "sec",
+    "localcito",
+    "visitanos"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "rosie-cafe",
+   "url": "https://rosie-cafe.vercel.app/",
+   "hero": {
+    "arquetipo": "texto-izq-foto-der",
+    "detalle": "título condensado + torta en óvalo con sellos, fondo rosa con patrón",
+    "mascara_foto": "ovalo",
+    "botones": 2,
+    "animado": false
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Barlow Condensed",
+    "cuerpo": "Archivo"
+   },
+   "fondo": "rgb(255, 246, 241)",
+   "piezas": "armá tu torta (juego por pasos)",
+   "secciones": [
+    "inicio",
+    "ahora",
+    "carta",
+    "tortas",
+    "llevar",
+    "saber",
+    "cosas",
+    "galeria",
+    "visitanos"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "bien-etre-cafe",
+   "url": "https://bien-etre-cafe.vercel.app/",
+   "hero": {
+    "arquetipo": "texto-izq-foto-der",
+    "detalle": "foto del jardín con borde de ondas de la marca y movimiento",
+    "mascara_foto": "forma-de-marca",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "DM Serif Display",
+    "cuerpo": "Josefin Sans"
+   },
+   "fondo": "rgb(237, 235, 221)",
+   "piezas": "el pasaje · agenda",
+   "secciones": [
+    "inicio",
+    "pasaje",
+    "carta",
+    "agenda",
+    "almuerzos",
+    "jardin",
+    "reglas",
+    "visitanos"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "bodegon-lacade",
+   "url": "https://bodegon-lacade.vercel.app/",
+   "hero": {
+    "arquetipo": "partido-color-foto",
+    "detalle": "celeste a rayas + foto del salón, sello que gira, la web cambia según la hora",
+    "mascara_foto": "ninguna",
+    "botones": 4,
+    "animado": true
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Big Shoulders Display",
+    "cuerpo": "Adventor"
+   },
+   "fondo": "rgb(232, 232, 232)",
+   "piezas": "ídolos · la sede · reloj día/noche",
+   "secciones": [
+    "inicio",
+    "sede",
+    "idolos",
+    "carta",
+    "ejecutivo",
+    "reservas",
+    "regala",
+    "ustedes",
+    "cumple",
+    "llegar"
+   ],
+   "formularios_en_pagina": [
+    "reservas",
+    "regala"
+   ]
+  },
+  {
+   "slug": "mundolococgi",
+   "url": "https://mundolococgi.vercel.app/",
+   "hero": {
+    "arquetipo": "escena-interactiva",
+    "detalle": "globo en canvas con las producciones orbitando, se arrastra",
+    "mascara_foto": "ninguna",
+    "botones": 3,
+    "animado": true
+   },
+   "nav": "mínima",
+   "fuentes": {
+    "titulos": "Schibsted Grotesk",
+    "cuerpo": "Instrument Sans"
+   },
+   "fondo": "rgb(3, 5, 10)",
+   "piezas": "el globo es el hero",
+   "secciones": [
+    "hero",
+    "next"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "paozito",
+   "url": "https://paozito.vercel.app/",
+   "hero": {
+    "arquetipo": "tipografia-gigante-sobre-foto",
+    "detalle": "título manuscrito enorme que pisa la foto de la calle, polaroid y stickers",
+    "mascara_foto": "ninguna",
+    "botones": 2,
+    "animado": false
+   },
+   "nav": "píldora flotante",
+   "fuentes": {
+    "titulos": "Just Another Hand",
+    "cuerpo": "Montserrat"
+   },
+   "fondo": "rgb(251, 247, 240)",
+   "piezas": "saquinho (armar pedido con física) · carta vidriera",
+   "secciones": [
+    "hero",
+    "tape",
+    "sabores",
+    "saquinho",
+    "tape",
+    "galeria",
+    "cardapio",
+    "lojas"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "compadre-bike-and-coffee",
+   "url": "https://compadre-bike-and-coffee.vercel.app/",
+   "hero": {
+    "arquetipo": "marca-centrada-objetos-alrededor",
+    "detalle": "nombre espaciado al centro con platos alrededor sobre granito, logo que gira en el plato",
+    "mascara_foto": "ninguna",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "píldora flotante",
+   "fuentes": {
+    "titulos": "Antonio",
+    "cuerpo": "Instrument Sans"
+   },
+   "fondo": "rgb(255, 255, 249)",
+   "piezas": "logo que avanza con el scroll · armá tu caja",
+   "secciones": [
+    "inicio",
+    "tienda",
+    "caja",
+    "esquina",
+    "carta",
+    "compadres",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "bodegon-devoto",
+   "url": "https://bodegon-devoto.vercel.app/",
+   "hero": {
+    "arquetipo": "texto-izq-foto-der",
+    "detalle": "título serif + plato en arco, sticker del mozo que se mueve",
+    "mascara_foto": "arco",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Instrument Serif",
+    "cuerpo": "Hanken Grotesk"
+   },
+   "fondo": "rgb(255, 247, 240)",
+   "piezas": "elegí tu mila · armá la mesa",
+   "secciones": [
+    "hero",
+    "hoy",
+    "carta",
+    "mila",
+    "mesa",
+    "mesas",
+    "reservar",
+    "llegar"
+   ],
+   "formularios_en_pagina": [
+    "reservar"
+   ]
+  },
+  {
+   "slug": "bodegon-parque",
+   "url": "https://bodegon-parque.vercel.app/",
+   "hero": {
+    "arquetipo": "collage-de-fotos",
+    "detalle": "banderines + polaroids inclinadas sobre rojo, tipografía de cancha",
+    "mascara_foto": "polaroid",
+    "botones": 3,
+    "animado": false
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Anton",
+    "cuerpo": "Montserrat"
+   },
+   "fondo": "rgb(14, 13, 12)",
+   "piezas": "la formación (fútbol)",
+   "secciones": [
+    "inicio",
+    "historia",
+    "formacion",
+    "carta",
+    "ejecutivo",
+    "show",
+    "llevar",
+    "salon",
+    "donde"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "rumbo-cafeteria",
+   "url": "https://rumbo-cafeteria.vercel.app/",
+   "hero": {
+    "arquetipo": "texto-izq-foto-der",
+    "detalle": "cartel luminoso del local + dos fotos en arco, fondo oscuro",
+    "mascara_foto": "arco",
+    "botones": 4,
+    "animado": true
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Playfair Display",
+    "cuerpo": "Onest"
+   },
+   "fondo": "rgb(251, 246, 239)",
+   "piezas": "la brújula de bebidas",
+   "secciones": [
+    "hero",
+    "brujula",
+    "carta",
+    "promos",
+    "local",
+    "donde"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "ciciliano",
+   "url": "https://ciciliano.vercel.app/",
+   "hero": {
+    "arquetipo": "texto-izq-foto-der",
+    "detalle": "título serif + medialunas en arco, fondo crema",
+    "mascara_foto": "arco",
+    "botones": 2,
+    "animado": false
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Fraunces",
+    "cuerpo": "Figtree"
+   },
+   "fondo": "rgb(242, 232, 213)",
+   "piezas": "hoy en la bandeja · tortas",
+   "secciones": [
+    "hero",
+    "hoy",
+    "carta",
+    "tortas",
+    "capas",
+    "resenas",
+    "visitanos"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "amasadero",
+   "url": "https://amasadero.vercel.app/",
+   "hero": {
+    "arquetipo": "foto-de-fondo-completa",
+    "detalle": "foto oscura a pantalla completa con título en mayúsculas y tarjetas de sucursal",
+    "mascara_foto": "ninguna",
+    "botones": 1,
+    "animado": false
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Montserrat",
+    "cuerpo": "Montserrat"
+   },
+   "fondo": "rgb(247, 245, 241)",
+   "piezas": "armá tu caja",
+   "secciones": [
+    "hero",
+    "ahora",
+    "proceso",
+    "carta",
+    "caja",
+    "brunch",
+    "prov",
+    "mostrador",
+    "sucursales"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "la-cana-vermuteria",
+   "url": "https://la-cana-vermuteria.vercel.app/",
+   "hero": {
+    "arquetipo": "texto-izq-foto-der",
+    "detalle": "título condensado + tres fotos rectas",
+    "mascara_foto": "rectangulo",
+    "botones": 2,
+    "animado": false
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Anton",
+    "cuerpo": "Archivo"
+   },
+   "fondo": "rgb(239, 230, 210)",
+   "piezas": "vermú propio",
+   "secciones": [
+    "hero",
+    "hora",
+    "vermu",
+    "carta",
+    "reservar",
+    "llevar",
+    "lugar",
+    "extras",
+    "donde"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "lombardi-vermuteria",
+   "url": "https://lombardi-vermuteria.vercel.app/",
+   "hero": {
+    "arquetipo": "texto-izq-foto-der",
+    "detalle": "título serif + tres fotos rectas, fondo verde",
+    "mascara_foto": "rectangulo",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Fraunces",
+    "cuerpo": "Archivo"
+   },
+   "fondo": "rgb(239, 234, 226)",
+   "piezas": "la semana · agenda",
+   "secciones": [
+    "inicio",
+    "semana",
+    "historia",
+    "carta",
+    "vermu",
+    "agenda",
+    "mesa",
+    "sec",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "lumbre-empanadas",
+   "url": "https://lumbre-empanadas.vercel.app/",
+   "hero": {
+    "arquetipo": "texto-izq-foto-der",
+    "detalle": "título en versales + empanadas en arco, chispas en canvas",
+    "mascara_foto": "arco",
+    "botones": 3,
+    "animado": true
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Cinzel",
+    "cuerpo": "Manrope"
+   },
+   "fondo": "rgb(14, 4, 3)",
+   "piezas": "armá tu docena · el fuego",
+   "secciones": [
+    "inicio",
+    "carta",
+    "caja",
+    "fuego",
+    "historia",
+    "eventos",
+    "como-pedir"
+   ],
+   "formularios_en_pagina": [
+    "eventos"
+   ]
+  },
+  {
+   "slug": "mercado-de-helados",
+   "url": "https://mercado-de-helados.vercel.app/",
+   "hero": {
+    "arquetipo": "texto-izq-foto-der",
+    "detalle": "título serif + helado en arco con logo encima, fondo crema",
+    "mascara_foto": "arco",
+    "botones": 3,
+    "animado": false
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Libre Caslon Display",
+    "cuerpo": "Jost"
+   },
+   "fondo": "rgb(252, 247, 241)",
+   "piezas": "armá tu kilo",
+   "secciones": [
+    "hero",
+    "estrella",
+    "sabores",
+    "kilo",
+    "carta",
+    "nosotros",
+    "sucursales",
+    "franquicias"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "barile-di-pizza-devoto",
+   "url": "https://barile-di-pizza-devoto.vercel.app/",
+   "hero": {
+    "arquetipo": "foto-de-fondo-completa",
+    "detalle": "foto de la fachada enmarcada con texto encima y pizarra",
+    "mascara_foto": "ninguna",
+    "botones": 2,
+    "animado": false
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Marcellus",
+    "cuerpo": "Work Sans"
+   },
+   "fondo": "rgb(234, 223, 203)",
+   "piezas": "el horno",
+   "secciones": [
+    "inicio",
+    "horno",
+    "carta",
+    "caja",
+    "familia",
+    "momentos",
+    "festeja",
+    "vereda"
+   ],
+   "formularios_en_pagina": [
+    "festeja"
+   ]
+  },
+  {
+   "slug": "casa-de-la-villa",
+   "url": "https://casa-de-la-villa.vercel.app/",
+   "hero": {
+    "arquetipo": "foto-de-fondo-completa",
+    "detalle": "foto del salón a pantalla completa con el nombre abajo",
+    "mascara_foto": "ninguna",
+    "botones": 1,
+    "animado": true
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Cormorant Garamond",
+    "cuerpo": "Jost"
+   },
+   "fondo": "rgb(22, 17, 14)",
+   "piezas": "el fuego",
+   "secciones": [
+    "inicio",
+    "casa",
+    "fuego",
+    "carta",
+    "reservar",
+    "eventos",
+    "visitanos"
+   ],
+   "formularios_en_pagina": [
+    "reservar",
+    "eventos"
+   ]
+  },
+  {
+   "slug": "las-buenas-artes",
+   "url": "https://las-buenas-artes.vercel.app/",
+   "hero": {
+    "arquetipo": "texto-izq-foto-der",
+    "detalle": "título serif + torta en arco con etiquetas, fondo crema",
+    "mascara_foto": "arco",
+    "botones": 2,
+    "animado": false
+   },
+   "nav": "barra: logo izquierda, links al centro, acción a la derecha",
+   "fuentes": {
+    "titulos": "Cormorant Garamond",
+    "cuerpo": "Figtree"
+   },
+   "fondo": "rgb(248, 241, 236)",
+   "piezas": "la vitrina · armá tu docena",
+   "secciones": [
+    "hero",
+    "vitrina",
+    "docena",
+    "sala",
+    "familia",
+    "encargar",
+    "galeria",
+    "visitanos"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "malcriada",
+   "url": "https://malcriada.vercel.app/",
+   "hero": {
+    "arquetipo": "diario-o-carta-impresa",
+    "detalle": "el hero es la carta impresa: marcos de doble línea con diamantes, la mascota y el nombre en script al centro, 3 productos con etiqueta y precio",
+    "mascara_foto": "marco-doble-de-la-carta",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "cintas que cuelgan del borde superior (como la cinta 'Menú' de la carta), sin barra",
+   "botones_estilo": "cinta con muescas + subrayado que se recoge",
+   "firma": "trazo: la intro dibuja la cara y el nombre, los marcos de doble línea se dibujan, los diamantes titilan, los títulos se entintan",
+   "wow": "la lata de colección que se destapa (arrastrar o tocar la tapa) con 7 productos en pirotines, popup de tamaño fijo",
+   "fuentes": {
+    "titulos": "Great Vibes",
+    "cuerpo": "Outfit"
+   },
+   "fondo": "rgb(251, 246, 234)",
+   "piezas": "la lata malcriada · tortas por encargo con seña · relicario de corazones · carta vidriera",
+   "secciones": [
+    "heroA",
+    "lata",
+    "tortas",
+    "alfajores",
+    "carta",
+    "historia",
+    "eventos",
+    "visitanos"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "ru-pasteleria",
+   "url": "https://ru-pasteleria.vercel.app/",
+   "hero": {
+    "arquetipo": "ventana-al-local",
+    "detalle": "la fachada de madera blanca reconstruida con la puerta de vidrio repartido (la mesa larga con flores del otro lado), cartel RU y rótulos con hilo; al scrollear se entra por la puerta",
+    "mascara_foto": "reja-de-la-puerta",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "sin barra en el hero; al pasar la puerta, barra inferior tipo app en celu e índice vertical numerado en desktop",
+   "botones_estilo": "rótulo con hilo (etiqueta blanca con línea fina, como las historias de su carta) que se llena de salvia",
+   "firma": "vidrio repartido: la intro es la puerta esmerilada que se achica hasta la del hero; fotos y fichas se despejan paño por paño",
+   "wow": "la mesa larga: talleres y cenas como lugares (plato + tarjetita de mesa) en una mesa vista de arriba; la ficha de tamaño fijo se abre sobre la mesa con cupos (sillas) y reserva del kit",
+   "fuentes": {
+    "titulos": "Gloock",
+    "cuerpo": "Albert Sans"
+   },
+   "fondo": "rgb(244, 242, 238)",
+   "piezas": "la puerta · la mesa larga · vitrina rotulada · tortas y boxes por encargo con seña · la casa nueva · tres hermanas",
+   "secciones": [
+    "heroA",
+    "casa",
+    "vitrina",
+    "encargos",
+    "mesa",
+    "brunch",
+    "hermanas",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "bodegon-nunez",
+   "url": "https://bodegonnunez.vercel.app/",
+   "hero": {
+    "arquetipo": "mesa-desde-arriba",
+    "detalle": "mantel cuadrillé + la fuente de aluminio con una milanesa gigante que asoma desde abajo y no entra en la pantalla; el cartel del logo y el papel de la carta caen",
+    "mascara_foto": "fuente-de-aluminio",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "sin barra en el hero; barra que aparece al pasar la primera pantalla (desktop) y barra inferior tipo app (celu)",
+   "botones_estilo": "etiqueta de la casa (rectángulo rojo con filete blanco) + subrayado con flecha que se estira",
+   "firma": "peso: el cartel, las fuentes y los carteles de promos caen y rebotan al apoyarse; el sello de personas golpea",
+   "wow": "¿Para cuántos?: la Mila-grosa en la fuente con 12 sillas alrededor; tocar sillas = personas, la mila se corta en porciones, dos mitades con gusto propio y 'Reservar mesa para N' (reserva del kit)",
+   "fuentes": {
+    "titulos": "Big Shoulders Display (+ Inline)",
+    "cuerpo": "Barlow"
+   },
+   "fondo": "rgb(246, 242, 234)",
+   "piezas": "fuente que no entra · ¿para cuántos? · ticket del menú ejecutivo · cazuelas del Rincón Español · tira de fotos arrastrable · carteles de promos colgados · ñoquis del 29 con cuenta regresiva",
+   "secciones": [
+    "heroA",
+    "mila",
+    "carta",
+    "mediodia",
+    "rincon",
+    "salon",
+    "promos",
+    "sedes"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "terra-soho",
+   "url": "https://terra-soho.vercel.app/",
+   "hero": {
+    "arquetipo": "mesa-desde-arriba",
+    "detalle": "su mesa de madera vista desde arriba con el logo-taza al centro (se llena de café) y 6 tazas y platos reales recortados en círculo con asa y etiqueta a mano con precio; el título en una nota de papel con un grano de café de chinche",
+    "mascara_foto": "circulo-con-asa (la forma del logo)",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "índice de tazas al costado en desktop (la de la sección se llena) + barra inferior tipo app en el celu, sin barra superior",
+   "botones_estilo": "sello redondo con asa (el logo como botón) + subrayado que se recoge",
+   "firma": "se sirve: la intro barre el logo-taza y la página se abre desde el centro; platos, café y latte art se llenan desde el centro como una taza servida",
+   "wow": "Serví tu taza: arrastrar o tocar una bebida y se sirve en la taza vista desde arriba (cambia de taza, el café se llena y el latte art se dibuja), etiqueta de tamaño fijo colgada de la taza",
+   "fuentes": {
+    "titulos": "Gloock",
+    "cuerpo": "Urbanist"
+   },
+   "fondo": "rgb(241, 232, 214)",
+   "piezas": "Serví tu taza · carta vidriera en 4 tableros (pizarra, vitrina, cocina, para tomar) · bolsas de café en grano con molienda · tote bag que se dibuja (talleres) · reseñas en servilletas",
+   "secciones": [
+    "hero-mesa",
+    "servi-tu-taza",
+    "carta-tableros",
+    "cafe-en-grano",
+    "talleres",
+    "el-lugar",
+    "resenas",
+    "como-llegar"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "kaldi-cafe",
+   "url": "https://kaldi-cafe-soho.vercel.app/",
+   "hero": {
+    "arquetipo": "cartel-o-marquesina",
+    "detalle": "las letras corpóreas KALDI sobre la piedra de la fachada, arrancan prendidas en bronce (como el cartel de noche) con sombra que sigue la luz; tecla para apagarlo; placa con el estado abajo a la izquierda, sin botones",
+    "mascara_foto": "sin foto en el hero",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "barra inferior tipo app en el celu (con la bolsita) + índice numerado al costado en desktop, sin barra superior",
+   "botones_estilo": "recto que se llena de color cereza desde la izquierda + flecha que se estira",
+   "firma": "luz: la intro arranca de noche con el cartel prendido y amanece; las secciones y fotos entran prendiéndose con un parpadeo corto",
+   "wow": "el cartel: se prende en la intro, la luz sigue al mouse o al dedo y la tecla lo apaga y pasa el muro a día (el cafeto con la cabra se probó y Alejo lo sacó: 'raro, no copado')",
+   "fuentes": {
+    "titulos": "Gilda Display",
+    "cuerpo": "Hanken Grotesk"
+   },
+   "fondo": "rgb(233, 226, 214)",
+   "piezas": "el cartel con luz · estantes de madera de la vidriera con el + sobre la foto · tickets de promos con la del momento · bolsa y caja de cookies dibujadas · historia con foto de la puerta",
+   "secciones": [
+    "cartel",
+    "vidriera",
+    "promos",
+    "llevate",
+    "historia",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "hobby-cafe",
+   "url": "https://hobby-cafe.vercel.app/",
+   "hero": {
+    "arquetipo": "letras-ventana",
+    "detalle": "el logo HobbY gigante de papel recortado: cada letra es una ventana (clipPath) a fotos que rotan; al tocar o pasar una letra aparece la etiqueta con el nombre y el precio en el local elegido. Intro: las letras caen como papel y se abren en fotos",
+    "mascara_foto": "las letras del logo",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "barra inferior en el celu + índice vertical sobre papel en desktop (aparece después del hero); selector de local Malabia/Guevara fijo",
+   "botones_estilo": "recorte de papel (clip-path irregular) + tira de papel",
+   "firma": "papel que se apoya: secciones, fichas y vasos entran como recortes que caen y se asientan con una leve rotación",
+   "wow": "armá la ronda: pila de vasos de papel, uno por amigo (hasta 6); se tocan o arrastran las bebidas a la pila, la info aparece pegada al vaso y 'Pedir la ronda' manda todo al carrito con retiro en el local elegido",
+   "fuentes": {
+    "titulos": "Bricolage Grotesque",
+    "cuerpo": "Hanken Grotesk"
+   },
+   "fondo": "#F2EDEB",
+   "piezas": "letras-ventana · la ronda de vasos · vidriera de 8 platos · collage de fotos con forma de grano de café (Malabia) · eventos con dos papeles-CTA y popup · market en estantes de madera · mapa con los dos locales",
+   "secciones": [
+    "hero-letras",
+    "ronda",
+    "lo-que-mas-sale",
+    "la-casa-de-palermo",
+    "eventos",
+    "market",
+    "locales"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "signos-cafe",
+   "url": "https://signos-cafe.vercel.app/",
+   "hero": {
+    "arquetipo": "afiche-texto-detras",
+    "detalle": "los afiches de su Instagram hechos web: el nombre del producto en Anton marrón gigante DETRÁS del recorte (roll, avocado toast, flat white), nota manuscrita lima con flecha, descripción y precio en óvalo; los afiches se despegan y se pegan uno atrás del otro. Intro: el logo se estampa en el centro y vuela a su lugar",
+    "mascara_foto": "recorte del producto sin fondo",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "barra inferior en el celu + píldora inferior centrada en desktop (aparece después del hero)",
+   "botones_estilo": "óvalo dibujado a mano (trazo irregular alrededor del texto)",
+   "firma": "se pegan como afiches: secciones y fichas entran con un leve giro, como un papel que se pega y se alisa",
+   "wow": "la máquina de los signos: una expendedora retro con Apuki arriba; se elige el signo (o sale el del día), se tira de la palanca y se imprime un ticket-afiche con el café o plato del signo que se suma al pedido",
+   "fuentes": {
+    "titulos": "Anton",
+    "cuerpo": "DM Sans"
+   },
+   "fondo": "#F0EADE",
+   "piezas": "afiche texto-detrás · máquina de los signos con palanca y ticket · carta-afiche con foto que cambia por categoría · agenda de noches con fechas en bloque terracota · Apuki que se toca y cambia de pose · mapa protagonista con horarios",
+   "secciones": [
+    "hero-afiche",
+    "maquina-signos",
+    "carta",
+    "noches",
+    "el-jefe",
+    "como-llegar"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "parrilla-el-potrero",
+   "url": "https://parrilla-el-potrero.vercel.app/",
+   "hero": {
+    "arquetipo": "cartel-o-marquesina",
+    "detalle": "su pizarra a tiza (marco de madera, fondo azul pizarra) centrada sobre la foto del salón en sepia, con horarios y el estado de hoy en vivo; la intro (la llama del logo) vuela al logo",
+    "mascara_foto": "ninguna (foto a sangre detrás de la pizarra)",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "celu: barra inferior tipo app (Parrilla · Carta · Comanda · Llegar); desktop: sin barra en el hero, barra opaca que baja al pasarlo",
+   "botones_estilo": "rectos que se llenan de brasa desde la izquierda + link con subrayado oro; sumar = + redondo ladrillo",
+   "firma": "brasa: todo entra apagado y se enciende con un brillo naranja corto; títulos letra por letra, cortes que se calientan al caer, fotos que se prenden de sepia oscuro a color",
+   "wow": "¿Cuántos son?: parrilla cenital con cortes dibujados que se llena con la parrillada justa según la cantidad de personas (platos en la mesa), ficha de tamaño fijo al tocar cada corte, suma al carrito",
+   "fuentes": {
+    "titulos": "Big Shoulders Display",
+    "cuerpo": "DM Sans",
+    "acento": "Cabin Sketch (tiza)",
+    "nombre": "Alegreya SC"
+   },
+   "fondo": "rgb(20, 16, 12)",
+   "piezas": "la parrilla ¿Cuántos son? · pizarra con estado en vivo · comanda de papel (carta vidriera) · el 4501-4400 gigante sobre ladrillo · ticket de comanda",
+   "secciones": [
+    "heroPizarra",
+    "parrilla",
+    "oficio",
+    "carta",
+    "pedidos",
+    "salon",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "casa-roti",
+   "url": "https://casa-roti.vercel.app/",
+   "hero": {
+    "arquetipo": "el-wow-es-el-hero",
+    "detalle": "fondo negro con la luz naranja de la lámpara; CASA ROTI gigante con el cuadrillé del gorrito adentro de las letras (celu: una línea arriba; desktop: CASA y ROTI a los costados) y el spiedo vertical colgando en el medio, con 8 platos que giran",
+    "mascara_foto": "plato-redondo-de-su-vajilla",
+    "botones": 1,
+    "animado": true
+   },
+   "nav": "sin barra en el hero; después barra inferior tipo app en el celu (Spiedo · Hoy · Carta · Fiestas · Pedido) e índice vertical de puntos en desktop",
+   "botones_estilo": "ticket de comanda: recto, troquel a los costados, línea punteada y número (01, 02…)",
+   "firma": "giro sobre el eje: la intro es una moneda (logo / cuadrillé) que gira, el spiedo, las entradas con rotateY y el plato del día que gira al entrar",
+   "wow": "el spiedo vivo: varilla, campana con resistencia, coronas y horquillas con 8 platos colgados en dos pisos; se arrastra, banderita con nombre y precio (cinta HOY en el plato del día), popup de tamaño fijo con Sumar",
+   "fuentes": {
+    "titulos": "Bebas Neue",
+    "cuerpo": "Plus Jakarta Sans"
+   },
+   "fondo": "rgb(20, 20, 20)",
+   "piezas": "el spiedo vivo · pizarra de letras del plato del día · carta vidriera El mostrador (6 familias × 5) · mesa de fiestas en popup · canal + cuenta regresiva al 29",
+   "secciones": [
+    "spiedo",
+    "hoy",
+    "mostrador",
+    "fiestas",
+    "novedades",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "sabores-de-hogar",
+   "url": "https://saboresdehogar.vercel.app/",
+   "hero": {
+    "arquetipo": "mesa-desde-arriba",
+    "detalle": "la mesa de la merienda: madera vista desde arriba con la vajilla real del local recortada entera (latte en platito azul, bandeja con capuccino y exprimido, roll y tarta de frutillas en platos negros, tostados), estática, con vapor en las tazas y un individual de papel con la marca en el centro; la mesa sigue sin corte en la sección de la carta y los platos de abajo cruzan el borde; la intro dibuja el logo y lo apoya en el individual",
+    "mascara_foto": "ninguna (vajilla recortada con borde ajustado a la forma del plato, una sola sombra con luz desde arriba a la izquierda)",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "celu: barra inferior tipo app (Carta · Dulces · Tortas · Pedido); desktop: índice vertical de mariposas a la derecha; ambas aparecen al pasar la mesa",
+   "botones_estilo": "sello redondo con texto girando en el anillo + link con subrayado que se dibuja; sumar = + redondo rosa",
+   "firma": "hojas: los bloques entran girados -7° y se asientan como una hoja que cae",
+   "wow": "Atrapá una mariposa: el empapelado de selva real del salón con 8 mariposas que se llevaron algo de la vitrina; al tocar una vuela y se posa en una tarjeta de tamaño fijo con el producto, sumar o encargar; contador de atrapadas",
+   "fuentes": {
+    "titulos": "Bricolage Grotesque",
+    "cuerpo": "Rethink Sans",
+    "nombre": "Sacramento"
+   },
+   "fondo": "rgb(251, 246, 242)",
+   "piezas": "mesa continua hero → carta con vajilla real · individual de papel con el logo · empapelado de mariposas · hoja de carta con señaladores y plato en hover · estante iluminado con tortas por encargo · servilletas con reseñas",
+   "secciones": [
+    "inicio",
+    "carta",
+    "mariposas",
+    "encargos",
+    "casa",
+    "resenas",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "buna-cafe",
+   "url": "https://buna-cafe.vercel.app/",
+   "hero": {
+    "arquetipo": "ventana-al-local",
+    "detalle": "fachada real dibujada a línea (ventanal con reja + ventana de take away); la intro estampa el grano-B y lo hace volar al vidrio como vinilo; el scroll hace un zoom continuo y entra por el ventanal al salón real",
+    "mascara_foto": "ventanal de la fachada",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "celu: barra inferior tipo app (Carta, Tarjeta, Locales, Panel, Pedido n); desktop: índice vertical de granos + pill 'Tu pedido' arriba a la derecha",
+   "botones_estilo": "sello redondo inclinado ('Pedí take away') + links con trazo a mano; '+' redondos del kit en hoja",
+   "firma": "sello: las fichas y tarjetas entran estampándose (escala + giro que se asienta)",
+   "wow": "la tarjeta de sellos de Buna: 9 cafés en círculos; tocar uno lo sella y la ficha de tamaño fijo muestra foto, precio y Sumar; al 9/9 se estampa el décimo y cae el sello '¡Llegaste al café gratis!'",
+   "fuentes": {
+    "titulos": "Quicksand",
+    "cuerpo": "DM Sans",
+    "acento": "Caveat"
+   },
+   "fondo": "rgb(238, 237, 233)",
+   "piezas": "fachada dibujada · tarjeta de sellos · vidriera en dos hojas (desktop) / chips (celu) · estante de café en grano con moliendas · mural del barrio con mosaico + popup de la feria · mapa con pines-grano",
+   "secciones": [
+    "hero",
+    "tarjeta",
+    "carta",
+    "grano",
+    "barrio",
+    "locales"
+   ],
+   "formularios_en_pagina": []
+  }
+ ]
 }

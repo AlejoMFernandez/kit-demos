@@ -841,6 +841,36 @@
     "locales"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "signos-cafe",
+   "url": "https://signos-cafe.vercel.app/",
+   "hero": {
+    "arquetipo": "afiche-texto-detras",
+    "detalle": "los afiches de su Instagram hechos web: el nombre del producto en Anton marrón gigante DETRÁS del recorte (roll, avocado toast, flat white), nota manuscrita lima con flecha, descripción y precio en óvalo; los afiches se despegan y se pegan uno atrás del otro. Intro: el logo se estampa en el centro y vuela a su lugar",
+    "mascara_foto": "recorte del producto sin fondo",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "barra inferior en el celu + píldora inferior centrada en desktop (aparece después del hero)",
+   "botones_estilo": "óvalo dibujado a mano (trazo irregular alrededor del texto)",
+   "firma": "se pegan como afiches: secciones y fichas entran con un leve giro, como un papel que se pega y se alisa",
+   "wow": "la máquina de los signos: una expendedora retro con Apuki arriba; se elige el signo (o sale el del día), se tira de la palanca y se imprime un ticket-afiche con el café o plato del signo que se suma al pedido",
+   "fuentes": {
+    "titulos": "Anton",
+    "cuerpo": "DM Sans"
+   },
+   "fondo": "#F0EADE",
+   "piezas": "afiche texto-detrás · máquina de los signos con palanca y ticket · carta-afiche con foto que cambia por categoría · agenda de noches con fechas en bloque terracota · Apuki que se toca y cambia de pose · mapa protagonista con horarios",
+   "secciones": [
+    "hero-afiche",
+    "maquina-signos",
+    "carta",
+    "noches",
+    "el-jefe",
+    "como-llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

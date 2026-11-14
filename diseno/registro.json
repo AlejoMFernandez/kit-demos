@@ -786,7 +786,7 @@
    "url": "https://kaldi-cafe-soho.vercel.app/",
    "hero": {
     "arquetipo": "cartel-o-marquesina",
-    "detalle": "las letras corpóreas KALDI sobre la piedra de la fachada, con espesor y sombra que sigue la luz (mouse, dedo o sol automático); tecla de luz que prende el cartel en bronce (modo noche, también según la hora real)",
+    "detalle": "las letras corpóreas KALDI sobre la piedra de la fachada, arrancan prendidas en bronce (como el cartel de noche) con sombra que sigue la luz; tecla para apagarlo; placa con el estado abajo a la izquierda, sin botones",
     "mascara_foto": "sin foto en el hero",
     "botones": 2,
     "animado": true
@@ -794,19 +794,19 @@
    "nav": "barra inferior tipo app en el celu (con la bolsita) + índice numerado al costado en desktop, sin barra superior",
    "botones_estilo": "recto que se llena de color cereza desde la izquierda + flecha que se estira",
    "firma": "luz: la intro arranca de noche con el cartel prendido y amanece; las secciones y fotos entran prendiéndose con un parpadeo corto",
-   "wow": "el cafeto de Kaldi: rama con 6 cerezas y la cabra de la leyenda; tocar o arrastrar una cereza hasta la cabra, que salta, y aparece la bebida en una ficha de tamaño fijo con Sumar",
+   "wow": "el cartel: se prende en la intro, la luz sigue al mouse o al dedo y la tecla lo apaga y pasa el muro a día (el cafeto con la cabra se probó y Alejo lo sacó: 'raro, no copado')",
    "fuentes": {
     "titulos": "Gilda Display",
     "cuerpo": "Hanken Grotesk"
    },
    "fondo": "rgb(233, 226, 214)",
-   "piezas": "el cartel con luz · el cafeto y la cabra · estantes de madera de la vidriera · tickets de promos con la del momento · encargos con popup",
+   "piezas": "el cartel con luz · estantes de madera de la vidriera con el + sobre la foto · tickets de promos con la del momento · bolsa y caja de cookies dibujadas · historia con foto de la puerta",
    "secciones": [
     "cartel",
-    "leyenda-cafeto",
     "vidriera",
     "promos",
     "llevate",
+    "historia",
     "llegar"
    ],
    "formularios_en_pagina": []

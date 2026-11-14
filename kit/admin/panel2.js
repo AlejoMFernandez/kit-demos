@@ -83,6 +83,7 @@ export function panel2(ctx, { hoy, render, root }) {
     return `<div class="p2-barras" role="img" aria-label="${esc(datos.map(d => `${d.l}: ${valor(d.v)}`).join(', '))}">${datos.map((d, i) => `<div class="p2-barra${i === marca ? ' is-on' : ''}"><span class="p2-barra__v">${d.v ? esc(valor(d.v)) : ''}</span><i style="height:${Math.max(d.v ? 4 : 0, Math.round(100 * d.v / mx))}%"></i><span class="p2-barra__l">${esc(d.l)}</span></div>`).join('')}</div>`;
   }
   const corto = (n) => n >= 1e6 ? `${(n / 1e6).toLocaleString(loc, { maximumFractionDigits: 1 })} M` : n >= 1000 ? `${Math.round(n / 1000)} mil` : String(Math.round(n));
+  const horaRetiro = (r) => { const f = r && r.franja; if (!f) return (r && r.hora) || ''; if (typeof f !== 'object') return String(f); if (f.asap) return f.desde ? '~' + f.desde : 'Ya'; return f.desde && f.hasta && f.desde !== f.hasta ? `${f.desde}–${f.hasta}` : (f.desde || f.nombre || ''); };
   const detalle = (p) => (p.items || []).map(i => `${i.cant > 1 ? `${i.cant} × ` : ''}${i.nombre}`).join(', ');
   const topProductos = (ped) => { const m = new Map(); ped.forEach(p => (p.items || []).forEach(i => { const x = m.get(i.nombre) || { n: 0, plata: 0 }; x.n += i.cant || 1; x.plata += i.subtotal || 0; m.set(i.nombre, x); })); return [...m].map(([nombre, x]) => ({ nombre, ...x })).sort((a, b) => b.n - a.n); };
 
@@ -117,7 +118,7 @@ export function panel2(ctx, { hoy, render, root }) {
             <button type="button" class="kit-btn${p.estado === 'pendiente' ? '' : ' kit-btn--ghost'}" data-p2-estado="${esc(p.id)}" data-a="${SIGUIENTE[p.estado][0]}">${SIGUIENTE[p.estado][1]}</button></div>`).join('') : vacio('No hay pedidos esperando. Cuando entre uno desde la web, aparece acá.')}
         </section>
         <div class="p2-lado">
-          ${retiros.length ? `<section class="p2-card">${cab('Para retirar hoy')}${retiros.slice(0, 5).map(p => `<div class="p2-fila"><b class="p2-hora">${esc(p.retiro.franja || p.retiro.hora || '')}</b><div class="p2-fila__t"><b>${esc(detalle(p))}</b><span>${esc(p.cliente?.nombre || '')}${p.estado === 'entregado' ? ' · ya retirado' : ' · falta retirar'}</span></div></div>`).join('')}</section>` : ''}
+          ${retiros.length ? `<section class="p2-card">${cab('Para retirar hoy')}${retiros.slice(0, 5).map(p => `<div class="p2-fila"><b class="p2-hora">${esc(horaRetiro(p.retiro))}</b><div class="p2-fila__t"><b>${esc(detalle(p))}</b><span>${esc(p.cliente?.nombre || '')}${p.estado === 'entregado' ? ' · ya retirado' : ' · falta retirar'}</span></div></div>`).join('')}</section>` : ''}
           ${bajos.length ? `<section class="p2-card">${cab('Se está agotando')}${bajos.map(p => `<div class="p2-fila"><div class="p2-fila__t"><b>${esc(p.nombre)}</b><span class="p2-aviso">${Number(p.stock) > 0 ? `Quedan ${Number(p.stock)}` : 'Sin stock'}</span></div><button type="button" class="kit-btn kit-btn--ghost" data-p2-agotar="${esc(p.id)}">Marcar agotado</button></div>`).join('')}</section>` : ''}
           <section class="p2-card">${cab('Lo más pedido hoy')}${top.length ? top.map(x => `<div class="p2-fila"><b class="p2-hora">${x.n}</b><div class="p2-fila__t"><b>${esc(x.nombre)}</b><span>${esc(money(x.plata))}</span></div></div>`).join('') : vacio('Todavía no hay pedidos hoy.')}</section>
         </div>

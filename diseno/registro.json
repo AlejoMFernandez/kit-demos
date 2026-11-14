@@ -934,6 +934,38 @@
     "llegar"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "sabores-de-hogar",
+   "url": "https://saboresdehogar.vercel.app/",
+   "hero": {
+    "arquetipo": "objeto-o-escena-interactiva",
+    "detalle": "la mesa de la merienda: madera vista desde arriba con tazas, tostados y tartas reales recortadas que se arrastran (vapor en las tazas, etiqueta con precio al tocar) y un individual de papel con la marca en el centro; la intro dibuja el logo y lo apoya en el individual",
+    "mascara_foto": "ninguna (recortes sueltos sobre textura de madera)",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "celu: barra inferior tipo app (Carta · Dulces · Tortas · Pedido); desktop: índice vertical de mariposas a la derecha; ambas aparecen al pasar la mesa",
+   "botones_estilo": "sello redondo con texto girando en el anillo + link con subrayado que se dibuja; sumar = + redondo rosa",
+   "firma": "hojas: los bloques entran girados -7° y se asientan como una hoja que cae",
+   "wow": "Atrapá una mariposa: el empapelado de selva real del salón con 8 mariposas que se llevaron algo de la vitrina; al tocar una vuela y se posa en una tarjeta de tamaño fijo con el producto, sumar o encargar; contador de atrapadas",
+   "fuentes": {
+    "titulos": "Bricolage Grotesque",
+    "cuerpo": "Rethink Sans",
+    "nombre": "Sacramento"
+   },
+   "fondo": "rgb(251, 246, 242)",
+   "piezas": "mesa con cosas arrastrables · individual de papel con el logo · empapelado de mariposas · hoja de carta con señaladores y plato en hover · estante iluminado con tortas por encargo · servilletas con reseñas",
+   "secciones": [
+    "inicio",
+    "mariposas",
+    "carta",
+    "encargos",
+    "casa",
+    "resenas",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

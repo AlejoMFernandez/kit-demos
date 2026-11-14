@@ -684,6 +684,38 @@
     "visitanos"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "ru-pasteleria",
+   "url": "https://ru-pasteleria.vercel.app/",
+   "hero": {
+    "arquetipo": "ventana-al-local",
+    "detalle": "la fachada de madera blanca reconstruida con la puerta de vidrio repartido (la mesa larga con flores del otro lado), cartel RU y rótulos con hilo; al scrollear se entra por la puerta",
+    "mascara_foto": "reja-de-la-puerta",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "sin barra en el hero; al pasar la puerta, barra inferior tipo app en celu e índice vertical numerado en desktop",
+   "botones_estilo": "rótulo con hilo (etiqueta blanca con línea fina, como las historias de su carta) que se llena de salvia",
+   "firma": "vidrio repartido: la intro es la puerta esmerilada que se achica hasta la del hero; fotos y fichas se despejan paño por paño",
+   "wow": "la mesa larga: talleres y cenas como lugares (plato + tarjetita de mesa) en una mesa vista de arriba; la ficha de tamaño fijo se abre sobre la mesa con cupos (sillas) y reserva del kit",
+   "fuentes": {
+    "titulos": "Gloock",
+    "cuerpo": "Albert Sans"
+   },
+   "fondo": "rgb(244, 242, 238)",
+   "piezas": "la puerta · la mesa larga · vitrina rotulada · tortas y boxes por encargo con seña · la casa nueva · tres hermanas",
+   "secciones": [
+    "heroA",
+    "casa",
+    "vitrina",
+    "encargos",
+    "mesa",
+    "brunch",
+    "hermanas",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

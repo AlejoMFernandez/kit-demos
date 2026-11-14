@@ -748,6 +748,38 @@
     "sedes"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "terra-soho",
+   "url": "https://terra-soho.vercel.app/",
+   "hero": {
+    "arquetipo": "mesa-desde-arriba",
+    "detalle": "su mesa de madera vista desde arriba con el logo-taza al centro (se llena de café) y 6 tazas y platos reales recortados en círculo con asa y etiqueta a mano con precio; el título en una nota de papel con un grano de café de chinche",
+    "mascara_foto": "circulo-con-asa (la forma del logo)",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "índice de tazas al costado en desktop (la de la sección se llena) + barra inferior tipo app en el celu, sin barra superior",
+   "botones_estilo": "sello redondo con asa (el logo como botón) + subrayado que se recoge",
+   "firma": "se sirve: la intro barre el logo-taza y la página se abre desde el centro; platos, café y latte art se llenan desde el centro como una taza servida",
+   "wow": "Serví tu taza: arrastrar o tocar una bebida y se sirve en la taza vista desde arriba (cambia de taza, el café se llena y el latte art se dibuja), etiqueta de tamaño fijo colgada de la taza",
+   "fuentes": {
+    "titulos": "Gloock",
+    "cuerpo": "Urbanist"
+   },
+   "fondo": "rgb(241, 232, 214)",
+   "piezas": "Serví tu taza · carta vidriera en 4 tableros (pizarra, vitrina, cocina, para tomar) · bolsas de café en grano con molienda · tote bag que se dibuja (talleres) · reseñas en servilletas",
+   "secciones": [
+    "hero-mesa",
+    "servi-tu-taza",
+    "carta-tableros",
+    "cafe-en-grano",
+    "talleres",
+    "el-lugar",
+    "resenas",
+    "como-llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

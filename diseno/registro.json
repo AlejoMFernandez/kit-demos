@@ -871,6 +871,39 @@
     "como-llegar"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "parrilla-el-potrero",
+   "url": "https://parrilla-el-potrero.vercel.app/",
+   "hero": {
+    "arquetipo": "cartel-o-marquesina",
+    "detalle": "su pizarra a tiza (marco de madera, fondo azul pizarra) centrada sobre la foto del salón en sepia, con horarios y el estado de hoy en vivo; la intro (la llama del logo) vuela al logo",
+    "mascara_foto": "ninguna (foto a sangre detrás de la pizarra)",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "celu: barra inferior tipo app (Parrilla · Carta · Comanda · Llegar); desktop: sin barra en el hero, barra opaca que baja al pasarlo",
+   "botones_estilo": "rectos que se llenan de brasa desde la izquierda + link con subrayado oro; sumar = + redondo ladrillo",
+   "firma": "brasa: todo entra apagado y se enciende con un brillo naranja corto; títulos letra por letra, cortes que se calientan al caer, fotos que se prenden de sepia oscuro a color",
+   "wow": "¿Cuántos son?: parrilla cenital con cortes dibujados que se llena con la parrillada justa según la cantidad de personas (platos en la mesa), ficha de tamaño fijo al tocar cada corte, suma al carrito",
+   "fuentes": {
+    "titulos": "Big Shoulders Display",
+    "cuerpo": "DM Sans",
+    "acento": "Cabin Sketch (tiza)",
+    "nombre": "Alegreya SC"
+   },
+   "fondo": "rgb(20, 16, 12)",
+   "piezas": "la parrilla ¿Cuántos son? · pizarra con estado en vivo · comanda de papel (carta vidriera) · el 4501-4400 gigante sobre ladrillo · ticket de comanda",
+   "secciones": [
+    "heroPizarra",
+    "parrilla",
+    "oficio",
+    "carta",
+    "pedidos",
+    "salon",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

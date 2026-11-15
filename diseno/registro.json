@@ -690,7 +690,7 @@
    "url": "https://ru-pasteleria.vercel.app/",
    "hero": {
     "arquetipo": "ventana-al-local",
-    "detalle": "la fachada de madera blanca reconstruida con la puerta de vidrio repartido (la mesa larga con flores del otro lado), cartel RU y rótulos con hilo; al scrollear se entra por la puerta",
+    "detalle": "la fachada de madera blanca reconstruida con la puerta de vidrio repartido (la mesa larga con flores del otro lado), cartel RU y rótulos con hilo; estática (el zoom al scrollear se sacó a pedido de Alejo: la foto se rompía)",
     "mascara_foto": "reja-de-la-puerta",
     "botones": 2,
     "animado": true

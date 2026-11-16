@@ -31,3 +31,9 @@ test('sin sede no toca nada', () => {
   const lista = [{ id: 'a', precio: 1, preciosSucursal: { guevara: 2 } }];
   assert.equal(conPreciosSede(lista, ''), lista);
 });
+
+test('soloSucursales: el plato no aparece en las otras sedes (kit 1.23)', () => {
+  const lista = [{ id: 'chipis', precio: 25000, soloSucursales: ['devoto'] }, { id: 'noquis', precio: 35000 }, { id: 'brisket', precio: 48000, soloSucursales: [] }];
+  assert.deepEqual(conPreciosSede(lista, 'nordelta').map(p => p.id), ['noquis', 'brisket']);
+  assert.deepEqual(conPreciosSede(lista, 'devoto').map(p => p.id), ['chipis', 'noquis', 'brisket']);
+});

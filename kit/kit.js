@@ -37,7 +37,7 @@ import { initCanchas } from './modules/canchas.js';
 import { tieneEventos, aplicarEventos, proximos } from './core/eventos.js';
 import { sucursales, preciosPorSucursal, precioEnSede, conPreciosSede } from './core/sucursales.js';
 
-export const VERSION = '1.22.0';
+export const VERSION = '1.23.0';
 
 export { stockDe };
 
@@ -57,6 +57,13 @@ export async function cargarConfig(src = 'cliente.json') {
 export async function crearContexto({ config, base }) {
   setLang(config.idioma, config.textos);
   applyTheme(config.marca);
+  // fuentes alojadas (kit 1.23): "marca.fuentes.css": "css/fuentes.css" (relativo a cliente.json) se enlaza
+  // también en /carta y /admin, así las páginas del kit usan las mismas fuentes que la web
+  const fcss = config.marca?.fuentes?.css;
+  if (fcss && !document.querySelector('link[data-kit-fuentes]')) {
+    const l = document.createElement('link'); l.rel = 'stylesheet'; l.dataset.kitFuentes = '';
+    l.href = new URL(fcss, base).href; document.head.appendChild(l);
+  }
   const store = await createStore(config);
   const P = pais(config.pais);
   return {

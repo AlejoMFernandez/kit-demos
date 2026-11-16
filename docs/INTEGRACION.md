@@ -91,6 +91,8 @@ El carrito ya genera el mensaje y abre WhatsApp. Si el WOW de la demo tiene su p
 
 ## Cadenas: varias sedes
 
+> Kit 1.23: un plato que se sirve solo en algunas sedes lleva `"soloSucursales": ["devoto"]` (en el panel: "Se sirve en"). En las otras sedes no aparece, ni en la web ni en la carta del QR. Fuentes alojadas: `"marca.fuentes.css": "css/fuentes.css"` hace que `/carta` y `/admin` enlacen el mismo archivo de `@font-face` que la web.
+
 Agregá `"sucursales"` a `cliente.json` (ver `docs/cliente.schema.json`):
 
 ```json

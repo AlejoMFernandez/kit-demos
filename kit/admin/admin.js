@@ -909,6 +909,7 @@ export async function initAdmin(opts = {}) {
       <div class="kit-field-row">
         ${tieneVariantes(p0) || CC.sinPrecio ? '<input name="precio" type="hidden" value="">' : `<label class="kit-field"><span>${esc(t('precio'))} (${esc(ctx.pais.moneda)})${PXS ? ` · ${esc(sucursales(config)[0].nombre)}` : ''}</span><input name="precio" type="number" inputmode="decimal" min="0" step="${ctx.pais.decimales ? '0.01' : '1'}" value="${p0.precio ?? ''}"></label>`}
         ${PXS && !tieneVariantes(p0) && !CC.sinPrecio ? sucursales(config).slice(1).map(sd => `<label class="kit-field"><span>${esc(t('precio'))} · ${esc(sd.nombre)}</span><input data-ps="${esc(sd.id)}" type="number" inputmode="decimal" min="0" step="${ctx.pais.decimales ? '0.01' : '1'}" value="${p0.preciosSucursal?.[sd.id] ?? ''}" placeholder="${esc(t('igualPrimera') || '')}"></label>`).join('') : ''}
+        ${PXS ? `<fieldset class="kit-field kad-sedes"><span>Se sirve en</span><div class="kad-sedes__ops">${sucursales(config).map(sd => `<label class="kit-check"><input type="checkbox" data-solo="${esc(sd.id)}" ${!Array.isArray(p0.soloSucursales) || !p0.soloSucursales.length || p0.soloSucursales.includes(sd.id) ? 'checked' : ''}><span>${esc(sd.nombre)}</span></label>`).join('')}</div></fieldset>` : ''}
         <label class="kit-field"><span>${esc(t('categoria'))}</span><select name="categoria">${cats.map(c => `<option value="${esc(c.id)}" ${c.id === p0.categoria ? 'selected' : ''}>${esc(c.nombre)}</option>`).join('')}<option value="" ${!p0.categoria ? 'selected' : ''}>${esc(t('sinCategoria'))}</option></select></label>
       </div>
       <label class="kit-field"><span>${esc(t('descripcion'))}</span><textarea name="descripcion" rows="${CC.sinPrecio ? 6 : 3}" maxlength="${CC.descripcionMax || 400}">${esc(p0.descripcion)}</textarea></label>
@@ -951,6 +952,8 @@ export async function initAdmin(opts = {}) {
           ...(prod || {}), id, nombre, descripcion: f.descripcion.value.trim(),
           precio: f.precio.value === '' ? null : Number(f.precio.value), categoria: f.categoria.value || null,
           ...(PXS && f.querySelector('[data-ps]') ? { preciosSucursal: Object.fromEntries([...f.querySelectorAll('[data-ps]')].filter(i => i.value !== '').map(i => [i.dataset.ps, Number(i.value)])) } : {}),
+          ...(PXS ? (() => { const ch = [...f.querySelectorAll('[data-solo]')]; const si = ch.filter(i => i.checked).map(i => i.dataset.solo);
+            return { soloSucursales: si.length && si.length < ch.length ? si : undefined }; })() : {}),
           ...(tieneVariantes(p0) ? { variantes: p0.variantes.map(v => { const inp = f.querySelector(`[data-var="${CSS.escape(String(v.id))}"]`); return { ...v, precio: inp && inp.value !== '' ? Number(inp.value) : null }; }) } : {}),
           etiquetas: f.etiquetas.value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
           disponible: f.disponible.checked, foto, orden: prod?.orden ?? (Math.max(0, ...enCat.map(x => x.orden || 0)) + 1),

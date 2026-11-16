@@ -21,9 +21,11 @@ export function precioEnSede(p, sedeId) {
 }
 // también tamaños (variantes) y adicionales, cada uno con su propio "preciosSucursal"
 const tienePS = (x, id) => !!(x && x.preciosSucursal && x.preciosSucursal[id] !== undefined);
+// Platos que se sirven solo en algunas sedes (kit 1.23): "soloSucursales": ["devoto"]. En las otras no aparecen.
+export const seSirveEn = (p, sedeId) => !sedeId || !Array.isArray(p?.soloSucursales) || !p.soloSucursales.length || p.soloSucursales.includes(sedeId);
 export function conPreciosSede(productos, sedeId) {
   if (!sedeId) return productos;
-  return productos.map(p => {
+  return productos.filter(p => seSirveEn(p, sedeId)).map(p => {
     if (!p) return p;
     const vs = Array.isArray(p.variantes) && p.variantes.some(v => tienePS(v, sedeId));
     const ad = Array.isArray(p.adicionales) && p.adicionales.some(a => tienePS(a, sedeId));

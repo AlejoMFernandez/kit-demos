@@ -708,3 +708,7 @@ body { margin: 0; background: var(--kit-bg); color: var(--kit-text); font-family
 .p2-rank__b i { display: block; height: 100%; border-radius: 999px; background: var(--kit-primary); }
 .p2-rank b { text-align: right; } .p2-rank__p { color: var(--kit-muted); font-size: .9rem; white-space: nowrap; }
 @media (max-width: 599px) { .p2-rank { grid-template-columns: minmax(0, 1fr) 2.2em auto; } .p2-rank__b { display: none; } }
+
+/* kit 1.23: en qué sedes se sirve un plato */
+.kad-sedes{border:0;padding:0;margin:0}
+.kad-sedes__ops{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:6px}

@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-14",
+ "actualizado": "2026-11-17",
  "nota": "Registro de diseño de las demos publicadas: solo datos de diseño (qué hero, navegación, tipografía y piezas usó cada una). Antes de proponer un moodboard, leerlo y cumplir diseno/catalogo.md. Al publicar una demo, sumar su entrada (scripts/ficha-diseno.py da los datos). La valoración de cada demo está en la rúbrica del proyecto DEMOS, no acá.",
  "demos": [
   {
@@ -1027,6 +1027,37 @@
     "casas",
     "mediodia",
     "reservar",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "manso-restaurante",
+   "url": "https://manso-restaurante.vercel.app/",
+   "hero": {
+    "arquetipo": "horizonte-partido",
+    "detalle": "lago arriba (atardecer desde el muelle) y fuego abajo (hogar), a sangre; el logo apoyado sobre su trazo de pincel horizontal, que es el horizonte; la línea sigue al mouse en desktop y arranca más alta de día y más baja de noche; frase + 'Reservá tu mesa' subrayado + estado abierto/cerrado en vivo",
+    "mascara_foto": "corte recto en la línea de pincel",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "nombre solo (aparece al pasar el hero) + 'Reservá' en itálica subrayada + 'Menú' a pantalla completa con foto en desktop",
+   "botones_estilo": "texto grande en itálica (IM Fell) subrayado con su trazo de pincel; secundario en versalitas con línea fina",
+   "firma": "horizonte: todo se abre desde una línea de pincel (intro que traza el horizonte y se abre en dos, títulos que se abren desde la línea del medio y dejan su trazo debajo, fotos de los fuegos que suben)",
+   "wow": "Elegí tu fuego: los dibujos de línea de su carta (kamado, josper, ganchos, parrilla) apoyados en el trazo; arranca prendido en Ganchos; al tocar se prende el dibujo, saltan chispas, sube la foto real y aparece una ficha fija con cortes y precios; el + anota el corte para la reserva (sin carrito)",
+   "fuentes": {
+    "titulos": "IM Fell English (+ SC)",
+    "cuerpo": "Montserrat"
+   },
+   "fondo": "rgb(20, 17, 16)",
+   "piezas": "hero horizonte · elegí tu fuego · un día en Manso (franja arrastrable con la hora real del atardecer y un sol que avanza) · carta vidriera con índice y foto · armá tu gin tonic (copa dibujada que se llena) · eventos asado a la cruz · mapa grande con pin del logo",
+   "secciones": [
+    "hero",
+    "fuegos",
+    "dia",
+    "carta",
+    "gin",
+    "eventos",
     "llegar"
    ],
    "formularios_en_pagina": []

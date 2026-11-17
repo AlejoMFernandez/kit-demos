@@ -997,6 +997,39 @@
     "locales"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "mailo",
+   "url": "https://mailo-ba.vercel.app/",
+   "hero": {
+    "arquetipo": "partido-color-foto",
+    "detalle": "partido por el isotipo: Devoto (fuego del horno) y Nordelta (jardín) a sangre, separados por una costura crema con la curva del logo (llama que se vuelve hoja) que respira, sigue al mouse (la mitad que mirás crece) y en celu se agranda al tocar; '¿A qué Mailo vas?' + logo al centro con la costura cortada alrededor; estado abierto/cerrado de cada sede en vivo",
+    "mascara_foto": "costura con la curva del isotipo",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "nombre solo al centro + 'Menú' a pantalla completa (secciones + las dos sedes con Meitre) + 'Reservar' subrayado",
+   "botones_estilo": "texto grande subrayado sin caja; selector de sede con el isotipo + subrayado (salvia Nordelta, naranja Devoto)",
+   "firma": "calor: entra ondulado (feTurbulence + feDisplacementMap real) y desenfocado, y se asienta nítido; la intro arma el logo en su lugar y la pantalla crema se abre por la costura",
+   "wow": "la pila de leña: pirámide de leños planos con anillos; 9 leños por sede tienen un plato cenital en el corazón; al pasar se sale con su nombre, al tocar abre una ficha de tamaño fijo; cambia con la sede",
+   "fuentes": {
+    "titulos": "Archivo (ancha, 800)",
+    "cuerpo": "Geist",
+    "acento": "Mansalva"
+   },
+   "fondo": "rgb(241, 236, 227)",
+   "piezas": "hero partido por la costura · insignia (ñoquis en la cabutia, foto con borde de costura) · pila de leña · carta en pestañas subrayadas con precios y descripciones por sede · las dos casas (salvia / carbón con ola de costura) · ticket del Mailo Lunch + beneficios · mapa con pin del isotipo",
+   "secciones": [
+    "hero",
+    "insignia",
+    "pila",
+    "carta",
+    "casas",
+    "mediodia",
+    "reservar",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

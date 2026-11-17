@@ -402,9 +402,12 @@ async def rendimiento(browser):
     t0 = time.time(); await pg.goto(URL, wait_until='load', timeout=120000); carga = time.time() - t0
     await pg.wait_for_timeout(3000)
     inicial = dict(pesos)
+    # el LCP se lee antes de recorrer la página: el navegador lo corta con el primer scroll del usuario,
+    # y el recorrido automático hacía contar como LCP fotos de secciones de más abajo
+    lcp = await pg.evaluate('window.__lcp') / 1000
     await pg.evaluate("async () => { for (let y = 0; y < document.documentElement.scrollHeight; y += innerHeight * 0.7) { scrollTo(0, y); await new Promise(r => setTimeout(r, 250)); } scrollTo(0, 0); }")
     await pg.wait_for_timeout(2500)
-    lcp = await pg.evaluate('window.__lcp') / 1000; d = await pg.evaluate(PERF); await ctx.close()
+    d = await pg.evaluate(PERF); await ctx.close()
     kb = lambda b: f'{b / 1024:.0f} KB' if b < 1024 * 1024 else f'{b / 1048576:.1f} MB'
     H = []; tot_ini = sum(v[0] for v in inicial.values()); tot = sum(v[0] for v in pesos.values()); img = sum(v[0] for v in pesos.values() if v[1] == 'image')
     local = 'localhost' in URL or '127.0.0.1' in URL

@@ -29,6 +29,8 @@ export function conPreciosSede(productos, sedeId) {
     if (!p) return p;
     const vs = Array.isArray(p.variantes) && p.variantes.some(v => tienePS(v, sedeId));
     const ad = Array.isArray(p.adicionales) && p.adicionales.some(a => tienePS(a, sedeId));
+    const ds = p.descripcionSucursal && typeof p.descripcionSucursal === 'object' ? p.descripcionSucursal[sedeId] : undefined;
+    if (ds != null) p = { ...p, descripcion: ds };   // descripción propia de la sede (kit 1.23)
     if (!tienePS(p, sedeId) && !vs && !ad) return p;
     return { ...p,
       ...(tienePS(p, sedeId) ? { precio: precioEnSede(p, sedeId) } : {}),

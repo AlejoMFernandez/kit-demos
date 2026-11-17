@@ -37,3 +37,9 @@ test('soloSucursales: el plato no aparece en las otras sedes (kit 1.23)', () => 
   assert.deepEqual(conPreciosSede(lista, 'nordelta').map(p => p.id), ['noquis', 'brisket']);
   assert.deepEqual(conPreciosSede(lista, 'devoto').map(p => p.id), ['chipis', 'noquis', 'brisket']);
 });
+
+test('descripcionSucursal: cada sede muestra su descripción (kit 1.23)', () => {
+  const lista = [{ id: 'noquis', precio: 35000, descripcion: 'Con pesto crocante.', descripcionSucursal: { devoto: 'Con tierra de pistacho.' } }];
+  assert.equal(conPreciosSede(lista, 'devoto')[0].descripcion, 'Con tierra de pistacho.');
+  assert.equal(conPreciosSede(lista, 'nordelta')[0].descripcion, 'Con pesto crocante.');
+});

@@ -1094,6 +1094,42 @@
     "llegar"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "sole-di-parma",
+   "url": "https://sole-di-parma.vercel.app/",
+   "hero": {
+    "arquetipo": "secuencia-con-scroll",
+    "detalle": "plato-sol: disco con rayos dibujados y el logo arriba; con el scroll el sol pasa por 4 fotos (mañana, mediodía, tarde y noche) y el día termina en azul noche",
+    "mascara_foto": "disco (sol) con rayos",
+    "botones": 1,
+    "animado": true
+   },
+   "nav": "botón flotante 'pizarra' redondo que abre el menú como una carta de pizarra con puntos guía; se esconde en el hero",
+   "botones_estilo": "toldo festoneado (borde inferior en ondas, como el toldo a rayas) + subrayado trazado",
+   "firma": "trazo: todo se dibuja con stroke-dashoffset (rayos del sol, aros, subrayados, sellos); la intro dibuja el aro del sol y el logo aparece arriba",
+   "wow": "La teglia al corte: bandeja de focaccias en 4 columnas por sabor con porciones; tocar una abre un globo anclado con flecha (foto, precio, Sumar) y la segunda porción arma sola la promo de 2 con sello; el cartoccio de papel muestra lo elegido",
+   "fuentes": {
+    "titulos": "Londrina Solid",
+    "cuerpo": "Literata",
+    "acento": "Young Serif"
+   },
+   "fondo": "rgb(251, 243, 234)",
+   "piezas": "sol que sale (intro + hero secuencia) · teglia al corte + cartoccio · mostrador en estante arrastrable · afiche de la noche de pastas con artistas pasados y menú en pestañas · carta como hoja con grupos y páginas · pick-up con caja · gift card que se da vuelta · Navidad con caja y pan dulces · collage del barrio · 4,7 + temas de reseñas · mapa con pin sol",
+   "secciones": [
+    "hero",
+    "focacce",
+    "mostrador",
+    "notte",
+    "carta",
+    "pickup",
+    "regalo",
+    "navidad",
+    "barrio",
+    "resenas",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

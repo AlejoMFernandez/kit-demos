@@ -580,3 +580,4 @@ a.kit-btn[data-kit-ir-checkout] { display: flex; }
   .kit-co__res { position: static; }
   .kit-co__box .kit-lines { max-height: none; }
 }
+.kit-resv__evento { margin: 0; padding: 14px 16px; border: 1.5px solid var(--kit-border, #ddd); border-radius: var(--kit-radius, 8px); font-weight: 700; font-size: 17px; }

@@ -137,7 +137,10 @@ export function createLocalStore(config) {
       return mut(db => {
         const pers = Number(data.personas);
         if (!(pers >= 1 && pers <= cfg.maxPersonas)) throw Object.assign(new Error('personas'), { code: 'personas' });
-        const td = serviciosDe(cfg) ? tandaDe(cfg, data.hora) : null;
+        let td = serviciosDe(cfg) ? tandaDe(cfg, data.hora) : null;
+        // Si se pidió un servicio (ej. una cata a la misma hora que un turno de cena), se respeta ese.
+        const pedido = data.servicio && serviciosDe(cfg)?.find(sv => sv.id === data.servicio);
+        if (pedido) { const ti = (pedido.tandas || []).findIndex(t => (t.turnos || []).includes(data.hora)); if (ti >= 0) td = { servicio: pedido, tanda: pedido.tandas[ti], indice: ti, capacidad: Number(pedido.tandas[ti].capacidad ?? pedido.capacidad ?? cfg.capacidad) }; }
         if (serviciosDe(cfg) && !td) throw Object.assign(new Error('hora'), { code: 'hora' });
         const ocup = {};
         db.reservas.filter(r => r.fecha === data.fecha && !['cancelada', 'no_vino'].includes(r.estado)).forEach(r => { ocup[r.hora] = (ocup[r.hora] || 0) + r.personas; });

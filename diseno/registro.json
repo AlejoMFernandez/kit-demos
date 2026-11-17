@@ -1130,6 +1130,38 @@
     "llegar"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "tibuk",
+   "url": "https://tibuk.vercel.app/",
+   "hero": {
+    "arquetipo": "escena-interactiva",
+    "detalle": "la enredadera de su fachada (hojas planas de hiedra) tapa la pantalla y la foto real asoma por un hueco de borde irregular; las hojas se corren con el mouse o el dedo; celu: la puerta con la chapa corten, desktop: la veredita; estado abierto/cerrado en vivo",
+    "mascara_foto": "hueco de hojas irregular (sale de la fachada)",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "cartel de chapa corten colgado que se mece (es el logo) + links en cal (desktop) / Menú a pantalla completa con la enredadera (celu) + Reservar; en celu el cartel se achica y se esconde al bajar",
+   "botones_estilo": "chapa calada: rectángulo corten con dos remaches que se llena de corten oscuro desde la izquierda + texto con raya que se borra",
+   "firma": "brota: la intro dibuja el logo, brotan las hojas desde la esquina y se abren; los bloques entran creciendo desde un punto con un leve giro",
+   "wow": "La casona: la fachada verde dibujada con su enredadera, chimenea con humo, cartel y sombrillas; ventanas que son fotos reales (salón, horno, puerta con Julián, cava, vereda); al tocar una parte se ilumina y la pizarra de vereda de tamaño fijo cuenta qué hay y reserva ese lugar (vereda o salón) o lleva a la carta/catas",
+   "fuentes": {
+    "titulos": "Epilogue 900",
+    "cuerpo": "Figtree",
+    "acento": "Newsreader itálica"
+   },
+   "fondo": "rgb(242, 237, 224)",
+   "piezas": "hueco de hojas en el hero · la casona con pizarra de vereda · pizarra del chef con marco de madera (carta vidriera por pestañas, foto del plato al costado) · agenda de catas en chapas corten con cupo · foto del equipo con marco de hojas · reseñas reales con 5/5 · mapa a lo ancho con pin-cartel del logo",
+   "secciones": [
+    "hero",
+    "casona",
+    "carta",
+    "catas",
+    "casa",
+    "resenas",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

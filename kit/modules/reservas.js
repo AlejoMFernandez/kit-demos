@@ -16,12 +16,22 @@ export function crearFormReserva(ctx, { onDone, inicial = {} } = {}) {
   const conServicios = !!serviciosDe(R);
   // Solo eventos con fecha (catas, shows): mostrar únicamente esas fechas, no una fila de días "cerrado".
   const soloEventos = conServicios && serviciosDe(R).every(s => Array.isArray(s.fechas));
-  const dias = diasReservables(env).filter(d => !soloEventos || d.abierto);
+  // Inscripción a un evento (kit 1.19): abrir({ evento: 'cata-1' }) → fecha y servicio fijos, sin selector de días ni de servicio.
+  const evSvc = inicial.evento ? (serviciosDe(R) || []).find(s => s.evento === inicial.evento || s.id === 'ev-' + inicial.evento) || null : null;
+  const dias = diasReservables(env).filter(d => (!soloEventos || d.abierto) && (!evSvc || (evSvc.fechas || []).includes(d.fecha)));
   const extras = Array.isArray(R.extras) ? R.extras : [];
+  if (evSvc) { inicial = { ...inicial, fecha: evSvc.fechas?.[0], hora: inicial.hora || evSvc.tandas?.[0]?.turnos?.[0] }; }
   const fechaIni = inicial.fecha && dias.some(d => d.abierto && d.fecha === inicial.fecha) ? inicial.fecha : (dias.find(d => d.abierto) || {}).fecha;
-  const servIni = conServicios && inicial.hora ? (tandaDe(R, inicial.hora)?.servicio.id || null) : null;
+  // Con fecha y hora (inscripción a un evento): primero el evento de ese día con esa hora, después cualquier servicio con esa hora.
+  const evDelDia = conServicios && inicial.hora && fechaIni ? serviciosDe(R).find(s => Array.isArray(s.fechas) && s.fechas.includes(fechaIni) && (s.tandas || []).some(t => (t.turnos || []).includes(inicial.hora))) : null;
+  const servIni = evSvc ? evSvc.id : conServicios && inicial.hora ? (evDelDia?.id || tandaDe(R, inicial.hora)?.servicio.id || null) : null;
   const st = { personas: Math.max(1, Math.min(Number(inicial.personas) || 2, R.maxPersonas)), fecha: fechaIni, servicio: servIni, hora: inicial.hora || null, nombre: '', telefono: '', email: '', comentario: '', extras: [] };
 
+  function fmtEvento() {
+    const d = dias.find(x => x.fecha === fechaIni); if (!d) return '';
+    const [, m, dd] = d.fecha.split('-').map(Number);
+    return `${t('diasCortos')[d.dow]} ${dd} ${t('meses')[m - 1]} · ${inicial.hora || ''} hs`;
+  }
   const el = h(`<form class="kit-root kit-resv" novalidate>
     <div class="kit-resv__row">
       <span class="kit-label" id="kr-p">${esc(t('personas'))}</span>
@@ -30,18 +40,19 @@ export function crearFormReserva(ctx, { onDone, inicial = {} } = {}) {
       </div>
     </div>
     <p class="kit-hint" data-max hidden></p>
-    <div class="kit-resv__block"><span class="kit-label">${esc(t('dia'))}</span><div class="kit-chips kit-chips--scroll" data-dias role="radiogroup"></div></div>
-    ${conServicios ? `<div class="kit-resv__block"><span class="kit-label" id="kr-s">${esc(t('servicio'))}</span><div class="kit-seg kit-seg--serv" data-servicios role="radiogroup" aria-labelledby="kr-s"></div></div>` : ''}
-    <div class="kit-resv__block"><span class="kit-label">${esc(t('hora'))}</span><div class="${conServicios ? 'kit-tandas' : 'kit-chips kit-chips--grid'}" data-horas role="radiogroup" aria-live="polite"></div></div>
+    <div class="kit-resv__block"${evSvc ? ' hidden' : ''}><span class="kit-label">${esc(t('dia'))}</span><div class="kit-chips kit-chips--scroll" data-dias role="radiogroup"></div></div>
+    ${conServicios && !evSvc ? `<div class="kit-resv__block"><span class="kit-label" id="kr-s">${esc(t('servicio'))}</span><div class="kit-seg kit-seg--serv" data-servicios role="radiogroup" aria-labelledby="kr-s"></div></div>` : ''}
+    ${evSvc ? `<p class="kit-resv__evento">${esc(fmtEvento())}</p>` : ''}
+    <div class="kit-resv__block"${evSvc ? ' hidden' : ''}><span class="kit-label">${esc(t('hora'))}</span><div class="${conServicios ? 'kit-tandas' : 'kit-chips kit-chips--grid'}" data-horas role="radiogroup" aria-live="polite"></div></div>
     <div class="kit-resv__datos">
       <label class="kit-field"><span>${esc(t('nombre'))}</span><input name="nombre" autocomplete="name" required></label>
       <label class="kit-field"><span>${esc(t('telefono'))}</span><input name="telefono" type="tel" inputmode="tel" autocomplete="tel" required></label>
       <label class="kit-field"><span>${esc(t('email'))}</span><input name="email" type="email" autocomplete="email"></label>
-      <label class="kit-field kit-field--full"><span>${esc(t('comentario'))}</span><textarea name="comentario" rows="2" maxlength="280"></textarea></label>
-      ${extras.length ? `<div class="kit-extras kit-field--full">${extras.map(x => `<label class="kit-check"><input type="checkbox" name="extra" value="${esc(x.id)}"><span>${esc(x.label || x.id)}</span></label>`).join('')}</div>` : ''}
+      <label class="kit-field kit-field--full"><span>${esc(evSvc ? t('comentarioEvento') : t('comentario'))}</span><textarea name="comentario" rows="2" maxlength="280"></textarea></label>
+      ${extras.length && !evSvc ? `<div class="kit-extras kit-field--full">${extras.map(x => `<label class="kit-check"><input type="checkbox" name="extra" value="${esc(x.id)}"><span>${esc(x.label || x.id)}</span></label>`).join('')}</div>` : ''}
     </div>
     <p class="kit-msg" role="alert" hidden></p>
-    <button type="submit" class="kit-btn kit-btn--block kit-btn--big">${esc(t('confirmarReserva'))}</button>
+    <button type="submit" class="kit-btn kit-btn--block kit-btn--big">${esc(evSvc ? t('confirmarLugar') : t('confirmarReserva'))}</button>
   </form>`);
 
   let autoDia = !inicial.fecha;
@@ -69,7 +80,8 @@ export function crearFormReserva(ctx, { onDone, inicial = {} } = {}) {
   function pintarServicios(turnosDia) {
     const box = el.querySelector('[data-servicios]'); if (!box) return;
     const delDia = st.fecha ? serviciosDelDia(env, st.fecha).map(s => s.id) : [];
-    box.innerHTML = serviciosDe(R).map(s => {
+    // Los eventos con fecha (catas, shows) solo aparecen el día que se hacen: no ensucian el selector los demás días.
+    box.innerHTML = serviciosDe(R).filter(s => (!Array.isArray(s.fechas) || delDia.includes(s.id)) && (!evSvc || s.id === evSvc.id)).map(s => {
       const hay = delDia.includes(s.id) && turnosDia.some(x => x.servicio === s.id && x.disponible);
       const on = s.id === st.servicio;
       return `<label><input type="radio" name="servicio" value="${esc(s.id)}" ${on ? 'checked' : ''} ${delDia.includes(s.id) ? '' : 'disabled'}><span>${esc(s.nombre || s.id)}${delDia.includes(s.id) ? (hay ? '' : `<small>${esc(t('lleno'))}</small>`) : `<small>${esc(t('cerrado'))}</small>`}</span></label>`;
@@ -167,7 +179,7 @@ export function crearFormReserva(ctx, { onDone, inicial = {} } = {}) {
     const { url } = linkWhatsApp(config.whatsapp, t('waReserva', { negocio: config.nombre, ...res }));
     el.innerHTML = `<div class="kit-done">
       <div class="kit-done__ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-      <h3>${esc(t('reservaLista'))}</h3><p>${esc(t('reservaListaSub', res))}</p>
+      <h3>${esc(evSvc ? t('inscripcionLista') : t('reservaLista'))}</h3><p>${esc(evSvc ? `${evSvc.nombre} · ${res.dia} · ${res.hora} hs · ${res.personas}` : t('reservaListaSub', res))}</p>
       ${url ? `<div class="kit-row kit-row--center"><a class="kit-btn" href="${esc(url)}" target="_blank" rel="noopener">${esc(t('avisarWA'))}</a></div>` : ''}
     </div>`;
   }
@@ -182,11 +194,13 @@ export function initReservas(ctx) {
   // abrir({ fecha: '2026-10-27', hora: '19:00', personas: 4 }) → popup con el turno ya elegido
   const abrir = (inicial = {}) => {
     const form = crearFormReserva(ctx, { inicial });
-    return popup({ titulo: t('reservarMesa'), contenido: form, clase: 'kit-pop--resv' });
+    const R0 = configReservas(ctx.config.reservas);
+    const ev = inicial.evento ? (serviciosDe(R0) || []).find(s => s.evento === inicial.evento || s.id === 'ev-' + inicial.evento) : null;
+    return popup({ titulo: ev ? t('anotarseA', { evento: ev.nombre }) : t('reservarMesa'), contenido: form, clase: 'kit-pop--resv' + (ev ? ' kit-pop--evento' : '') });
   };
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-kit-open="reservas"]'); if (!b) return;
-    e.preventDefault(); abrir({ fecha: b.dataset.kitFecha, hora: b.dataset.kitHora, personas: b.dataset.kitPersonas });
+    e.preventDefault(); abrir({ fecha: b.dataset.kitFecha, hora: b.dataset.kitHora, personas: b.dataset.kitPersonas, evento: b.dataset.kitEvento });
   });
   const env = { horarios: ctx.config.horarios, reservas: ctx.config.reservas, tz: ctx.tz };
   // Para dibujar la disponibilidad con el diseño de la demo (ej. un pizarrón de turnos).

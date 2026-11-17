@@ -64,7 +64,7 @@ const DICT = {
     productosFecha: 'Productos de la fecha', sinFechas: 'Todavía no cargaste fechas especiales.', sinFechasSub: 'Armá Navidad, Pascuas o el Día de la Madre con sus productos y la web los muestra sola en su momento.',
     borrarFecha: '¿Borrar la fecha "{nombre}" y sus productos?', fechaGuardada: 'Fecha guardada', verEnWeb: 'Ver cómo queda en la web',
     // reservas
-    reservar: 'Reservar', reservarMesa: 'Reservá tu mesa', personas: 'Personas', persona: 'persona', personasN: 'personas',
+    reservar: 'Reservar', reservarMesa: 'Reservá tu mesa', anotarseA: 'Anotate: {evento}', inscripcionLista: '¡Quedaste anotado!', confirmarLugar: 'Confirmar mi lugar', comentarioEvento: 'Comentario (alergias, algo que tengamos que saber)', personas: 'Personas', persona: 'persona', personasN: 'personas',
     dia: 'Día', hora: 'Hora', hoy: 'Hoy', manana: 'Mañana', cerrado: 'Cerrado', sinTurnos: 'No quedan horarios para este día.',
     lleno: 'Completo', quedan: 'Quedan {n}', comentario: 'Comentario (cumple, silla para bebé…)',
     confirmarReserva: 'Pedir reserva', reservaLista: '¡Reserva pedida!', reservaListaSub: '{personas} · {dia} a las {hora}. Te confirmamos por WhatsApp.',
@@ -223,7 +223,7 @@ const DICT = {
     bajada: 'Frase para o site', estProgramada: 'Programada', estAviso: 'Anunciada', estEnCurso: 'Em andamento', estTermino: 'Terminou', estBorrador: 'Rascunho',
     productosFecha: 'Produtos da data', sinFechas: 'Nenhuma data especial ainda.', sinFechasSub: 'Monte Natal, Páscoa ou Dia das Mães com seus produtos e o site mostra sozinho na hora certa.',
     borrarFecha: 'Apagar a data "{nombre}" e seus produtos?', fechaGuardada: 'Data salva', verEnWeb: 'Ver como fica no site',
-    reservar: 'Reservar', reservarMesa: 'Reserve sua mesa', personas: 'Pessoas', persona: 'pessoa', personasN: 'pessoas',
+    reservar: 'Reservar', reservarMesa: 'Reserve sua mesa', anotarseA: 'Inscrição: {evento}', inscripcionLista: 'Inscrição feita!', confirmarLugar: 'Confirmar minha vaga', comentarioEvento: 'Comentário (alergias, algo que devemos saber)', personas: 'Pessoas', persona: 'pessoa', personasN: 'pessoas',
     dia: 'Dia', hora: 'Horário', hoy: 'Hoje', manana: 'Amanhã', cerrado: 'Fechado', sinTurnos: 'Não há mais horários para este dia.',
     lleno: 'Lotado', quedan: 'Restam {n}', comentario: 'Comentário (aniversário, cadeirinha…)',
     confirmarReserva: 'Pedir reserva', reservaLista: 'Reserva solicitada!', reservaListaSub: '{personas} · {dia} às {hora}. A gente confirma pelo WhatsApp.',

@@ -1061,6 +1061,39 @@
     "llegar"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "isola-nordelta",
+   "url": "https://isola-nordelta.vercel.app/",
+   "hero": {
+    "arquetipo": "tipografico-puro",
+    "detalle": "su pared facetada retroiluminada hecha portal plano: capas crema con brillo dorado que se encienden de afuera hacia adentro y el logo ISOLA gigante al centro; estado abierto/cerrado en vivo",
+    "mascara_foto": "sin foto",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "solo el nombre (aparece al bajar, cambia a cal sobre fondos oscuros) + botón redondo 'ojo de buey' que abre el menú a pantalla completa, también en desktop; el menú sube como marea",
+   "botones_estilo": "faceta (rectángulo con las esquinas talladas como los paneles de su pared, brillo que lo cruza) + subrayado de ola",
+   "firma": "marea: la intro es la marea que baja y deja ver la isla; los bloques entran con borde de ola (máscara)",
+   "wow": "Un día en ISOLA: arco del día grande con el sol (de noche luna) que se arrastra o se toca Lunch/Merienda/Cena; cambia el cielo, la sala dentro de la cúpula y los platos que flotan en el mar; ficha de tamaño fijo con 'Reservar ese momento' que abre la reserva del kit con el servicio elegido",
+   "fuentes": {
+    "titulos": "Pathway Gothic One",
+    "cuerpo": "Alegreya Sans",
+    "acento": "Alegreya Sans itálica"
+   },
+   "fondo": "rgb(242, 235, 224)",
+   "piezas": "portal facetado · arco del día con cúpula y mar · espacios de la casa con foto que cambia con ola (desktop) / carrusel (celu) · tira 'cada detalle cuenta' en ritmo de ola · carta como su placa con foto al costado · reservas sobre el portal de noche · 4,9 + reseñas reales · mapa con pin del logo",
+   "secciones": [
+    "hero",
+    "dia",
+    "casa",
+    "detalles",
+    "carta",
+    "reservas",
+    "opiniones",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

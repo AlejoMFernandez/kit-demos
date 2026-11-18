@@ -1227,6 +1227,38 @@
     "llegar"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "irish-town",
+   "url": "https://irish-town.vercel.app/",
+   "hero": {
+    "arquetipo": "diario-o-carta-impresa",
+    "detalle": "la cabecera de su carta impresa a pantalla completa: trenzas celtas verdes, IRISH TOWN negro con sombra gris corrida, barras verde/naranja y DRINKS + TASTES + MUSIC; la burger dentro de la forma de su tabla de madera de 'Clásicos' (horizontal en desktop, más alta en celu) y un sello de goma 'irishtown.com.ar · ahora sí abre' que estampa al final",
+    "mascara_foto": "tabla de madera con manija y agujero (sale del recuadro 'Clásicos' de su carta)",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "pestañas tricolor (verde/crema/naranja) que bajan del borde superior al pasar el hero, con 'Tu ronda' y Reservá (desktop) / posavasos redondo con el isotipo que abre el menú a pantalla completa (celu)",
+   "botones_estilo": "pinta de stout: rectángulo negro con 7 px de espuma arriba que se llena de crema al pasar + texto con la trenza celta abajo que se recoge",
+   "firma": "se tira la pinta: la intro llena la pantalla de cerveza con burbujas y la espuma se vuelve el papel de la carta; la tabla del hero se llena de abajo hacia arriba; los títulos de sección se llenan como una pinta",
+   "wow": "La diana: tablero de dardos grande con los colores de Irlanda; tocás o hacés clic, el dardo vuela, se clava y tiembla; cada número (simple, doble, triple, bull) es un plato o una pinta de la carta y la info cae en un posavasos de tamaño fijo sobre la diana, con Sumar",
+   "fuentes": {
+    "titulos": "Playfair Display 900",
+    "cuerpo": "Barlow",
+    "acento": "Barlow Condensed 700"
+   },
+   "fondo": "rgb(243, 235, 221)",
+   "piezas": "cabecera de carta con trenzas y sello · la diana con posavasos · carta larga por páginas con índice y cuerda roja y negra, foto del plato al costado · siete canillas con pinta que se llena (pinta/media, estilo) · banda de happy hour con estado en vivo · agenda de jams con cupo y foto en forma de pinta · mapa con pin del isotipo",
+   "secciones": [
+    "hero",
+    "diana",
+    "carta",
+    "pintas",
+    "happy",
+    "musica",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

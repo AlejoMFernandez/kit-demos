@@ -1099,8 +1099,8 @@
    "slug": "sole-di-parma",
    "url": "https://sole-di-parma.vercel.app/",
    "hero": {
-    "arquetipo": "secuencia-con-scroll",
-    "detalle": "plato-sol: disco con rayos dibujados y el logo arriba; con el scroll el sol pasa por 4 fotos (mañana, mediodía, tarde y noche) y el día termina en azul noche",
+    "arquetipo": "estado-con-botones",
+    "detalle": "logo y plato-sol centrados como un grupo sobre el horizonte ilustrado; 4 botones-píldora (8:30, 13:00, 17:00, 20:00) cambian la foto del plato, el texto y el cielo hasta el azul noche; sin secuencia de scroll",
     "mascara_foto": "disco (sol) con rayos",
     "botones": 1,
     "animado": true

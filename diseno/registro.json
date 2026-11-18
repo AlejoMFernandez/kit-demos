@@ -1162,6 +1162,38 @@
     "llegar"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "granero-milberg",
+   "url": "https://granero-milberg.vercel.app/",
+   "hero": {
+    "arquetipo": "secuencia-con-scroll",
+    "detalle": "pantalla fija de 3 tablones de fotos con juntas negras (en celu una foto cortada en 3 tablas) que giran como tablas de granero en cada momento del scroll: Granero → Huerta → Quebracho → A la mesa; la palabra gigante cambia letra por letra; índice 01-04",
+    "mascara_foto": "tablones verticales (persiana)",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "sin barra en el hero; después, barra fina con el granero del logo + links + Reservá (desktop) / barra inferior tipo app con Carta, Eventos, Reservá y Llegar (celu)",
+   "botones_estilo": "tablón: rectángulo ladrillo con las vetas de 4 tablas que se llena de tinta desde la izquierda + link con raya que se recoge",
+   "firma": "persiana de tablones: la intro arma el logo en 7 tablas y abre la pantalla en 8 tablones que giran; fotos, paredes de fotos y palabras entran girando como tablas (rotateY en escalera)",
+   "wow": "El granero es tuyo: el granero del logo dibujado en línea y abierto; se baja el fardo de la grúa del techo para sumar invitados (20 a 150), Pasos/Estaciones cambia el interior (mesas largas o islas) y los carteles colgados abren el menú de cada paso en un cartelito fijo; total en vivo y pedido de presupuesto por el carrito del kit",
+   "fuentes": {
+    "titulos": "Oswald 700",
+    "cuerpo": "Karla"
+   },
+   "fondo": "rgb(18, 17, 16)",
+   "piezas": "tablones del hero · pared de tablones de fotos arrastrable · huerta en 4 tablas desfasadas + ensaladas vidriera · carta impresa con índice y foto al pasar · cartel HAPPY HOUR de cajas amarillas que se prende en vivo · fila de tragos · el granero con grúa y fardo · reseñas 5/5 · mapa con pin del granero",
+   "secciones": [
+    "hero",
+    "granero",
+    "huerta",
+    "carta",
+    "barra",
+    "eventos",
+    "resenas",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

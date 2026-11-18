@@ -1099,10 +1099,10 @@
    "slug": "sole-di-parma",
    "url": "https://sole-di-parma.vercel.app/",
    "hero": {
-    "arquetipo": "estado-con-botones",
-    "detalle": "logo y plato-sol centrados como un grupo sobre el horizonte ilustrado; 4 botones-píldora (8:30, 13:00, 17:00, 20:00) cambian la foto del plato, el texto y el cielo hasta el azul noche; sin secuencia de scroll",
-    "mascara_foto": "disco (sol) con rayos",
-    "botones": 1,
+    "arquetipo": "escena-ilustrada",
+    "detalle": "toldo a rayas festoneado arriba, logo grande centrado y debajo la vereda ilustrada en movimiento (planta que se mece, gato que mueve la cola, señora que da vuelta el diario, cartera que se hamaca, vapor del café) con el sol asomando a medias detrás del horizonte; sin foto, sin scroll ni botones",
+    "mascara_foto": "ninguna",
+    "botones": 2,
     "animado": true
    },
    "nav": "botón flotante 'pizarra' redondo que abre el menú como una carta de pizarra con puntos guía; se esconde en el hero",

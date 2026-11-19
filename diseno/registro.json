@@ -1259,6 +1259,37 @@
     "llegar"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "almacen-de-tigre",
+   "url": "https://almacen-de-tigre.vercel.app/",
+   "hero": {
+    "arquetipo": "mosaico-de-fotos",
+    "detalle": "trencadís plano a pantalla completa (Voronoi con junta cal) con fotos del pasaje y los platos dentro de las piezas y piezas de color de la marca; placa de cal con borde partido al centro con el nombre en Forum, 'el primero del Boulevard' en cursiva, CTA y estado abierto/cerrado en vivo; la intro es el mosaico armándose pieza por pieza",
+    "mascara_foto": "piezas de trencadís (Voronoi)",
+    "botones": 1,
+    "animado": true
+   },
+   "nav": "logo festoneado (el cartel del local) fijo arriba a la izquierda + botón 'Menú' de venecita; el menú es un mosaico 3x2 a pantalla completa con las secciones; la barra se esconde al bajar y vuelve con franja cal",
+   "botones_estilo": "piezas de venecita: rectángulo con bordes partidos (clip-path irregular) en cal o verde mosaico que se llena desde la izquierda",
+   "firma": "trencadís: las cosas entran en pedazos que se juntan (intro del hero, medallón del WOW, tarjetas y fotos con giro)",
+   "wow": "Cada pieza, un plato: medallón redondo de mosaico con 12 platos reales; hover levanta la pieza, toque/clic abre ficha de tamaño fijo en el centro (desktop) o debajo (celu, con plato de ejemplo que rota); las piezas grises son las que hoy no salen y se prenden/apagan desde el panel (campo disponible)",
+   "fuentes": {
+    "titulos": "Forum",
+    "cuerpo": "Karla",
+    "acento": "Playwrite AR (cursiva escolar, la de la pared lalala)"
+   },
+   "fondo": "rgb(245, 241, 234)",
+   "piezas": "hero trencadís con placa · medallón de 12 platos · carta vidriera sobre la pared roja 'lalala' (hoja de cal con borde partido, columnas en desktop, pestañas en celu) · tira del pasaje con fotos recortadas como piezas · Luchi + 'Sin reservas' en pieza turquesa con CTA a fecha especial (popup del kit en modo evento) · mapa Leaflet con el cartel festoneado como pin",
+   "secciones": [
+    "hero",
+    "hoy",
+    "carta",
+    "pasaje",
+    "luchi",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }

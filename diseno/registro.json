@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-18",
+ "actualizado": "2026-11-19",
  "nota": "Registro de diseño de las demos publicadas: solo datos de diseño (qué hero, navegación, tipografía y piezas usó cada una). Antes de proponer un moodboard, leerlo y cumplir diseno/catalogo.md. Al publicar una demo, sumar su entrada (scripts/ficha-diseno.py da los datos). La valoración de cada demo está en la rúbrica del proyecto DEMOS, no acá.",
  "demos": [
   {
@@ -1198,7 +1198,6 @@
   {
    "slug": "bollo-pizzeria",
    "url": "https://bollo-pizzeria.vercel.app/",
-   "estado": "en curso",
    "hero": {
     "arquetipo": "letras-con-producto",
     "detalle": "BOLLO gigante en Bowlby One con las dos O reemplazadas por pizzas recortadas reales que giran; tocar una O hace rodar otra pizza; en celu BOL / LO",
@@ -1209,13 +1208,13 @@
    "nav": "sin barra: la cabeza de la mascota (Bollo, pelo de fuego) es el botón flotante del menú, que se abre a pantalla completa en mostaza",
    "botones_estilo": "sticker troquelado: borde blanco grueso + filete negro, levemente girado; + redondo blanco con sombra dura",
    "firma": "leva: todo entra como masa que crece (se estira, se pasa y se asienta); la intro es el logo que leva; las pizzas entran rodando",
-   "wow": "la rueda de pizzas: una pizza enorme por vez que entra rodando como una rueda, el fondo de la sección toma su color, nombre gigante en script detrás, ficha fija con +; pasa sola",
+   "wow": "la rueda de pizzas: una pizza enorme por vez que entra rodando como una rueda (flechas, arrastre, miniaturas), el fondo de la sección toma su color, nombre gigante en script detrás, ficha de tamaño fijo con + que suma a 'Tu caja'",
    "fuentes": {
     "titulos": "Shrikhand / Bowlby One",
     "cuerpo": "Figtree"
    },
    "fondo": "rgb(246, 239, 226)",
-   "piezas": "letras-pizza del hero · rueda de pizzas · placas de colores 'lo que no es pizza' · jueves de molde · galpón y jardín · caja para retirar · letrero de tragos · mapa",
+   "piezas": "letras-pizza del hero · rueda de pizzas · placas de colores 'lo que no es pizza' · jueves de molde con reserva en popup · galpón y jardín como pizza de 6 porciones con fotos · caja para retirar · letrero de tragos que se pincha letra por letra · mapa",
    "secciones": [
     "hero",
     "pizzas",
@@ -1226,7 +1225,8 @@
     "tragos",
     "llegar"
    ],
-   "formularios_en_pagina": []
+   "formularios_en_pagina": [],
+   "intro": "el logo leva sobre masa crema y un círculo se cierra adentro de la segunda O, donde nace la pizza"
   },
   {
    "slug": "irish-town",

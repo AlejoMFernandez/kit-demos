@@ -18,7 +18,7 @@ Qué revisa en cada pantalla (celu 390, android 360, notebook 1366, desktop 1440
     - botones y links chicos para el dedo, inputs que hacen zoom en iPhone
     - imágenes pixeladas (estiradas por encima de su tamaño real)
     - el botón principal del hero queda fuera de la primera pantalla
-    - formularios desplegados en la página (van en popup) y secciones de más de 2,3 pantallas (3,2 en celu)
+    - formularios desplegados en la página (van en popup) y secciones de más de 2,3 pantallas (3,2 en celu); la carta, error si pasa de 1,6 (1,8 en celu)
     - rendimiento en un celu lento: primera pantalla a más de 2,5 s, carga de más de 2,5 MB, fotos de más de
       400 KB, sobredimensionadas, sin medidas, sin lazy o sin vista previa, fuentes pedidas a terceros
     - saltos de layout al cargar (CLS), intro más larga que el máximo (1,8 s celu / 2,6 s desktop)
@@ -164,6 +164,9 @@ async ([vw, vh, raizSel]) => {
   // 8b. formularios desplegados en la página y secciones eternas (reglas de Alejo)
   for (const e of ext) { const campos = [...e.b.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select, textarea')].filter(c => { const k = ctx(c), r = c.getBoundingClientRect(); return !k.oculto && k.op > 0.2 && r.width > 20 && r.height > 10; });
     if (campos.length >= 3) add('formulario-desplegado', 'aviso', e.b, campos[0].getBoundingClientRect(), `"${sel(e.b)}" muestra un formulario de ${campos.length} campos en la página: va un CTA que abre el popup`);
+    // la carta es una vidriera: si pasa de 1,6 pantallas (1,8 en celu) bloquea, tenga los productos que tenga
+    const esCarta = /carta|menu/i.test(sel(e.b) + ' ' + (e.b.id || '')) && !/footer/i.test(sel(e.b));
+    if (esCarta && e !== ext[ext.length - 1] && e.r.height > vh * (celu ? 1.8 : 1.6)) H.push({ tipo: 'carta-larga', nivel: 'error', sel: sel(e.b), msg: `la carta "${sel(e.b)}" mide ${(e.r.height / vh).toFixed(1)} pantallas de alto (máximo ${celu ? 1.8 : 1.6}): paginarla en hojas de alto fijo`, x: 0, y: Math.round(e.r.top + scrollY), w: 0, h: 0 });
     const tope = celu ? 3.2 : 2.3; if (e !== ext[ext.length - 1] && e.r.height > vh * tope) H.push({ tipo: 'seccion-eterna', nivel: 'aviso', sel: sel(e.b), msg: `"${sel(e.b)}" mide ${(e.r.height / vh).toFixed(1)} pantallas de alto (máximo ${tope})`, x: 0, y: Math.round(e.r.top + scrollY), w: 0, h: 0 }); }
 
   // 9. hero: botón principal dentro de la primera pantalla

@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-19",
+ "actualizado": "2026-11-26",
  "nota": "Registro de diseño de las demos publicadas: solo datos de diseño (qué hero, navegación, tipografía y piezas usó cada una). Antes de proponer un moodboard, leerlo y cumplir diseno/catalogo.md. Al publicar una demo, sumar su entrada (scripts/ficha-diseno.py da los datos). La valoración de cada demo está en la rúbrica del proyecto DEMOS, no acá.",
  "demos": [
   {
@@ -1320,6 +1320,37 @@
     "mostrador",
     "esquina",
     "llegar"
+   ],
+   "formularios_en_pagina": []
+  },
+  {
+   "slug": "brunette",
+   "url": "https://brunette-devoto.vercel.app/",
+   "hero": {
+    "arquetipo": "vidriera",
+    "detalle": "la fachada verde inglés a pantalla completa con el logo Brunette en crema como su cartel; la ventana del local es una vitrina de dos estantes (celu 3+3, desktop 5+5) con recortes de productos y etiqueta de precio colgando; tocar uno lo levanta y abre una ficha de tamaño fijo sobre el vidrio con + al carrito o Consultar; la intro es la persiana verde pintada 'MOSTRADOR de ANTOJOS' que sube de una pieza",
+    "mascara_foto": "ninguna (recortes sin fondo sobre estantes planos)",
+    "botones": 2,
+    "animado": true
+   },
+   "nav": "sello circular 'Mostrador de antojos' de su carta, girando, arriba a la derecha: abre el menú como la hoja de la carta (rosa + hoja papel + números en oro); en desktop barra fina que baja al pasar el hero (logo, links, 'Tus antojos') y el sello se oculta",
+   "botones_estilo": "etiqueta kraft/tinta con ojal y punta (la de sus cajas) que se llena de verde cinta desde la izquierda; link en Bodoni itálica con subrayado oro que se recoge",
+   "firma": "la cinta: una banda de raso verde en diagonal cruza cada título y lo destapa; los productos caen con peso en los estantes y los precios se hamacan; las fachadas se destapan con su persiana",
+   "wow": "Armá tu caja y la cerramos con moño: caja blanca con puntilla de papel y 6 pirotines; tocás un antojo de la bandeja y cae en su lugar; 'Cerrar con moño' baja la tapa, se dibuja la cinta en cruz y salta el moño; la etiqueta kraft lleva cuenta y total; suma al carrito con nota",
+   "fuentes": {
+    "titulos": "Italiana",
+    "cuerpo": "Hanken Grotesk",
+    "acento": "Bodoni Moda itálica"
+   },
+   "fondo": "rgb(47, 74, 59)",
+   "piezas": "hero vidriera · 'De un mostrador a tres' (3 fachadas con persiana, Beiró muy pronto, polaroid 2012) · caja con moño (WOW) · carta como su hoja impresa sobre verde (índice numerado, foto por sección) · catering (foto a sangre + 2 menús de referencia + popup presupuesto) · locales (selector café/mostrador/Beiró + mapa Leaflet con pin isotipo B) · pie tinta",
+   "secciones": [
+    "inicio",
+    "historia",
+    "caja",
+    "carta",
+    "catering",
+    "locales"
    ],
    "formularios_en_pagina": []
   }

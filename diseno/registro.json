@@ -1290,6 +1290,38 @@
     "llegar"
    ],
    "formularios_en_pagina": []
+  },
+  {
+   "slug": "tentate-mas",
+   "url": "https://tentate-mas-devoto.vercel.app/",
+   "hero": {
+    "arquetipo": "flor-ventana",
+    "detalle": "flor de cerezo gigante (la de la fachada pintada) centrada: cada uno de los 5 pétalos es una ventana a una torta y cada 3 s un pétalo cambia de foto; medallón del logo al centro; desktop con 'Tentate' y 'más' (Bodoni) a los costados, simétrico; la intro es un pimpollo que abre sus pétalos y vuela hasta ser la flor del hero",
+    "mascara_foto": "pétalos de flor de cerezo (clipPath SVG)",
+    "botones": 1,
+    "animado": true
+   },
+   "nav": "medallón del logo arriba a la izquierda + botón blanco 'Menú' con la flor de cerezo que gira; menú rosa a pantalla completa con links en Bodoni que abren girando",
+   "botones_estilo": "cinta de regalo: rectángulo fucsia con muesca en V en los dos extremos que se llena de cerezo oscuro desde la izquierda; links con subrayado de puntitos",
+   "firma": "florece: todo abre desde el centro con escala + giro corto, como un pimpollo, y suelta pétalos que caen",
+   "wow": "El cerezo de las tortas: rama pintada como la de la fachada que cruza la sección con 8 flores que son las tortas de la semana; hover agranda y muestra el nombre, toque/clic suelta pétalos y abre una ficha de tamaño fijo (en desktop ocupa el lugar del título) con Encargala → popup de encargo",
+   "fuentes": {
+    "titulos": "Bodoni Moda",
+    "cuerpo": "Nunito Sans",
+    "acento": "Parisienne (frases a mano)"
+   },
+   "fondo": "rgb(247, 236, 221)",
+   "piezas": "hero flor-ventana · cerezo de tortas · ramo de 3 tortas en flor con CTA a popup de encargo · box de regalo: caja con tapa y moño que se abre (bisagra 3D) + etiquetas colgantes + tarjeta de regalo de tamaño fijo · vitrina del mostrador en flores sobre platitos · galería polaroid (mosaico desktop, fila deslizable celu) · mapa Leaflet rosado con pin flor + tarjeta de horarios",
+   "secciones": [
+    "hero",
+    "semana",
+    "a-pedido",
+    "box",
+    "mostrador",
+    "esquina",
+    "llegar"
+   ],
+   "formularios_en_pagina": []
   }
  ]
 }
